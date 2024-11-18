@@ -24,6 +24,7 @@
 #include <Winsock2.h> //Add support for sockets
 #include <time.h>
 #include <process.h>//Add support for threads
+#include "../include/registers.h"
 #include "../include/getopt.h"
 #else //Linux includes.
 #define closesocket close
@@ -123,13 +124,19 @@ static gxSecuritySetup securitySetupHigh;
 //Security Setup HighGMac is for GMac authentication.
 static gxSecuritySetup securitySetupHighGMac;
 
+// Define external KIGG registers
+extern gxRegister voltageL1;
+
 //static gxObject* NONE_OBJECTS[] = { BASE(associationNone), BASE(ldn), BASE(sapAssignment), BASE(clock1) };
 
 static gxObject* ALL_OBJECTS[] = { BASE(associationNone), BASE(associationLow), BASE(associationHigh), BASE(associationHighGMac), BASE(securitySetupHigh), BASE(securitySetupHighGMac),
                                    BASE(ldn), BASE(sapAssignment), BASE(eventCode),
                                    BASE(clock1), BASE(activePowerL1), BASE(pushSetup), BASE(scriptTableGlobalMeterReset), BASE(scriptTableDisconnectControl),
                                    BASE(scriptTableActivateTestMode), BASE(scriptTableActivateNormalMode), BASE(loadProfile), BASE(eventLog), BASE(hdlc),
-                                   BASE(disconnectControl), BASE(actionScheduleDisconnectOpen), BASE(actionScheduleDisconnectClose), BASE(unixTime), BASE(invocationCounter)
+                                   BASE(disconnectControl), BASE(actionScheduleDisconnectOpen), BASE(actionScheduleDisconnectClose), BASE(unixTime), BASE(invocationCounter),
+
+                                   // Add KIGG registers
+                                   BASE(voltageL1)
 };
 
 ////////////////////////////////////////////////////
@@ -909,6 +916,12 @@ uint16_t readActivePowerValue()
     return ++activePowerL1Value;
 }
 
+int addRegisterVoltageL1() 
+{
+    int ret = addVoltageL1();
+    return ret;
+}
+
 uint16_t readEventCode()
 {
     return eventCode.value.uiVal;
@@ -1238,6 +1251,7 @@ int createObjects()
         (ret = addInvocationCounter()) != 0 ||
         (ret = addClockObject()) != 0 ||
         (ret = addRegisterObject()) != 0 ||
+        (ret = addRegisterVoltageL1()) != 0 ||
         (ret = addAssociationNone()) != 0 ||
         (ret = addAssociationLow()) != 0 ||
         (ret = addAssociationHigh()) != 0 ||
@@ -1740,6 +1754,11 @@ void svr_preRead(
         if (e->target == BASE(activePowerL1) && e->index == 2)
         {
             readActivePowerValue();
+        }
+        //Update value by one every time when user reads register.
+        if (e->target == BASE(voltageL1) && e->index == 2)
+        {
+            readVoltageL1Value();
         }
         //Get time if user want to read date and time.
         if (e->target == BASE(clock1) && e->index == 2)
