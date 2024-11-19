@@ -125,7 +125,12 @@ static gxSecuritySetup securitySetupHigh;
 static gxSecuritySetup securitySetupHighGMac;
 
 // Define external KIGG registers
-extern gxRegister voltageL1;
+extern gxRegister voltageL1, voltageL2, voltageL3;
+extern gxRegister currentL1, currentL2, currentL3;
+extern gxRegister frequency;
+extern gxRegister powerFactorL1, powerFactorL2, powerFactorL3;
+extern gxRegister blockEnergyKWhImport, blockEnergyKVAhLag, blockEnergyKVAhLead, blockEnergyKVAhImport;
+extern gxRegister cumulativeEnergyKWhImport, cumulativeEnergyKVAhImport;
 
 //static gxObject* NONE_OBJECTS[] = { BASE(associationNone), BASE(ldn), BASE(sapAssignment), BASE(clock1) };
 
@@ -136,7 +141,12 @@ static gxObject* ALL_OBJECTS[] = { BASE(associationNone), BASE(associationLow), 
                                    BASE(disconnectControl), BASE(actionScheduleDisconnectOpen), BASE(actionScheduleDisconnectClose), BASE(unixTime), BASE(invocationCounter),
 
                                    // Add KIGG registers
-                                   BASE(voltageL1)
+                                   BASE(voltageL1), BASE(voltageL2), BASE(voltageL3),
+                                   BASE(currentL1), BASE(currentL2), BASE(currentL3),
+                                   BASE(frequency),
+                                   BASE(powerFactorL1), BASE(powerFactorL2), BASE(powerFactorL3),
+                                   BASE(blockEnergyKWhImport), BASE(blockEnergyKVAhLag), BASE(blockEnergyKVAhLead), BASE(blockEnergyKVAhImport),
+                                   BASE(cumulativeEnergyKWhImport), BASE(cumulativeEnergyKVAhImport)
 };
 
 ////////////////////////////////////////////////////
@@ -922,6 +932,96 @@ int addRegisterVoltageL1()
     return ret;
 }
 
+int addRegisterVoltageL2() 
+{
+    int ret = addVoltageL2();
+    return ret;
+}
+
+int addRegisterVoltageL3() 
+{
+    int ret = addVoltageL3();
+    return ret;
+}
+
+int addRegisterCurrentL1() 
+{
+    int ret = addCurrentL1();
+    return ret;
+}
+
+int addRegisterCurrentL2() 
+{
+    int ret = addCurrentL2();
+    return ret;
+}
+
+int addRegisterCurrentL3() 
+{
+    int ret = addCurrentL3();
+    return ret;
+}
+
+int addRegisterFrequency() 
+{
+    int ret = addFrequency();
+    return ret;
+}
+
+int addRegisterPowerFactorL1() 
+{
+    int ret = addPowerFactorL1();
+    return ret;
+}
+
+int addRegisterPowerFactorL2() 
+{
+    int ret = addPowerFactorL2();
+    return ret;
+}
+
+int addRegisterPowerFactorL3() 
+{
+    int ret = addPowerFactorL3();
+    return ret;
+}
+
+int addRegisterBlockEnergyKWhImport()
+{
+    int ret = addBlockEnergyKWhImport();
+    return ret;
+}
+
+int addRegisterBlockEnergyKVAhLag()
+{
+    int ret = addBlockEnergyKVAhLag();
+    return ret;
+}
+
+int addRegisterBlockEnergyKVAhLead()
+{
+    int ret = addBlockEnergyKVAhLead();
+    return ret;
+}
+
+int addRegisterBlockEnergyKVAhImport()
+{
+    int ret = addBlockEnergyKVAhImport();
+    return ret;
+}
+
+int addRegisterCumulativeEnergyKWhImport()
+{
+    int ret = addCumulativeEnergyKWhImport();
+    return ret;
+}
+
+int addRegisterCumulativeEnergyKVAhImport()
+{
+    int ret = addCumulativeEnergyKVAhImport();
+    return ret;
+}
+
 uint16_t readEventCode()
 {
     return eventCode.value.uiVal;
@@ -1252,6 +1352,21 @@ int createObjects()
         (ret = addClockObject()) != 0 ||
         (ret = addRegisterObject()) != 0 ||
         (ret = addRegisterVoltageL1()) != 0 ||
+        (ret = addRegisterVoltageL2()) != 0 ||
+        (ret = addRegisterVoltageL3()) != 0 ||
+        (ret = addRegisterCurrentL1()) != 0 ||
+        (ret = addRegisterCurrentL2()) != 0 ||
+        (ret = addRegisterCurrentL3()) != 0 ||
+        (ret = addRegisterFrequency()) != 0 ||
+        (ret = addRegisterPowerFactorL1()) != 0 ||
+        (ret = addRegisterPowerFactorL2()) != 0 ||
+        (ret = addRegisterPowerFactorL3()) != 0 ||
+        (ret = addRegisterBlockEnergyKWhImport()) != 0 ||
+        (ret = addRegisterBlockEnergyKVAhLag()) != 0 ||
+        (ret = addRegisterBlockEnergyKVAhLead()) != 0 ||
+        (ret = addRegisterBlockEnergyKVAhImport()) != 0 ||
+        (ret = addRegisterCumulativeEnergyKWhImport()) != 0 ||
+        (ret = addRegisterCumulativeEnergyKVAhImport()) != 0 ||
         (ret = addAssociationNone()) != 0 ||
         (ret = addAssociationLow()) != 0 ||
         (ret = addAssociationHigh()) != 0 ||
@@ -1755,10 +1870,85 @@ void svr_preRead(
         {
             readActivePowerValue();
         }
-        //Update value by one every time when user reads register.
+        //Update value every time when user reads register.
         if (e->target == BASE(voltageL1) && e->index == 2)
         {
             readVoltageL1Value();
+        }
+        //Update value every time when user reads register.
+        if (e->target == BASE(voltageL2) && e->index == 2)
+        {
+            readVoltageL2Value();
+        }
+        //Update value every time when user reads register.
+        if (e->target == BASE(voltageL3) && e->index == 2)
+        {
+            readVoltageL3Value();
+        }
+        //Update value every time when user reads register.
+        if (e->target == BASE(currentL1) && e->index == 2)
+        {
+            readCurrentL1Value();
+        }
+        //Update value every time when user reads register.
+        if (e->target == BASE(currentL2) && e->index == 2)
+        {
+            readCurrentL2Value();
+        }
+        //Update value every time when user reads register.
+        if (e->target == BASE(currentL3) && e->index == 2)
+        {
+            readCurrentL3Value();
+        }
+        //Update value every time when user reads register.
+        if (e->target == BASE(frequency) && e->index == 2)
+        {
+            readFrequencyValue();
+        }
+        //Update value every time when user reads register.
+        if (e->target == BASE(powerFactorL1) && e->index == 2)
+        {
+            readPowerFactorL1Value();
+        }
+        //Update value every time when user reads register.
+        if (e->target == BASE(powerFactorL2) && e->index == 2)
+        {
+            readPowerFactorL2Value();
+        }
+        //Update value every time when user reads register.
+        if (e->target == BASE(powerFactorL3) && e->index == 2)
+        {
+            readPowerFactorL3Value();
+        }
+        //Update value every time when user reads register.
+        if (e->target == BASE(blockEnergyKWhImport) && e->index == 2)
+        {
+            readBlockEnergyKWhImportValue();
+        }
+        //Update value every time when user reads register.
+        if (e->target == BASE(blockEnergyKVAhLag) && e->index == 2)
+        {
+            readBlockEnergyKVAhLagValue();
+        }
+        //Update value every time when user reads register.
+        if (e->target == BASE(blockEnergyKVAhLead) && e->index == 2)
+        {
+            readBlockEnergyKVAhLeadValue();
+        }
+        //Update value every time when user reads register.
+        if (e->target == BASE(blockEnergyKVAhImport) && e->index == 2)
+        {
+            readBlockEnergyKVAhImportValue();
+        }
+        // Update value every time when user reads register.
+        if (e->target == BASE(cumulativeEnergyKWhImport) && e->index == 2)
+        {
+            readCumulativeEnergyKWhImportValue();
+        }
+        // Update value every time when user reads register.
+        if (e->target == BASE(cumulativeEnergyKVAhImport) && e->index == 2)
+        {
+            readCumulativeEnergyKVAhImportValue();
         }
         //Get time if user want to read date and time.
         if (e->target == BASE(clock1) && e->index == 2)
