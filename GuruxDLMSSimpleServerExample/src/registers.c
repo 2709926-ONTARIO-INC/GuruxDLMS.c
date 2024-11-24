@@ -1,10 +1,38 @@
 #include <stdlib.h>
+#include <stdbool.h>
+#include <time.h>
+#include <stdio.h>
 
 #include "../include/registers.h"
 #include "../../development/include/gxmem.h"
 #include "../../development/include/dlmssettings.h"
 #include "../../development/include/variant.h"
 #include "../../development/include/cosem.h"
+
+// Include the getter for enableGarbageValues
+extern bool isGarbageValuesEnabled();
+
+// Constants for garbage value counters
+#define MIN_GARBAGE_COUNT 4
+#define MAX_GARBAGE_COUNT 7
+
+// Garbage value arrays for each variable
+uint16_t voltageL1GarbageValues[] = {500, 999, 1100};
+uint16_t voltageL2GarbageValues[] = {600, 888, 1200};
+uint16_t voltageL3GarbageValues[] = {550, 1000, 1300};
+uint16_t currentL1GarbageValues[] = {50, 99, 110};
+uint16_t currentL2GarbageValues[] = {60, 98, 120};
+uint16_t currentL3GarbageValues[] = {55, 100, 130};
+uint16_t frequencyGarbageValues[] = {0, 999, 110};
+int16_t powerFactorL1GarbageValues[] = {-100, 0, 200};
+int16_t powerFactorL2GarbageValues[] = {-90, 0, 210};
+int16_t powerFactorL3GarbageValues[] = {-80, 0, 220};
+uint32_t blockEnergyKWhImportGarbageValues[] = {999999, 1234567, 2147483647};
+uint32_t blockEnergyKVAhLagGarbageValues[] = {999999, 2345678, 1987654321};
+uint32_t blockEnergyKVAhLeadGarbageValues[] = {888888, 3456789, 1098765432};
+uint32_t blockEnergyKVAhImportGarbageValues[] = {777777, 4567890, 987654321};
+uint32_t cumulativeEnergyKWhImportGarbageValues[] = {9999999, 9876543, 7654321};
+uint32_t cumulativeEnergyKVAhImportGarbageValues[] = {8888888, 8765432, 6543210};
 
 // Define the KIGG register objects globally.
 gxRegister voltageL1, voltageL2, voltageL3;
@@ -21,6 +49,20 @@ static uint16_t frequencyValue = 0;
 static int16_t powerFactorL1Value = 0, powerFactorL2Value = 0, powerFactorL3Value = 0;
 static uint32_t blockEnergyKWhImportValue = 0, blockEnergyKVAhLagValue = 0, blockEnergyKVAhLeadValue = 0, blockEnergyKVAhImportValue = 0;
 static uint32_t cumulativeEnergyKWhImportValue = 0, cumulativeEnergyKVAhImportValue = 0;
+
+// Garbage counters for each variable
+int voltageL1Counter = 0, voltageL2Counter = 0, voltageL3Counter = 0;
+int currentL1Counter = 0, currentL2Counter = 0, currentL3Counter = 0;
+int frequencyCounter = 0;
+int powerFactorL1Counter = 0, powerFactorL2Counter = 0, powerFactorL3Counter = 0;
+int blockEnergyKWhImportCounter = 0, blockEnergyKVAhLagCounter = 0, blockEnergyKVAhLeadCounter = 0, blockEnergyKVAhImportCounter = 0;
+int cumulativeEnergyKWhImportCounter = 0, cumulativeEnergyKVAhImportCounter = 0;
+
+// Helper to reset a counter
+int resetCounter()
+{
+    return MIN_GARBAGE_COUNT + rand() % (MAX_GARBAGE_COUNT - MIN_GARBAGE_COUNT + 1);
+}
 
 // Function to add the voltageL1 register to the DLMS server
 int addVoltageL1()
@@ -47,10 +89,29 @@ void writeVoltageL1Value(uint16_t value)
     voltageL1Value = value;
 }
 
-// Function to get the voltageL1 registers' value
+// Function to get the voltageL1 registers' value with garbage value injection
 uint16_t readVoltageL1Value()
 {
-    voltageL1Value = 230 + (rand() % 11 - 5);
+    if (isGarbageValuesEnabled())
+    {
+        if (voltageL1Counter == 0)
+        {
+            // Select a random garbage value
+            printf("Meter sending garbage value for voltage L1.\n");
+            voltageL1Value = voltageL1GarbageValues[rand() % (sizeof(voltageL1GarbageValues) / sizeof(voltageL1GarbageValues[0]))];
+            // Reset the counter
+            voltageL1Counter = resetCounter();
+        }
+        else
+        {
+            voltageL1Value = 230 + (rand() % 11 - 5); // Normal value
+            voltageL1Counter--;
+        }
+    }
+    else
+    {
+        voltageL1Value = 230 + (rand() % 11 - 5); // Normal value
+    }
     return voltageL1Value;
 }
 
@@ -77,10 +138,29 @@ void writeVoltageL2Value(uint16_t value)
     voltageL2Value = value;
 }
 
-// Function to get the voltageL2 registers' value
+// Function to get the voltageL2 registers' value with garbage value injection
 uint16_t readVoltageL2Value()
 {
-    voltageL2Value = 230 + (rand() % 11 - 5);
+    if (isGarbageValuesEnabled())
+    {
+        if (voltageL2Counter == 0)
+        {
+            // Select a random garbage value
+            printf("Meter sending garbage value for voltage L2\n");
+            voltageL2Value = voltageL2GarbageValues[rand() % (sizeof(voltageL2GarbageValues) / sizeof(voltageL2GarbageValues[0]))];
+            // Reset the counter
+            voltageL2Counter = resetCounter();
+        }
+        else
+        {
+            voltageL2Value = 230 + (rand() % 11 - 5); // Normal value
+            voltageL2Counter--;
+        }
+    }
+    else
+    {
+        voltageL2Value = 230 + (rand() % 11 - 5); // Normal value
+    }
     return voltageL2Value;
 }
 
@@ -107,10 +187,29 @@ void writeVoltageL3Value(uint16_t value)
     voltageL3Value = value;
 }
 
-// Function to get the voltageL3 registers' value
+// Function to get the voltageL3 registers' value with garbage value injection
 uint16_t readVoltageL3Value()
 {
-    voltageL3Value = 230 + (rand() % 11 - 5);
+    if (isGarbageValuesEnabled())
+    {
+        if (voltageL3Counter == 0)
+        {
+            // Select a random garbage value
+            printf("Meter sending garbage value for voltage L3\n");
+            voltageL3Value = voltageL3GarbageValues[rand() % (sizeof(voltageL3GarbageValues) / sizeof(voltageL3GarbageValues[0]))];
+            // Reset the counter
+            voltageL3Counter = resetCounter();
+        }
+        else
+        {
+            voltageL3Value = 230 + (rand() % 11 - 5); // Normal value
+            voltageL3Counter--;
+        }
+    }
+    else
+    {
+        voltageL3Value = 230 + (rand() % 11 - 5); // Normal value
+    }
     return voltageL3Value;
 }
 
@@ -137,10 +236,29 @@ void writeCurrentL1Value(uint16_t value)
     currentL1Value = value;
 }
 
-// Function to get the currentL1 registers' value
+// Function to get the currentL1 registers' value with garbage value injection
 uint16_t readCurrentL1Value()
 {
-    currentL1Value = 10 + (rand() % 3 - 1);
+    if (isGarbageValuesEnabled())
+    {
+        if (currentL1Counter == 0)
+        {
+            // Select a random garbage value
+            printf("Meter sending garbage value for current L1\n");
+            currentL1Value = currentL1GarbageValues[rand() % (sizeof(currentL1GarbageValues) / sizeof(currentL1GarbageValues[0]))];
+            // Reset the counter
+            currentL1Counter = resetCounter();
+        }
+        else
+        {
+            currentL1Value = 10 + (rand() % 3 - 1); // Normal value
+            currentL1Counter--;
+        }
+    }
+    else
+    {
+        currentL1Value = 10 + (rand() % 3 - 1); // Normal value
+    }
     return currentL1Value;
 }
 
@@ -167,10 +285,29 @@ void writeCurrentL2Value(uint16_t value)
     currentL2Value = value;
 }
 
-// Function to get the currentL2 registers' value
+// Function to get the currentL2 registers' value with garbage value injection
 uint16_t readCurrentL2Value()
 {
-    currentL2Value = 10 + (rand() % 3 - 1);
+    if (isGarbageValuesEnabled())
+    {
+        if (currentL2Counter == 0)
+        {
+            // Select a random garbage value
+            printf("Meter sending garbage value for current L2\n");
+            currentL2Value = currentL2GarbageValues[rand() % (sizeof(currentL2GarbageValues) / sizeof(currentL2GarbageValues[0]))];
+            // Reset the counter
+            currentL2Counter = resetCounter();
+        }
+        else
+        {
+            currentL2Value = 10 + (rand() % 3 - 1); // Normal value
+            currentL2Counter--;
+        }
+    }
+    else
+    {
+        currentL2Value = 10 + (rand() % 3 - 1); // Normal value
+    }
     return currentL2Value;
 }
 
@@ -197,10 +334,29 @@ void writeCurrentL3Value(uint16_t value)
     currentL3Value = value;
 }
 
-// Function to get the currentL3 registers' value
+// Function to get the currentL3 registers' value with garbage value injection
 uint16_t readCurrentL3Value()
 {
-    currentL3Value = 10 + (rand() % 3 - 1);
+    if (isGarbageValuesEnabled())
+    {
+        if (currentL3Counter == 0)
+        {
+            // Select a random garbage value
+            printf("Meter sending garbage value for current L3\n");
+            currentL3Value = currentL3GarbageValues[rand() % (sizeof(currentL3GarbageValues) / sizeof(currentL3GarbageValues[0]))];
+            // Reset the counter
+            currentL3Counter = resetCounter();
+        }
+        else
+        {
+            currentL3Value = 10 + (rand() % 3 - 1); // Normal value
+            currentL3Counter--;
+        }
+    }
+    else
+    {
+        currentL3Value = 10 + (rand() % 3 - 1); // Normal value
+    }
     return currentL3Value;
 }
 
@@ -227,10 +383,29 @@ void writeFrequencyValue(uint16_t value)
     frequencyValue = value;
 }
 
-// Function to get the frequency registers' value
+// Function to get the frequency registers' value with garbage value injection
 uint16_t readFrequencyValue()
 {
-    frequencyValue = 50 + (rand() % 3 - 1);
+    if (isGarbageValuesEnabled())
+    {
+        if (frequencyCounter == 0)
+        {
+            // Select a random garbage value
+            printf("Meter sending garbage value for frequency\n");
+            frequencyValue = frequencyGarbageValues[rand() % (sizeof(frequencyGarbageValues) / sizeof(frequencyGarbageValues[0]))];
+            // Reset the counter
+            frequencyCounter = resetCounter();
+        }
+        else
+        {
+            frequencyValue = 50 + (rand() % 3 - 1); // Normal value
+            frequencyCounter--;
+        }
+    }
+    else
+    {
+        frequencyValue = 50 + (rand() % 3 - 1); // Normal value
+    }
     return frequencyValue;
 }
 
@@ -257,10 +432,29 @@ void writePowerFactorL1Value(int16_t value)
     powerFactorL1Value = value;
 }
 
-// Function to get the powerFactorL1 registers' value
+// Function to get the powerFactorL1 registers' value with garbage value injection
 int16_t readPowerFactorL1Value()
 {
-    powerFactorL1Value = 100 + (rand() % 3 - 1);
+    if (isGarbageValuesEnabled())
+    {
+        if (powerFactorL1Counter == 0)
+        {
+            // Select a random garbage value
+            printf("Meter sending garbage value for power factor L1\n");
+            powerFactorL1Value = powerFactorL1GarbageValues[rand() % (sizeof(powerFactorL1GarbageValues) / sizeof(powerFactorL1GarbageValues[0]))];
+            // Reset the counter
+            powerFactorL1Counter = resetCounter();
+        }
+        else
+        {
+            powerFactorL1Value = 100 + (rand() % 3 - 1); // Normal value
+            powerFactorL1Counter--;
+        }
+    }
+    else
+    {
+        powerFactorL1Value = 100 + (rand() % 3 - 1); // Normal value
+    }
     return powerFactorL1Value;
 }
 
@@ -287,10 +481,29 @@ void writePowerFactorL2Value(int16_t value)
     powerFactorL2Value = value;
 }
 
-// Function to get Power Factor L2 register's value
+// Function to get the powerFactorL2 registers' value with garbage value injection
 int16_t readPowerFactorL2Value()
 {
-    powerFactorL2Value = 100 + (rand() % 3 - 1);
+    if (isGarbageValuesEnabled())
+    {
+        if (powerFactorL2Counter == 0)
+        {
+            // Select a random garbage value
+            printf("Meter sending garbage value for power factor L2\n");
+            powerFactorL2Value = powerFactorL2GarbageValues[rand() % (sizeof(powerFactorL2GarbageValues) / sizeof(powerFactorL2GarbageValues[0]))];
+            // Reset the counter
+            powerFactorL2Counter = resetCounter();
+        }
+        else
+        {
+            powerFactorL2Value = 100 + (rand() % 3 - 1); // Normal value
+            powerFactorL2Counter--;
+        }
+    }
+    else
+    {
+        powerFactorL2Value = 100 + (rand() % 3 - 1); // Normal value
+    }
     return powerFactorL2Value;
 }
 
@@ -317,10 +530,29 @@ void writePowerFactorL3Value(int16_t value)
     powerFactorL3Value = value;
 }
 
-// Function to get Power Factor L3 register's value
+// Function to get the powerFactorL3 registers' value with garbage value injection
 int16_t readPowerFactorL3Value()
 {
-    powerFactorL3Value = 100 + (rand() % 3 - 1);
+    if (isGarbageValuesEnabled())
+    {
+        if (powerFactorL3Counter == 0)
+        {
+            // Select a random garbage value
+            printf("Meter sending garbage value for power factor L3\n");
+            powerFactorL3Value = powerFactorL3GarbageValues[rand() % (sizeof(powerFactorL3GarbageValues) / sizeof(powerFactorL3GarbageValues[0]))];
+            // Reset the counter
+            powerFactorL3Counter = resetCounter();
+        }
+        else
+        {
+            powerFactorL3Value = 100 + (rand() % 3 - 1); // Normal value
+            powerFactorL3Counter--;
+        }
+    }
+    else
+    {
+        powerFactorL3Value = 100 + (rand() % 3 - 1); // Normal value
+    }
     return powerFactorL3Value;
 }
 
@@ -347,10 +579,29 @@ void writeBlockEnergyKWhImportValue(uint32_t value)
     blockEnergyKWhImportValue = value;
 }
 
-// Function to get Block Energy (kWh Import) register's value
+// Function to get Block Energy (kWh Import) register's value with garbage value injection
 uint32_t readBlockEnergyKWhImportValue()
 {
-    blockEnergyKWhImportValue = 1000 + (rand() % 3 - 1);
+    if (isGarbageValuesEnabled())
+    {
+        if (blockEnergyKWhImportCounter == 0)
+        {
+            // Select a random garbage value
+            printf("Meter sending garbage value for block energy kWh import\n");
+            blockEnergyKWhImportValue = blockEnergyKWhImportGarbageValues[rand() % (sizeof(blockEnergyKWhImportGarbageValues) / sizeof(blockEnergyKWhImportGarbageValues[0]))];
+            // Reset the counter
+            blockEnergyKWhImportCounter = resetCounter();
+        }
+        else
+        {
+            blockEnergyKWhImportValue = 1000 + (rand() % 3 - 1); // Normal value
+            blockEnergyKWhImportCounter--;
+        }
+    }
+    else
+    {
+        blockEnergyKWhImportValue = 1000 + (rand() % 3 - 1); // Normal value
+    }
     return blockEnergyKWhImportValue;
 }
 
@@ -377,10 +628,29 @@ void writeBlockEnergyKVAhLagValue(uint32_t value)
     blockEnergyKVAhLagValue = value;
 }
 
-// Function to get Block Energy (kVAh Lag) register's value
+// Function to get Block Energy (kVAh Lag) register's value with garbage value injection
 uint32_t readBlockEnergyKVAhLagValue()
 {
-    blockEnergyKVAhLagValue = 1000 + (rand() % 3 - 1);
+    if (isGarbageValuesEnabled())
+    {
+        if (blockEnergyKVAhLagCounter == 0)
+        {
+            // Select a random garbage value
+            printf("Meter sending garbage value for block energy kVAh lag\n");
+            blockEnergyKVAhLagValue = blockEnergyKVAhLagGarbageValues[rand() % (sizeof(blockEnergyKVAhLagGarbageValues) / sizeof(blockEnergyKVAhLagGarbageValues[0]))];
+            // Reset the counter
+            blockEnergyKVAhLagCounter = resetCounter();
+        }
+        else
+        {
+            blockEnergyKVAhLagValue = 1000 + (rand() % 3 - 1); // Normal value
+            blockEnergyKVAhLagCounter--;
+        }
+    }
+    else
+    {
+        blockEnergyKVAhLagValue = 1000 + (rand() % 3 - 1); // Normal value
+    }
     return blockEnergyKVAhLagValue;
 }
 
@@ -407,10 +677,29 @@ void writeBlockEnergyKVAhLeadValue(uint32_t value)
     blockEnergyKVAhLeadValue = value;
 }
 
-// Function to get Block Energy (kVAh Lead) register's value
+// Function to get Block Energy (kVAh Lead) register's value with garbage value injection
 uint32_t readBlockEnergyKVAhLeadValue()
 {
-    blockEnergyKVAhLeadValue = 1000 + (rand() % 3 - 1);
+    if (isGarbageValuesEnabled())
+    {
+        if (blockEnergyKVAhLeadCounter == 0)
+        {
+            // Select a random garbage value
+            printf("Meter sending garbage value for block energy kVAh lead\n");
+            blockEnergyKVAhLeadValue = blockEnergyKVAhLeadGarbageValues[rand() % (sizeof(blockEnergyKVAhLeadGarbageValues) / sizeof(blockEnergyKVAhLeadGarbageValues[0]))];
+            // Reset the counter
+            blockEnergyKVAhLeadCounter = resetCounter();
+        }
+        else
+        {
+            blockEnergyKVAhLeadValue = 1000 + (rand() % 3 - 1); // Normal value
+            blockEnergyKVAhLeadCounter--;
+        }
+    }
+    else
+    {
+        blockEnergyKVAhLeadValue = 1000 + (rand() % 3 - 1); // Normal value
+    }
     return blockEnergyKVAhLeadValue;
 }
 
@@ -437,10 +726,29 @@ void writeBlockEnergyKVAhImportValue(uint32_t value)
     blockEnergyKVAhImportValue = value;
 }
 
-// Function to get Block Energy (kVAh Import) register's value  
+// Function to get Block Energy (kVAh Import) register's value with garbage value injection
 uint32_t readBlockEnergyKVAhImportValue()
 {
-    blockEnergyKVAhImportValue = 1000 + (rand() % 3 - 1);
+    if (isGarbageValuesEnabled())
+    {
+        if (blockEnergyKVAhImportCounter == 0)
+        {
+            // Select a random garbage value
+            printf("Meter sending garbage value for block energy kVAh import\n");
+            blockEnergyKVAhImportValue = blockEnergyKVAhImportGarbageValues[rand() % (sizeof(blockEnergyKVAhImportGarbageValues) / sizeof(blockEnergyKVAhImportGarbageValues[0]))];
+            // Reset the counter
+            blockEnergyKVAhImportCounter = resetCounter();
+        }
+        else
+        {
+            blockEnergyKVAhImportValue = 1000 + (rand() % 3 - 1); // Normal value
+            blockEnergyKVAhImportCounter--;
+        }
+    }
+    else
+    {
+        blockEnergyKVAhImportValue = 1000 + (rand() % 3 - 1); // Normal value
+    }
     return blockEnergyKVAhImportValue;
 }
 
@@ -467,10 +775,29 @@ void writeCumulativeEnergyKWhImportValue(uint32_t value)
     cumulativeEnergyKWhImportValue = value;
 }
 
-// Function to get Cumulative Energy (kWh Import) register's value
+// Function to get Cumulative Energy (kWh Import) register's value with garbage value injection
 uint32_t readCumulativeEnergyKWhImportValue()
 {
-    cumulativeEnergyKWhImportValue = 1000 + (rand() % 3 - 1);
+    if (isGarbageValuesEnabled())
+    {
+        if (cumulativeEnergyKWhImportCounter == 0)
+        {
+            // Select a random garbage value
+            printf("Meter sending garbage value for cumulative energy kWh import\n");
+            cumulativeEnergyKWhImportValue = cumulativeEnergyKWhImportGarbageValues[rand() % (sizeof(cumulativeEnergyKWhImportGarbageValues) / sizeof(cumulativeEnergyKWhImportGarbageValues[0]))];
+            // Reset the counter
+            cumulativeEnergyKWhImportCounter = resetCounter();
+        }
+        else
+        {
+            cumulativeEnergyKWhImportValue = 1000 + (rand() % 3 - 1); // Normal value
+            cumulativeEnergyKWhImportCounter--;
+        }
+    }
+    else
+    {
+        cumulativeEnergyKWhImportValue = 1000 + (rand() % 3 - 1); // Normal value
+    }
     return cumulativeEnergyKWhImportValue;
 }
 
@@ -497,9 +824,50 @@ void writeCumulativeEnergyKVAhImportValue(uint32_t value)
     cumulativeEnergyKVAhImportValue = value;
 }
 
-// Function to get Cumulative Energy (kVAh Import) register's value
+// Function to get Cumulative Energy (kVAh Import) register's value with garbage value injection
 uint32_t readCumulativeEnergyKVAhImportValue()
 {
-    cumulativeEnergyKVAhImportValue = 1000 + (rand() % 3 - 1);
+    if (isGarbageValuesEnabled())
+    {
+        if (cumulativeEnergyKVAhImportCounter == 0)
+        {
+            // Select a random garbage value
+            printf("Meter sending garbage value for cumulative energy kVAh import\n");
+            cumulativeEnergyKVAhImportValue = cumulativeEnergyKVAhImportGarbageValues[rand() % (sizeof(cumulativeEnergyKVAhImportGarbageValues) / sizeof(cumulativeEnergyKVAhImportGarbageValues[0]))];
+            // Reset the counter
+            cumulativeEnergyKVAhImportCounter = resetCounter();
+        }
+        else
+        {
+            cumulativeEnergyKVAhImportValue = 1000 + (rand() % 3 - 1); // Normal value
+            cumulativeEnergyKVAhImportCounter--;
+        }
+    }
+    else
+    {
+        cumulativeEnergyKVAhImportValue = 1000 + (rand() % 3 - 1); // Normal value
+    }
     return cumulativeEnergyKVAhImportValue;
+}
+
+// Initialize counters
+void initializeCounters()
+{
+    srand(time(NULL));
+    voltageL1Counter = resetCounter();
+    voltageL2Counter = resetCounter();
+    voltageL3Counter = resetCounter();
+    currentL1Counter = resetCounter();
+    currentL2Counter = resetCounter();
+    currentL3Counter = resetCounter();
+    frequencyCounter = resetCounter();
+    powerFactorL1Counter = resetCounter();
+    powerFactorL2Counter = resetCounter();
+    powerFactorL3Counter = resetCounter();
+    blockEnergyKWhImportCounter = resetCounter();
+    blockEnergyKVAhLagCounter = resetCounter();
+    blockEnergyKVAhLeadCounter = resetCounter();
+    blockEnergyKVAhImportCounter = resetCounter();
+    cumulativeEnergyKWhImportCounter = resetCounter();
+    cumulativeEnergyKVAhImportCounter = resetCounter();
 }
