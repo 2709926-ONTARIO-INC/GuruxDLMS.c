@@ -14,6 +14,7 @@
 //
 //---------------------------------------------------------------------------
 #include <stdio.h>
+#include <stdbool.h>
 
 #if defined(_WIN32) || defined(_WIN64)//Windows includes
 #if _MSC_VER > 1400
@@ -165,6 +166,8 @@ gxSerializerIgnore NON_SERIALIZED_OBJECTS[] = {
 static uint32_t executeTime = 0;
 
 static uint16_t activePowerL1Value = 0;
+
+static bool enableGarbageValues = false;
 
 typedef enum
 {
@@ -3137,12 +3140,20 @@ char _getch()
 }
 #endif
 
+// Getter function for the enableGarbageValues flag.
+bool isGarbageValuesEnabled()
+{
+    return enableGarbageValues;
+}
+
 void showHelp()
 {
     printf("Gurux DLMS example Server implements four DLMS/COSEM devices.\n");
-    printf(" -t\t [Error, Warning, Info, Verbose] Trace messages.\n");
-    printf(" -p\t Start port number. Default is 4060.\n");
-    printf(" -S\t serial port.\n");
+    printf(" -t <trace>\t\t [Error, Warning, Info, Verbose] Trace messages.\n");
+    printf(" -p <port>\t\t Start port number. Default is 4061.\n");
+    printf(" -S <serialPort>\t serial port.\n");
+    printf(" -h, -help\t\t Show this help.\n");
+    printf(" -g\t\t\t Enable meter to send garbage values at random counts.\n");
 }
 
 void println(char* desc, unsigned char* data, uint32_t size)
@@ -3336,7 +3347,7 @@ int main(int argc, char* argv[])
     int ret, ls = 0;
     struct sockaddr_in add = { 0 };
     char* serialPort = NULL;
-    while ((opt = getopt(argc, argv, "t:p:S:")) != -1)
+    while ((opt = getopt(argc, argv, "t:p:S:hg")) != -1)
     {
         switch (opt)
         {
@@ -3364,6 +3375,14 @@ int main(int argc, char* argv[])
             break;
         case 'S':
             serialPort = optarg;
+            break;
+        case 'h':
+            showHelp();
+            return 0;
+        case 'g':
+            enableGarbageValues = true; // Set flag to true when -g is used
+            initializeCounters();
+            printf("The meter is set to send garbage values at random counts.\n");
             break;
         case '?':
         {
