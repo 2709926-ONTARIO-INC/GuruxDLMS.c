@@ -15,8 +15,9 @@
 extern bool isGarbageValuesEnabled();
 
 // Constants for garbage value counters
-#define MIN_GARBAGE_COUNT 4
-#define MAX_GARBAGE_COUNT 7
+#define MIN_GARBAGE_COUNT   4
+#define MAX_GARBAGE_COUNT   7
+#define SIZE                50
 
 // Garbage value arrays for each variable
 uint16_t voltageL1GarbageValues[] = {500, 999, 1100};
@@ -53,17 +54,39 @@ static uint32_t blockEnergyKWhImportValue = 0, blockEnergyKVAhLagValue = 0, bloc
 static uint32_t cumulativeEnergyKWhImportValue = 0, cumulativeEnergyKVAhImportValue = 0;
 
 // Garbage counters for each variable
-int voltageL1Counter = 0, voltageL2Counter = 0, voltageL3Counter = 0;
-int currentL1Counter = 0, currentL2Counter = 0, currentL3Counter = 0;
-int frequencyCounter = 0;
-int powerFactorL1Counter = 0, powerFactorL2Counter = 0, powerFactorL3Counter = 0;
-int blockEnergyKWhImportCounter = 0, blockEnergyKVAhLagCounter = 0, blockEnergyKVAhLeadCounter = 0, blockEnergyKVAhImportCounter = 0;
-int cumulativeEnergyKWhImportCounter = 0, cumulativeEnergyKVAhImportCounter = 0;
+static int voltageL1Counter = 0, voltageL2Counter = 0, voltageL3Counter = 0;
+static int currentL1Counter = 0, currentL2Counter = 0, currentL3Counter = 0;
+static int frequencyCounter = 0;
+static int powerFactorL1Counter = 0, powerFactorL2Counter = 0, powerFactorL3Counter = 0;
+static int blockEnergyKWhImportCounter = 0, blockEnergyKVAhLagCounter = 0, blockEnergyKVAhLeadCounter = 0, blockEnergyKVAhImportCounter = 0;
+static int cumulativeEnergyKWhImportCounter = 0, cumulativeEnergyKVAhImportCounter = 0;
+
+static char* current_timestamp = NULL;
 
 // Helper to reset a counter
 int resetCounter()
 {
     return MIN_GARBAGE_COUNT + rand() % (MAX_GARBAGE_COUNT - MIN_GARBAGE_COUNT + 1);
+}
+
+// Function to get the current formatted timestamp
+char* getFormattedTimestamp()
+{
+    static char formattedTime[SIZE + 20]; // Allocate enough space for prepending "Timestamp (GMT): "
+    time_t t;
+    struct tm *tmp;
+    char MY_TIME[SIZE];
+
+    // Get the current time
+    time(&t);
+    // Convert to local time
+    tmp = localtime(&t);
+    // Format the date and time
+    strftime(MY_TIME, sizeof(MY_TIME), "%x - %I:%M%p", tmp);
+    // Prepend "Timestamp (GMT): " to the formatted time
+    snprintf(formattedTime, sizeof(formattedTime), "Timestamp (GMT): %s", MY_TIME);
+
+    return formattedTime;
 }
 
 // Function to add the voltageL1 register to the DLMS server
@@ -99,8 +122,9 @@ uint16_t readVoltageL1Value()
         if (voltageL1Counter == 0)
         {
             // Select a random garbage value
-            printf("Meter sending garbage value for voltage L1.\n");
             voltageL1Value = voltageL1GarbageValues[rand() % (sizeof(voltageL1GarbageValues) / sizeof(voltageL1GarbageValues[0]))];
+            current_timestamp = getFormattedTimestamp();
+            printf("%s -> Meter sending garbage value %u for voltage L1.\n", current_timestamp, voltageL1Value);
             // Reset the counter
             voltageL1Counter = resetCounter();
         }
@@ -148,8 +172,9 @@ uint16_t readVoltageL2Value()
         if (voltageL2Counter == 0)
         {
             // Select a random garbage value
-            printf("Meter sending garbage value for voltage L2\n");
             voltageL2Value = voltageL2GarbageValues[rand() % (sizeof(voltageL2GarbageValues) / sizeof(voltageL2GarbageValues[0]))];
+            current_timestamp = getFormattedTimestamp();
+            printf("%s -> Meter sending garbage value %u for voltage L2.\n", current_timestamp, voltageL2Value);
             // Reset the counter
             voltageL2Counter = resetCounter();
         }
@@ -197,8 +222,9 @@ uint16_t readVoltageL3Value()
         if (voltageL3Counter == 0)
         {
             // Select a random garbage value
-            printf("Meter sending garbage value for voltage L3\n");
             voltageL3Value = voltageL3GarbageValues[rand() % (sizeof(voltageL3GarbageValues) / sizeof(voltageL3GarbageValues[0]))];
+            current_timestamp = getFormattedTimestamp();
+            printf("%s -> Meter sending garbage value %u for voltage L3.\n", current_timestamp, voltageL3Value);
             // Reset the counter
             voltageL3Counter = resetCounter();
         }
@@ -246,8 +272,9 @@ uint16_t readCurrentL1Value()
         if (currentL1Counter == 0)
         {
             // Select a random garbage value
-            printf("Meter sending garbage value for current L1\n");
             currentL1Value = currentL1GarbageValues[rand() % (sizeof(currentL1GarbageValues) / sizeof(currentL1GarbageValues[0]))];
+            current_timestamp = getFormattedTimestamp();
+            printf("%s -> Meter sending garbage value %u for current L1.\n", current_timestamp, currentL1Value);
             // Reset the counter
             currentL1Counter = resetCounter();
         }
@@ -295,8 +322,9 @@ uint16_t readCurrentL2Value()
         if (currentL2Counter == 0)
         {
             // Select a random garbage value
-            printf("Meter sending garbage value for current L2\n");
             currentL2Value = currentL2GarbageValues[rand() % (sizeof(currentL2GarbageValues) / sizeof(currentL2GarbageValues[0]))];
+            current_timestamp = getFormattedTimestamp();
+            printf("%s -> Meter sending garbage value %u for current L2.\n", current_timestamp, currentL2Value);
             // Reset the counter
             currentL2Counter = resetCounter();
         }
@@ -344,8 +372,9 @@ uint16_t readCurrentL3Value()
         if (currentL3Counter == 0)
         {
             // Select a random garbage value
-            printf("Meter sending garbage value for current L3\n");
             currentL3Value = currentL3GarbageValues[rand() % (sizeof(currentL3GarbageValues) / sizeof(currentL3GarbageValues[0]))];
+            current_timestamp = getFormattedTimestamp();
+            printf("%s -> Meter sending garbage value %u for current L3.\n", current_timestamp, currentL3Value);
             // Reset the counter
             currentL3Counter = resetCounter();
         }
@@ -393,8 +422,9 @@ uint16_t readFrequencyValue()
         if (frequencyCounter == 0)
         {
             // Select a random garbage value
-            printf("Meter sending garbage value for frequency\n");
             frequencyValue = frequencyGarbageValues[rand() % (sizeof(frequencyGarbageValues) / sizeof(frequencyGarbageValues[0]))];
+            current_timestamp = getFormattedTimestamp();
+            printf("%s -> Meter sending garbage value %u for frequency.\n", current_timestamp, frequencyValue);
             // Reset the counter
             frequencyCounter = resetCounter();
         }
@@ -442,8 +472,9 @@ float readPowerFactorL1Value()
         if (powerFactorL1Counter == 0)
         {
             // Select a random garbage value
-            printf("Meter sending garbage value for power factor L1\n");
             powerFactorL1Value = powerFactorL1GarbageValues[rand() % (sizeof(powerFactorL1GarbageValues) / sizeof(powerFactorL1GarbageValues[0]))];
+            current_timestamp = getFormattedTimestamp();
+            printf("%s -> Meter sending garbage value %f for power factor L1.\n", current_timestamp, powerFactorL1Value);
             // Reset the counter
             powerFactorL1Counter = resetCounter();
         }
@@ -491,8 +522,9 @@ float readPowerFactorL2Value()
         if (powerFactorL2Counter == 0)
         {
             // Select a random garbage value
-            printf("Meter sending garbage value for power factor L2\n");
             powerFactorL2Value = powerFactorL2GarbageValues[rand() % (sizeof(powerFactorL2GarbageValues) / sizeof(powerFactorL2GarbageValues[0]))];
+            current_timestamp = getFormattedTimestamp();
+            printf("%s -> Meter sending garbage value %f for power factor L2.\n", current_timestamp, powerFactorL2Value);
             // Reset the counter
             powerFactorL2Counter = resetCounter();
         }
@@ -540,8 +572,9 @@ float readPowerFactorL3Value()
         if (powerFactorL3Counter == 0)
         {
             // Select a random garbage value
-            printf("Meter sending garbage value for power factor L3\n");
             powerFactorL3Value = powerFactorL3GarbageValues[rand() % (sizeof(powerFactorL3GarbageValues) / sizeof(powerFactorL3GarbageValues[0]))];
+            current_timestamp = getFormattedTimestamp();
+            printf("%s -> Meter sending garbage value %f for power factor L3.\n", current_timestamp, powerFactorL3Value);
             // Reset the counter
             powerFactorL3Counter = resetCounter();
         }
@@ -589,8 +622,9 @@ uint32_t readBlockEnergyKWhImportValue()
         if (blockEnergyKWhImportCounter == 0)
         {
             // Select a random garbage value
-            printf("Meter sending garbage value for block energy kWh import\n");
             blockEnergyKWhImportValue = blockEnergyKWhImportGarbageValues[rand() % (sizeof(blockEnergyKWhImportGarbageValues) / sizeof(blockEnergyKWhImportGarbageValues[0]))];
+            current_timestamp = getFormattedTimestamp();
+            printf("%s -> Meter sending garbage value %u for block energy kWh import.\n", current_timestamp, blockEnergyKWhImportValue);
             // Reset the counter
             blockEnergyKWhImportCounter = resetCounter();
         }
@@ -638,8 +672,9 @@ uint32_t readBlockEnergyKVAhLagValue()
         if (blockEnergyKVAhLagCounter == 0)
         {
             // Select a random garbage value
-            printf("Meter sending garbage value for block energy kVAh lag\n");
             blockEnergyKVAhLagValue = blockEnergyKVAhLagGarbageValues[rand() % (sizeof(blockEnergyKVAhLagGarbageValues) / sizeof(blockEnergyKVAhLagGarbageValues[0]))];
+            current_timestamp = getFormattedTimestamp();
+            printf("%s -> Meter sending garbage value %u for block energy block energy kVAh lag.\n", current_timestamp, blockEnergyKVAhLagValue);
             // Reset the counter
             blockEnergyKVAhLagCounter = resetCounter();
         }
@@ -687,8 +722,9 @@ uint32_t readBlockEnergyKVAhLeadValue()
         if (blockEnergyKVAhLeadCounter == 0)
         {
             // Select a random garbage value
-            printf("Meter sending garbage value for block energy kVAh lead\n");
             blockEnergyKVAhLeadValue = blockEnergyKVAhLeadGarbageValues[rand() % (sizeof(blockEnergyKVAhLeadGarbageValues) / sizeof(blockEnergyKVAhLeadGarbageValues[0]))];
+            current_timestamp = getFormattedTimestamp();
+            printf("%s -> Meter sending garbage value %u for block energy block energy kVAh lead.\n", current_timestamp, blockEnergyKVAhLeadValue);
             // Reset the counter
             blockEnergyKVAhLeadCounter = resetCounter();
         }
@@ -736,8 +772,9 @@ uint32_t readBlockEnergyKVAhImportValue()
         if (blockEnergyKVAhImportCounter == 0)
         {
             // Select a random garbage value
-            printf("Meter sending garbage value for block energy kVAh import\n");
             blockEnergyKVAhImportValue = blockEnergyKVAhImportGarbageValues[rand() % (sizeof(blockEnergyKVAhImportGarbageValues) / sizeof(blockEnergyKVAhImportGarbageValues[0]))];
+            current_timestamp = getFormattedTimestamp();
+            printf("%s -> Meter sending garbage value %u for block energy block energy kVAh import.\n", current_timestamp, blockEnergyKVAhImportValue);
             // Reset the counter
             blockEnergyKVAhImportCounter = resetCounter();
         }
@@ -785,8 +822,9 @@ uint32_t readCumulativeEnergyKWhImportValue()
         if (cumulativeEnergyKWhImportCounter == 0)
         {
             // Select a random garbage value
-            printf("Meter sending garbage value for cumulative energy kWh import\n");
             cumulativeEnergyKWhImportValue = cumulativeEnergyKWhImportGarbageValues[rand() % (sizeof(cumulativeEnergyKWhImportGarbageValues) / sizeof(cumulativeEnergyKWhImportGarbageValues[0]))];
+            current_timestamp = getFormattedTimestamp();
+            printf("%s -> Meter sending garbage value %u for cumulative energy kWh import.\n", current_timestamp, cumulativeEnergyKWhImportValue);
             // Reset the counter
             cumulativeEnergyKWhImportCounter = resetCounter();
         }
@@ -834,8 +872,9 @@ uint32_t readCumulativeEnergyKVAhImportValue()
         if (cumulativeEnergyKVAhImportCounter == 0)
         {
             // Select a random garbage value
-            printf("Meter sending garbage value for cumulative energy kVAh import\n");
             cumulativeEnergyKVAhImportValue = cumulativeEnergyKVAhImportGarbageValues[rand() % (sizeof(cumulativeEnergyKVAhImportGarbageValues) / sizeof(cumulativeEnergyKVAhImportGarbageValues[0]))];
+            current_timestamp = getFormattedTimestamp();
+            printf("%s -> Meter sending garbage value %u for cumulative energy kVAh import.\n", current_timestamp, cumulativeEnergyKVAhImportValue);
             // Reset the counter
             cumulativeEnergyKVAhImportCounter = resetCounter();
         }
