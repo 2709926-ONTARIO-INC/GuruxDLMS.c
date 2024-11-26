@@ -78,7 +78,7 @@ int addVoltageL1()
         voltageL1Value = 115;
         GX_UINT16_BYREF(voltageL1.value, voltageL1Value);
         // Set additional properties  
-        voltageL1.scaler = 3;
+        voltageL1.scaler = -3;
         voltageL1.unit = 35;   
     }
     
@@ -176,7 +176,7 @@ int addVoltageL3()
     {
         voltageL3Value = 117;
         GX_UINT16_BYREF(voltageL3.value, voltageL3Value);
-        voltageL3.scaler = 0;
+        voltageL3.scaler = -3;
         voltageL3.unit = 35;
     }
 
@@ -225,7 +225,7 @@ int addCurrentL1()
     {
         currentL1Value = 10;
         GX_UINT16_BYREF(currentL1.value, currentL1Value);
-        currentL1.scaler = 3;
+        currentL1.scaler = -5;
         currentL1.unit = 33;
     }
 
@@ -274,7 +274,7 @@ int addCurrentL2()
     {
         currentL2Value = 10;
         GX_UINT16_BYREF(currentL2.value, currentL2Value);
-        currentL2.scaler = 3;
+        currentL2.scaler = -5;
         currentL2.unit = 33;
     }
 
@@ -323,7 +323,7 @@ int addCurrentL3()
     {
         currentL3Value = 10;
         GX_UINT16_BYREF(currentL3.value, currentL3Value);
-        currentL3.scaler = 3;
+        currentL3.scaler = -5;
         currentL3.unit = 33;
     }
 
@@ -372,7 +372,7 @@ int addFrequency()
     {
         frequencyValue = 50;
         GX_UINT16_BYREF(frequency.value, frequencyValue);
-        frequency.scaler = 3;
+        frequency.scaler = -3;
         frequency.unit = 44;
     }
 
@@ -421,8 +421,8 @@ int addPowerFactorL1()
     {
         powerFactorL1Value = 1;
         GX_FLOAT_BYREF(powerFactorL1.value, powerFactorL1Value);
-        powerFactorL1.scaler = 0;
-        powerFactorL1.unit = 27;  
+        powerFactorL1.scaler = -3;
+        powerFactorL1.unit = 0;  
     }
 
     return ret;
@@ -470,8 +470,8 @@ int addPowerFactorL2()
     {
         powerFactorL2Value = 1; 
         GX_FLOAT_BYREF(powerFactorL2.value, powerFactorL2Value);
-        powerFactorL2.scaler = 0;
-        powerFactorL2.unit = 40;  
+        powerFactorL2.scaler = -3;
+        powerFactorL2.unit = 0;  
     }
 
     return ret;
@@ -519,8 +519,8 @@ int addPowerFactorL3()
     {
         powerFactorL3Value = 1; 
         GX_FLOAT_BYREF(powerFactorL3.value, powerFactorL3Value);
-        powerFactorL3.scaler = 0;
-        powerFactorL3.unit = 40;  
+        powerFactorL3.scaler = -3;
+        powerFactorL3.unit = 0;  
     }
 
     return ret;
@@ -568,8 +568,8 @@ int addBlockEnergyKWhImport()
     {
         blockEnergyKWhImportValue = 1000; 
         GX_UINT32_BYREF(blockEnergyKWhImport.value, blockEnergyKWhImportValue);
-        blockEnergyKWhImport.scaler = 3;
-        blockEnergyKWhImport.unit = 30;  
+        blockEnergyKWhImport.scaler = 2;
+        blockEnergyKWhImport.unit = 32;  
     }
 
     return ret;
@@ -617,8 +617,8 @@ int addBlockEnergyKVAhLag()
     {
         blockEnergyKVAhLagValue = 1000; 
         GX_UINT32_BYREF(blockEnergyKVAhLag.value, blockEnergyKVAhLagValue);
-        blockEnergyKVAhLag.scaler = 3;
-        blockEnergyKVAhLag.unit = 30;  
+        blockEnergyKVAhLag.scaler = 2;
+        blockEnergyKVAhLag.unit = 32;  
     }
 
     return ret;
@@ -666,8 +666,8 @@ int addBlockEnergyKVAhLead()
     {
         blockEnergyKVAhLeadValue = 1000; 
         GX_UINT32_BYREF(blockEnergyKVAhLead.value, blockEnergyKVAhLeadValue);
-        blockEnergyKVAhLead.scaler = 3;
-        blockEnergyKVAhLead.unit = 30;  
+        blockEnergyKVAhLead.scaler = 2;
+        blockEnergyKVAhLead.unit = 32;  
     }
 
     return ret;
@@ -715,8 +715,8 @@ int addBlockEnergyKVAhImport()
     {
         blockEnergyKVAhImportValue = 1000; 
         GX_UINT32_BYREF(blockEnergyKVAhImport.value, blockEnergyKVAhImportValue);
-        blockEnergyKVAhImport.scaler = 3;
-        blockEnergyKVAhImport.unit = 30;  
+        blockEnergyKVAhImport.scaler = 2;
+        blockEnergyKVAhImport.unit = 32;  
     }
 
     return ret;
@@ -764,7 +764,7 @@ int addCumulativeEnergyKWhImport()
     {
         cumulativeEnergyKWhImportValue = 1000; 
         GX_UINT32_BYREF(cumulativeEnergyKWhImport.value, cumulativeEnergyKWhImportValue);
-        cumulativeEnergyKWhImport.scaler = 3;
+        cumulativeEnergyKWhImport.scaler = 2;
         cumulativeEnergyKWhImport.unit = 30;  
     }
 
@@ -807,14 +807,14 @@ uint32_t readCumulativeEnergyKWhImportValue()
 int addCumulativeEnergyKVAhImport()
 {
     int ret;
-    const unsigned char ln[6] = { 1, 0, 2, 8, 0, 255 };  // LN for Cumulative Energy KVAh Import
+    const unsigned char ln[6] = { 1, 0, 9, 8, 0, 255 };  // LN for Cumulative Energy KVAh Import
 
     if ((ret = INIT_OBJECT(cumulativeEnergyKVAhImport, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
     {
         cumulativeEnergyKVAhImportValue = 1000; 
         GX_UINT32_BYREF(cumulativeEnergyKVAhImport.value, cumulativeEnergyKVAhImportValue);
-        cumulativeEnergyKVAhImport.scaler = 3;
-        cumulativeEnergyKVAhImport.unit = 30;  
+        cumulativeEnergyKVAhImport.scaler = 2;
+        cumulativeEnergyKVAhImport.unit = 31;  
     }
 
     return ret;
