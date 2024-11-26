@@ -1,0 +1,76 @@
+{
+    "voltage_limits": {
+        "L1": {
+            "lower_limit": 210,
+            "upper_limit": 230
+        },
+        "L2": {
+            "lower_limit": 215,
+            "upper_limit": 235
+        },
+        "L3": {
+            "lower_limit": 220,
+            "upper_limit": 240
+        }
+    },
+    "current_limits": {
+        "L1": {
+            "lower_limit": 0,
+            "upper_limit": 100
+        },
+        "L2": {
+            "lower_limit": 0,
+            "upper_limit": 100
+        },
+        "L3": {
+            "lower_limit": 0,
+            "upper_limit": 100
+        }
+    },
+    "frequency_limits": {
+            "lower_limit": 49.5,
+            "upper_limit": 50.5
+    },
+    "power_factor_limits": {
+        "L1": {
+            "lower_limit": -1,
+            "upper_limit": 1
+        },
+        "L2": {
+            "lower_limit": -1,
+            "upper_limit": 1
+        },
+        "L3": {
+            "lower_limit": -1,
+            "upper_limit": 1
+        }
+    },
+    "block_energy_limits": {
+        "kWh_import": {
+            "lower_limit": 0,
+            "upper_limit": 10000
+        },
+        "kVAh_lag": {
+            "lower_limit": 0,
+            "upper_limit": 10000
+        },
+        "kVAh_lead": {
+            "lower_limit": 0,
+            "upper_limit": 10000
+        },
+        "kVAh_import": {
+            "lower_limit": 0,
+            "upper_limit": 10000
+        }
+    },
+    "cumulative_energy_limits": {
+        "kWh_import": {
+            "lower_limit": 0,
+            "upper_limit": 100000
+        },
+        "kVAh_import": {
+            "lower_limit": 0,
+            "upper_limit": 100000
+        }
+    }
+}
