@@ -3,6 +3,8 @@
 #include <time.h>
 #include <stdio.h>
 
+#include "../cJSON/include/cJSON.h"
+
 #include "../include/registers.h"
 #include "../../development/include/gxmem.h"
 #include "../../development/include/dlmssettings.h"

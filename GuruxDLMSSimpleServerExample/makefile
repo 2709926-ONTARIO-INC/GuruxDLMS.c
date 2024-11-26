@@ -4,7 +4,7 @@ TARGET   = gurux.dlms.simple.server.bin
 CC       = gcc
 
 # compiling flags here
-CFLAGS   = -std=gnu99 -Wall -I.
+CFLAGS   = -std=gnu99 -Wall -I. -IcJSON/include
 
 LINKER   = gcc -o
 
@@ -16,17 +16,25 @@ LFLAGS   = -L../development/lib
 SRCDIR   = src
 OBJDIR   = obj
 BINDIR   = bin
+CJSONDIR = cJSON
 
-SOURCES  := $(wildcard $(SRCDIR)/*.c)
-INCLUDES := $(wildcard $(SRCDIR)/*.h)
-OBJECTS  := $(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
+SOURCES  := $(wildcard $(SRCDIR)/*.c) $(wildcard $(CJSONDIR)/*.c)
+INCLUDES := $(wildcard $(SRCDIR)/*.h) $(wildcard $(CJSONDIR)/include/*.h)
+OBJECTS  := $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(filter $(SRCDIR)/%, $(SOURCES))) \
+            $(patsubst $(CJSONDIR)/%.c, $(OBJDIR)/%.o, $(filter $(CJSONDIR)/%, $(SOURCES)))
 rm       = rm -f
 
 $(BINDIR)/$(TARGET): $(OBJECTS)
 	@$(LINKER) $@ $(LFLAGS) $(OBJECTS) -lgurux_dlms_c -lpthread -lm
 	@echo "Linking complete!"
 
-$(OBJECTS): $(OBJDIR)/%.o : $(SRCDIR)/%.c
+# Compile rule for src files
+$(OBJDIR)/%.o: $(SRCDIR)/%.c
+	@$(CC) $(CFLAGS) -c $< -o $@
+	@echo "Compiled "$<" successfully!"
+
+# Compile rule for cJSON files
+$(OBJDIR)/%.o: $(CJSONDIR)/%.c
 	@$(CC) $(CFLAGS) -c $< -o $@
 	@echo "Compiled "$<" successfully!"
 
