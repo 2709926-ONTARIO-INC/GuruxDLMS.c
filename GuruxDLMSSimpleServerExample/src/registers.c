@@ -24,9 +24,9 @@ uint16_t currentL1GarbageValues[] = {50, 99, 110};
 uint16_t currentL2GarbageValues[] = {60, 98, 120};
 uint16_t currentL3GarbageValues[] = {55, 100, 130};
 uint16_t frequencyGarbageValues[] = {0, 999, 110};
-int16_t powerFactorL1GarbageValues[] = {-100, 0, 200};
-int16_t powerFactorL2GarbageValues[] = {-90, 0, 210};
-int16_t powerFactorL3GarbageValues[] = {-80, 0, 220};
+float powerFactorL1GarbageValues[] = {-100, 21, 200};
+float powerFactorL2GarbageValues[] = {-90, 21, 210};
+float powerFactorL3GarbageValues[] = {-80, 21, 220};
 uint32_t blockEnergyKWhImportGarbageValues[] = {999999, 1234567, 2147483647};
 uint32_t blockEnergyKVAhLagGarbageValues[] = {999999, 2345678, 1987654321};
 uint32_t blockEnergyKVAhLeadGarbageValues[] = {888888, 3456789, 1098765432};
@@ -46,7 +46,7 @@ gxRegister cumulativeEnergyKWhImport, cumulativeEnergyKVAhImport;
 static uint16_t voltageL1Value = 0, voltageL2Value = 0, voltageL3Value = 0;
 static uint16_t currentL1Value = 0, currentL2Value = 0, currentL3Value = 0;
 static uint16_t frequencyValue = 0;
-static int16_t powerFactorL1Value = 0, powerFactorL2Value = 0, powerFactorL3Value = 0;
+static float powerFactorL1Value = 0.0, powerFactorL2Value = 0.0, powerFactorL3Value = 0.0;
 static uint32_t blockEnergyKWhImportValue = 0, blockEnergyKVAhLagValue = 0, blockEnergyKVAhLeadValue = 0, blockEnergyKVAhImportValue = 0;
 static uint32_t cumulativeEnergyKWhImportValue = 0, cumulativeEnergyKVAhImportValue = 0;
 
@@ -73,7 +73,7 @@ int addVoltageL1()
     // Initialize the voltageL1 register object
     if ((ret = INIT_OBJECT(voltageL1, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
     {
-        voltageL1Value = 230;
+        voltageL1Value = 115;
         GX_UINT16_BYREF(voltageL1.value, voltageL1Value);
         // Set additional properties  
         voltageL1.scaler = 3;
@@ -104,13 +104,13 @@ uint16_t readVoltageL1Value()
         }
         else
         {
-            voltageL1Value = 230 + (rand() % 11 - 5); // Normal value
+            voltageL1Value = 115 + (rand() % 11 - 5); // Normal value
             voltageL1Counter--;
         }
     }
     else
     {
-        voltageL1Value = 230 + (rand() % 11 - 5); // Normal value
+        voltageL1Value = 115 + (rand() % 11 - 5); // Normal value
     }
     return voltageL1Value;
 }
@@ -123,9 +123,9 @@ int addVoltageL2()
 
     if ((ret = INIT_OBJECT(voltageL2, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
     {
-        voltageL2Value = 230;
+        voltageL2Value = 112;
         GX_UINT16_BYREF(voltageL2.value, voltageL2Value);
-        voltageL2.scaler = 3;
+        voltageL2.scaler = -3;
         voltageL2.unit = 35;
     }
 
@@ -153,13 +153,13 @@ uint16_t readVoltageL2Value()
         }
         else
         {
-            voltageL2Value = 230 + (rand() % 11 - 5); // Normal value
+            voltageL2Value = 112 + (rand() % 11 - 5); // Normal value
             voltageL2Counter--;
         }
     }
     else
     {
-        voltageL2Value = 230 + (rand() % 11 - 5); // Normal value
+        voltageL2Value = 112 + (rand() % 11 - 5); // Normal value
     }
     return voltageL2Value;
 }
@@ -172,9 +172,9 @@ int addVoltageL3()
 
     if ((ret = INIT_OBJECT(voltageL3, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
     {
-        voltageL3Value = 230;
+        voltageL3Value = 117;
         GX_UINT16_BYREF(voltageL3.value, voltageL3Value);
-        voltageL3.scaler = 3;
+        voltageL3.scaler = 0;
         voltageL3.unit = 35;
     }
 
@@ -202,13 +202,13 @@ uint16_t readVoltageL3Value()
         }
         else
         {
-            voltageL3Value = 230 + (rand() % 11 - 5); // Normal value
+            voltageL3Value = 117 + (rand() % 11 - 5); // Normal value
             voltageL3Counter--;
         }
     }
     else
     {
-        voltageL3Value = 230 + (rand() % 11 - 5); // Normal value
+        voltageL3Value = 117 + (rand() % 11 - 5); // Normal value
     }
     return voltageL3Value;
 }
@@ -417,9 +417,9 @@ int addPowerFactorL1()
 
     if ((ret = INIT_OBJECT(powerFactorL1, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
     {
-        powerFactorL1Value = 100;
-        GX_INT16_BYREF(powerFactorL1.value, powerFactorL1Value);
-        powerFactorL1.scaler = 3;
+        powerFactorL1Value = 1;
+        GX_FLOAT_BYREF(powerFactorL1.value, powerFactorL1Value);
+        powerFactorL1.scaler = 0;
         powerFactorL1.unit = 27;  
     }
 
@@ -433,7 +433,7 @@ void writePowerFactorL1Value(int16_t value)
 }
 
 // Function to get the powerFactorL1 registers' value with garbage value injection
-int16_t readPowerFactorL1Value()
+float readPowerFactorL1Value()
 {
     if (isGarbageValuesEnabled())
     {
@@ -447,13 +447,13 @@ int16_t readPowerFactorL1Value()
         }
         else
         {
-            powerFactorL1Value = 100 + (rand() % 3 - 1); // Normal value
+            powerFactorL1Value = 0.8f + ((float)rand() / RAND_MAX) * 0.19f; // Normal value
             powerFactorL1Counter--;
         }
     }
     else
     {
-        powerFactorL1Value = 100 + (rand() % 3 - 1); // Normal value
+        powerFactorL1Value = 0.8f + ((float)rand() / RAND_MAX) * 0.19f; // Normal value
     }
     return powerFactorL1Value;
 }
@@ -466,9 +466,9 @@ int addPowerFactorL2()
 
     if ((ret = INIT_OBJECT(powerFactorL2, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
     {
-        powerFactorL2Value = 100; 
-        GX_INT16_BYREF(powerFactorL2.value, powerFactorL2Value);
-        powerFactorL2.scaler = 3;
+        powerFactorL2Value = 1; 
+        GX_FLOAT_BYREF(powerFactorL2.value, powerFactorL2Value);
+        powerFactorL2.scaler = 0;
         powerFactorL2.unit = 40;  
     }
 
@@ -482,7 +482,7 @@ void writePowerFactorL2Value(int16_t value)
 }
 
 // Function to get the powerFactorL2 registers' value with garbage value injection
-int16_t readPowerFactorL2Value()
+float readPowerFactorL2Value()
 {
     if (isGarbageValuesEnabled())
     {
@@ -496,13 +496,13 @@ int16_t readPowerFactorL2Value()
         }
         else
         {
-            powerFactorL2Value = 100 + (rand() % 3 - 1); // Normal value
+            powerFactorL2Value = 0.8f + ((float)rand() / RAND_MAX) * 0.19f; // Normal value
             powerFactorL2Counter--;
         }
     }
     else
     {
-        powerFactorL2Value = 100 + (rand() % 3 - 1); // Normal value
+        powerFactorL2Value = 0.8f + ((float)rand() / RAND_MAX) * 0.19f; // Normal value
     }
     return powerFactorL2Value;
 }
@@ -515,9 +515,9 @@ int addPowerFactorL3()
 
     if ((ret = INIT_OBJECT(powerFactorL3, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
     {
-        powerFactorL3Value = 100; 
-        GX_INT16_BYREF(powerFactorL3.value, powerFactorL3Value);
-        powerFactorL3.scaler = 3;
+        powerFactorL3Value = 1; 
+        GX_FLOAT_BYREF(powerFactorL3.value, powerFactorL3Value);
+        powerFactorL3.scaler = 0;
         powerFactorL3.unit = 40;  
     }
 
@@ -531,7 +531,7 @@ void writePowerFactorL3Value(int16_t value)
 }
 
 // Function to get the powerFactorL3 registers' value with garbage value injection
-int16_t readPowerFactorL3Value()
+float readPowerFactorL3Value()
 {
     if (isGarbageValuesEnabled())
     {
@@ -545,13 +545,13 @@ int16_t readPowerFactorL3Value()
         }
         else
         {
-            powerFactorL3Value = 100 + (rand() % 3 - 1); // Normal value
+            powerFactorL3Value = 0.8f + ((float)rand() / RAND_MAX) * 0.19f; // Normal value
             powerFactorL3Counter--;
         }
     }
     else
     {
-        powerFactorL3Value = 100 + (rand() % 3 - 1); // Normal value
+        powerFactorL3Value = 0.8f + ((float)rand() / RAND_MAX) * 0.19f; // Normal value
     }
     return powerFactorL3Value;
 }
