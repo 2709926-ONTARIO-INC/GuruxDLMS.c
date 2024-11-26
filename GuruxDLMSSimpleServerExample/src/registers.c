@@ -873,3 +873,66 @@ void initializeCounters()
     cumulativeEnergyKWhImportCounter = resetCounter();
     cumulativeEnergyKVAhImportCounter = resetCounter();
 }
+
+// Initialize limits
+bool initializeLimits(const char* filePath)
+{
+    // Open the file for reading
+    FILE* file = fopen(filePath, "r");
+    if (file == NULL)
+    {
+        printf("Failed to open configuration file: %s\n", filePath);
+        perror("Error");
+        return false;
+    }
+
+    // Determine file size
+    fseek(file, 0, SEEK_END);
+    long fileSize = ftell(file);
+    rewind(file);
+
+    // Allocate memory for the file contents
+    char* buffer = (char*)malloc(fileSize + 1);
+    if (buffer == NULL)
+    {
+        printf("Failed to allocate memory for configuration file.\n");
+        fclose(file);
+        return false;
+    }
+
+    // Read the file into the buffer
+    fread(buffer, 1, fileSize, file);
+    buffer[fileSize] = '\0'; // Null-terminate the string
+    fclose(file);
+
+    // Parse the JSON contents
+    cJSON* json = cJSON_Parse(buffer);
+    free(buffer); // Free the buffer as it's no longer needed
+
+    if (json == NULL)
+    {
+        printf("Failed to parse JSON from the configuration file.\n");
+        const char* errorPtr = cJSON_GetErrorPtr();
+        if (errorPtr != NULL)
+        {
+            printf("Error before: %s\n", errorPtr);
+        }
+        return false;
+    }
+
+    // Print the JSON in a pretty format
+    char* jsonString = cJSON_Print(json);
+    if (jsonString == NULL)
+    {
+        printf("Failed to print JSON content.\n");
+    }
+    else
+    {
+        printf("Contents of the configuration file:\n%s\n", jsonString);
+        free(jsonString); // Free the printed JSON string
+    }
+
+    // Cleanup the JSON object
+    cJSON_Delete(json);
+    return true;
+}

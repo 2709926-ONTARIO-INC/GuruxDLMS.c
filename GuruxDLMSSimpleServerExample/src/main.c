@@ -3152,8 +3152,9 @@ void showHelp()
     printf(" -t <trace>\t\t [Error, Warning, Info, Verbose] Trace messages.\n");
     printf(" -p <port>\t\t Start port number. Default is 4061.\n");
     printf(" -S <serialPort>\t serial port.\n");
-    printf(" -h, -help\t\t Show this help.\n");
+    printf(" -c <json file>\t\t Provide a configuration file with register limits.\n");
     printf(" -g\t\t\t Enable meter to send garbage values at random counts.\n");
+    printf(" -h, -help\t\t Show this help.\n");
 }
 
 void println(char* desc, unsigned char* data, uint32_t size)
@@ -3347,7 +3348,7 @@ int main(int argc, char* argv[])
     int ret, ls = 0;
     struct sockaddr_in add = { 0 };
     char* serialPort = NULL;
-    while ((opt = getopt(argc, argv, "t:p:S:hg")) != -1)
+    while ((opt = getopt(argc, argv, "t:p:S:c:hg")) != -1)
     {
         switch (opt)
         {
@@ -3383,6 +3384,17 @@ int main(int argc, char* argv[])
             enableGarbageValues = true; // Set flag to true when -g is used
             initializeCounters();
             printf("The meter is set to send garbage values at random counts.\n");
+            break;
+        case 'c':
+            if (initializeLimits(optarg))
+            {
+                printf("Successfully set the meter registers limits from the configuration file.\n");
+            }
+            else
+            {
+                printf("Failed to set the meter registers limits from the configuration file.\n");
+                return 1;
+            }
             break;
         case '?':
         {
