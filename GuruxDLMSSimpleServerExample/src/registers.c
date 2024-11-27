@@ -20,22 +20,22 @@ extern bool isGarbageValuesEnabled();
 #define SIZE                50
 
 // Garbage value arrays for each variable
-uint16_t voltageL1GarbageValues[] = {500, 999, 1100};
-uint16_t voltageL2GarbageValues[] = {600, 888, 1200};
-uint16_t voltageL3GarbageValues[] = {550, 1000, 1300};
-uint16_t currentL1GarbageValues[] = {50, 99, 110};
-uint16_t currentL2GarbageValues[] = {60, 98, 120};
-uint16_t currentL3GarbageValues[] = {55, 100, 130};
-uint16_t frequencyGarbageValues[] = {0, 999, 110};
-float powerFactorL1GarbageValues[] = {-100, 21, 200};
-float powerFactorL2GarbageValues[] = {-90, 21, 210};
-float powerFactorL3GarbageValues[] = {-80, 21, 220};
-uint32_t blockEnergyKWhImportGarbageValues[] = {999999, 1234567, 2147483647};
-uint32_t blockEnergyKVAhLagGarbageValues[] = {999999, 2345678, 1987654321};
-uint32_t blockEnergyKVAhLeadGarbageValues[] = {888888, 3456789, 1098765432};
-uint32_t blockEnergyKVAhImportGarbageValues[] = {777777, 4567890, 987654321};
-uint32_t cumulativeEnergyKWhImportGarbageValues[] = {9999999, 9876543, 7654321};
-uint32_t cumulativeEnergyKVAhImportGarbageValues[] = {8888888, 8765432, 6543210};
+uint16_t voltageL1GarbageValues[] = {500000, 999000, 1100000};
+uint16_t voltageL2GarbageValues[] = {600000, 888000, 1200000};
+uint16_t voltageL3GarbageValues[] = {550000, 100000, 1300000};
+uint16_t currentL1GarbageValues[] = {500000, 990000, 1100000};
+uint16_t currentL2GarbageValues[] = {600000, 980000, 1200000};
+uint16_t currentL3GarbageValues[] = {550000, 100000, 1300000};
+uint16_t frequencyGarbageValues[] = {555000, 999000, 1100000};
+float powerFactorL1GarbageValues[] = {800000.0, 210000.0, 200000.0};
+float powerFactorL2GarbageValues[] = {900000.0, 210000.0, 210000.0};
+float powerFactorL3GarbageValues[] = {800000.0, 210000.0, 220000.0};
+uint32_t blockEnergyKWhImportGarbageValues[] = {99999, 12345, 214745};
+uint32_t blockEnergyKVAhLagGarbageValues[] = {99995, 23455, 198765};
+uint32_t blockEnergyKVAhLeadGarbageValues[] = {88885, 34565, 109875};
+uint32_t blockEnergyKVAhImportGarbageValues[] = {77775, 45675, 987655};
+uint32_t cumulativeEnergyKWhImportGarbageValues[] = {99995, 98765, 765435};
+uint32_t cumulativeEnergyKVAhImportGarbageValues[] = {88885, 87655, 6543265};
 
 // Define the KIGG register objects globally.
 gxRegister voltageL1, voltageL2, voltageL3;
@@ -52,6 +52,29 @@ static uint16_t frequencyValue = 0;
 static float powerFactorL1Value = 0.0, powerFactorL2Value = 0.0, powerFactorL3Value = 0.0;
 static uint32_t blockEnergyKWhImportValue = 0, blockEnergyKVAhLagValue = 0, blockEnergyKVAhLeadValue = 0, blockEnergyKVAhImportValue = 0;
 static uint32_t cumulativeEnergyKWhImportValue = 0, cumulativeEnergyKVAhImportValue = 0;
+
+// Define variables for upper and lower limits
+static uint16_t voltageL1ValueMin = 50000, voltageL1ValueMax = 60000;
+static uint16_t voltageL2ValueMin = 50000, voltageL2ValueMax = 60000;
+static uint16_t voltageL3ValueMin = 50000, voltageL3ValueMax = 60000;
+
+static uint16_t currentL1ValueMin = 1, currentL1ValueMax = 10000;
+static uint16_t currentL2ValueMin = 1, currentL2ValueMax = 10000;
+static uint16_t currentL3ValueMin = 1, currentL3ValueMax = 10000;
+
+static uint16_t frequencyValueMin = 45000, frequencyValueMax = 55000;
+
+static float powerFactorL1ValueMin = 800.0, powerFactorL1ValueMax = 1000.0;
+static float powerFactorL2ValueMin = 800.0, powerFactorL2ValueMax = 1000.0;
+static float powerFactorL3ValueMin = 800.0, powerFactorL3ValueMax = 1000.0;
+
+static uint32_t blockEnergyKWhImportValueMin = 100, blockEnergyKWhImportValueMax = 1000;
+static uint32_t blockEnergyKVAhLagValueMin = 100, blockEnergyKVAhLagValueMax = 1000;
+static uint32_t blockEnergyKVAhLeadValueMin = 100, blockEnergyKVAhLeadValueMax = 1000;
+static uint32_t blockEnergyKVAhImportValueMin = 100, blockEnergyKVAhImportValueMax = 1000;
+
+static uint32_t cumulativeEnergyKWhImportValueMin = 450, cumulativeEnergyKWhImportValueMax = 500;
+static uint32_t cumulativeEnergyKVAhImportValueMin = 500, cumulativeEnergyKVAhImportValueMax = 600;
 
 // Garbage counters for each variable
 static int voltageL1Counter = 0, voltageL2Counter = 0, voltageL3Counter = 0;
@@ -130,13 +153,13 @@ uint16_t readVoltageL1Value()
         }
         else
         {
-            voltageL1Value = 115 + (rand() % 11 - 5); // Normal value
+            voltageL1Value = voltageL1ValueMin + rand() % (voltageL1ValueMax - voltageL1ValueMin + 1); // Normal value
             voltageL1Counter--;
         }
     }
     else
     {
-        voltageL1Value = 115 + (rand() % 11 - 5); // Normal value
+        voltageL1Value = voltageL1ValueMin + rand() % (voltageL1ValueMax - voltageL1ValueMin + 1); // Normal value
     }
     return voltageL1Value;
 }
@@ -180,13 +203,13 @@ uint16_t readVoltageL2Value()
         }
         else
         {
-            voltageL2Value = 112 + (rand() % 11 - 5); // Normal value
+            voltageL2Value = voltageL2ValueMin + rand() % (voltageL2ValueMax - voltageL2ValueMin + 1); // Normal value
             voltageL2Counter--;
         }
     }
     else
     {
-        voltageL2Value = 112 + (rand() % 11 - 5); // Normal value
+        voltageL2Value = voltageL2ValueMin + rand() % (voltageL2ValueMax - voltageL2ValueMin + 1); // Normal value
     }
     return voltageL2Value;
 }
@@ -230,13 +253,13 @@ uint16_t readVoltageL3Value()
         }
         else
         {
-            voltageL3Value = 117 + (rand() % 11 - 5); // Normal value
+            voltageL3Value = voltageL3ValueMin + rand() % (voltageL3ValueMax - voltageL3ValueMin + 1); // Normal value
             voltageL3Counter--;
         }
     }
     else
     {
-        voltageL3Value = 117 + (rand() % 11 - 5); // Normal value
+        voltageL3Value = voltageL3ValueMin + rand() % (voltageL3ValueMax - voltageL3ValueMin + 1); // Normal value
     }
     return voltageL3Value;
 }
@@ -280,13 +303,13 @@ uint16_t readCurrentL1Value()
         }
         else
         {
-            currentL1Value = 10 + (rand() % 3 - 1); // Normal value
+            currentL1Value = currentL1ValueMin + rand() % (currentL1ValueMax - currentL1ValueMin + 1); // Normal value
             currentL1Counter--;
         }
     }
     else
     {
-        currentL1Value = 10 + (rand() % 3 - 1); // Normal value
+        currentL1Value = currentL1ValueMin + rand() % (currentL1ValueMax - currentL1ValueMin + 1); // Normal value
     }
     return currentL1Value;
 }
@@ -330,13 +353,13 @@ uint16_t readCurrentL2Value()
         }
         else
         {
-            currentL2Value = 10 + (rand() % 3 - 1); // Normal value
+            currentL2Value = currentL2ValueMin + rand() % (currentL2ValueMax - currentL2ValueMin + 1); // Normal value
             currentL2Counter--;
         }
     }
     else
     {
-        currentL2Value = 10 + (rand() % 3 - 1); // Normal value
+        currentL2Value = currentL2ValueMin + rand() % (currentL2ValueMax - currentL2ValueMin + 1); // Normal value
     }
     return currentL2Value;
 }
@@ -380,13 +403,13 @@ uint16_t readCurrentL3Value()
         }
         else
         {
-            currentL3Value = 10 + (rand() % 3 - 1); // Normal value
+            currentL3Value = currentL3ValueMin + rand() % (currentL3ValueMax - currentL3ValueMin + 1); // Normal value
             currentL3Counter--;
         }
     }
     else
     {
-        currentL3Value = 10 + (rand() % 3 - 1); // Normal value
+        currentL3Value = currentL3ValueMin + rand() % (currentL3ValueMax - currentL3ValueMin + 1); // Normal value
     }
     return currentL3Value;
 }
@@ -430,13 +453,13 @@ uint16_t readFrequencyValue()
         }
         else
         {
-            frequencyValue = 50 + (rand() % 3 - 1); // Normal value
+            frequencyValue = frequencyValueMin + rand() % (frequencyValueMax - frequencyValueMin + 1); // Normal value
             frequencyCounter--;
         }
     }
     else
     {
-        frequencyValue = 50 + (rand() % 3 - 1); // Normal value
+        frequencyValue = frequencyValueMin + rand() % (frequencyValueMax - frequencyValueMin + 1); // Normal value
     }
     return frequencyValue;
 }
@@ -480,13 +503,13 @@ float readPowerFactorL1Value()
         }
         else
         {
-            powerFactorL1Value = 0.8f + ((float)rand() / RAND_MAX) * 0.19f; // Normal value
+            powerFactorL1Value = powerFactorL1ValueMin + ((float)rand() / RAND_MAX) * (powerFactorL1ValueMax - powerFactorL1ValueMin); // Normal value
             powerFactorL1Counter--;
         }
     }
     else
     {
-        powerFactorL1Value = 0.8f + ((float)rand() / RAND_MAX) * 0.19f; // Normal value
+        powerFactorL1Value = powerFactorL1ValueMin + ((float)rand() / RAND_MAX) * (powerFactorL1ValueMax - powerFactorL1ValueMin); // Normal value // Normal value
     }
     return powerFactorL1Value;
 }
@@ -530,13 +553,13 @@ float readPowerFactorL2Value()
         }
         else
         {
-            powerFactorL2Value = 0.8f + ((float)rand() / RAND_MAX) * 0.19f; // Normal value
+            powerFactorL2Value = powerFactorL2ValueMin + ((float)rand() / RAND_MAX) * (powerFactorL2ValueMax - powerFactorL2ValueMin); // Normal value
             powerFactorL2Counter--;
         }
     }
     else
     {
-        powerFactorL2Value = 0.8f + ((float)rand() / RAND_MAX) * 0.19f; // Normal value
+        powerFactorL2Value = powerFactorL2ValueMin + ((float)rand() / RAND_MAX) * (powerFactorL2ValueMax - powerFactorL2ValueMin); // Normal value
     }
     return powerFactorL2Value;
 }
@@ -580,13 +603,13 @@ float readPowerFactorL3Value()
         }
         else
         {
-            powerFactorL3Value = 0.8f + ((float)rand() / RAND_MAX) * 0.19f; // Normal value
+            powerFactorL3Value = powerFactorL3ValueMin + ((float)rand() / RAND_MAX) * (powerFactorL3ValueMax - powerFactorL3ValueMin); // Normal value
             powerFactorL3Counter--;
         }
     }
     else
     {
-        powerFactorL3Value = 0.8f + ((float)rand() / RAND_MAX) * 0.19f; // Normal value
+        powerFactorL3Value = powerFactorL3ValueMin + ((float)rand() / RAND_MAX) * (powerFactorL3ValueMax - powerFactorL3ValueMin); // Normal value
     }
     return powerFactorL3Value;
 }
@@ -630,13 +653,13 @@ uint32_t readBlockEnergyKWhImportValue()
         }
         else
         {
-            blockEnergyKWhImportValue = 1000 + (rand() % 3 - 1); // Normal value
+            blockEnergyKWhImportValue = blockEnergyKWhImportValueMin + rand() % (blockEnergyKWhImportValueMax - blockEnergyKWhImportValueMin + 1); // Normal value
             blockEnergyKWhImportCounter--;
         }
     }
     else
     {
-        blockEnergyKWhImportValue = 1000 + (rand() % 3 - 1); // Normal value
+        blockEnergyKWhImportValue = blockEnergyKWhImportValueMin + rand() % (blockEnergyKWhImportValueMax - blockEnergyKWhImportValueMin + 1); // Normal value
     }
     return blockEnergyKWhImportValue;
 }
@@ -680,13 +703,13 @@ uint32_t readBlockEnergyKVAhLagValue()
         }
         else
         {
-            blockEnergyKVAhLagValue = 1000 + (rand() % 3 - 1); // Normal value
+            blockEnergyKVAhLagValue = blockEnergyKVAhLagValueMin + rand() % (blockEnergyKVAhLagValueMax - blockEnergyKVAhLagValueMin + 1); // Normal value
             blockEnergyKVAhLagCounter--;
         }
     }
     else
     {
-        blockEnergyKVAhLagValue = 1000 + (rand() % 3 - 1); // Normal value
+        blockEnergyKVAhLagValue = blockEnergyKVAhLagValueMin + rand() % (blockEnergyKVAhLagValueMax - blockEnergyKVAhLagValueMin + 1); // Normal value
     }
     return blockEnergyKVAhLagValue;
 }
@@ -730,13 +753,13 @@ uint32_t readBlockEnergyKVAhLeadValue()
         }
         else
         {
-            blockEnergyKVAhLeadValue = 1000 + (rand() % 3 - 1); // Normal value
+            blockEnergyKVAhLeadValue = blockEnergyKVAhLeadValueMin + rand() % (blockEnergyKVAhLeadValueMax - blockEnergyKVAhLeadValueMin + 1); // Normal value
             blockEnergyKVAhLeadCounter--;
         }
     }
     else
     {
-        blockEnergyKVAhLeadValue = 1000 + (rand() % 3 - 1); // Normal value
+        blockEnergyKVAhLeadValue = blockEnergyKVAhLeadValueMin + rand() % (blockEnergyKVAhLeadValueMax - blockEnergyKVAhLeadValueMin + 1); // Normal value
     }
     return blockEnergyKVAhLeadValue;
 }
@@ -780,13 +803,13 @@ uint32_t readBlockEnergyKVAhImportValue()
         }
         else
         {
-            blockEnergyKVAhImportValue = 1000 + (rand() % 3 - 1); // Normal value
+            blockEnergyKVAhImportValue = blockEnergyKVAhImportValueMin + rand() % (blockEnergyKVAhImportValueMax - blockEnergyKVAhImportValueMin + 1); // Normal value
             blockEnergyKVAhImportCounter--;
         }
     }
     else
     {
-        blockEnergyKVAhImportValue = 1000 + (rand() % 3 - 1); // Normal value
+        blockEnergyKVAhImportValue = blockEnergyKVAhImportValueMin + rand() % (blockEnergyKVAhImportValueMax - blockEnergyKVAhImportValueMin + 1); // Normal value
     }
     return blockEnergyKVAhImportValue;
 }
@@ -830,13 +853,13 @@ uint32_t readCumulativeEnergyKWhImportValue()
         }
         else
         {
-            cumulativeEnergyKWhImportValue = 1000 + (rand() % 3 - 1); // Normal value
+            cumulativeEnergyKWhImportValue = cumulativeEnergyKWhImportValueMin + rand() % (cumulativeEnergyKWhImportValueMax - cumulativeEnergyKWhImportValueMin + 1); // Normal value
             cumulativeEnergyKWhImportCounter--;
         }
     }
     else
     {
-        cumulativeEnergyKWhImportValue = 1000 + (rand() % 3 - 1); // Normal value
+        cumulativeEnergyKWhImportValue = cumulativeEnergyKWhImportValueMin + rand() % (cumulativeEnergyKWhImportValueMax - cumulativeEnergyKWhImportValueMin + 1); // Normal value
     }
     return cumulativeEnergyKWhImportValue;
 }
@@ -880,19 +903,19 @@ uint32_t readCumulativeEnergyKVAhImportValue()
         }
         else
         {
-            cumulativeEnergyKVAhImportValue = 1000 + (rand() % 3 - 1); // Normal value
+            cumulativeEnergyKVAhImportValue = cumulativeEnergyKVAhImportValueMin + rand() % (cumulativeEnergyKVAhImportValueMax - cumulativeEnergyKVAhImportValueMin + 1); // Normal value
             cumulativeEnergyKVAhImportCounter--;
         }
     }
     else
     {
-        cumulativeEnergyKVAhImportValue = 1000 + (rand() % 3 - 1); // Normal value
+        cumulativeEnergyKVAhImportValue = cumulativeEnergyKVAhImportValueMin + rand() % (cumulativeEnergyKVAhImportValueMax - cumulativeEnergyKVAhImportValueMin + 1); // Normal value
     }
     return cumulativeEnergyKVAhImportValue;
 }
 
 // Initialize counters
-void initializeCounters()
+void initializeCounters(void)
 {
     srand(time(NULL));
     voltageL1Counter = resetCounter();
