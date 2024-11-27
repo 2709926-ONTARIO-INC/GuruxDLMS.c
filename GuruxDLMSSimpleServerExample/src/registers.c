@@ -20,13 +20,13 @@ extern bool isGarbageValuesEnabled();
 #define SIZE                50
 
 // Garbage value arrays for each variable
-uint16_t voltageL1GarbageValues[] = {500000, 999000, 1100000};
-uint16_t voltageL2GarbageValues[] = {600000, 888000, 1200000};
-uint16_t voltageL3GarbageValues[] = {550000, 100000, 1300000};
-uint16_t currentL1GarbageValues[] = {500000, 990000, 1100000};
-uint16_t currentL2GarbageValues[] = {600000, 980000, 1200000};
-uint16_t currentL3GarbageValues[] = {550000, 100000, 1300000};
-uint16_t frequencyGarbageValues[] = {555000, 999000, 1100000};
+uint32_t voltageL1GarbageValues[] = {500000, 999000, 1100000};
+uint32_t voltageL2GarbageValues[] = {600000, 888000, 1200000};
+uint32_t voltageL3GarbageValues[] = {550000, 100000, 1300000};
+uint32_t currentL1GarbageValues[] = {500000, 990000, 1100000};
+uint32_t currentL2GarbageValues[] = {600000, 980000, 1200000};
+uint32_t currentL3GarbageValues[] = {550000, 100000, 1300000};
+uint32_t frequencyGarbageValues[] = {555000, 999000, 1100000};
 float powerFactorL1GarbageValues[] = {800000.0, 210000.0, 200000.0};
 float powerFactorL2GarbageValues[] = {900000.0, 210000.0, 210000.0};
 float powerFactorL3GarbageValues[] = {800000.0, 210000.0, 220000.0};
@@ -46,23 +46,23 @@ gxRegister blockEnergyKWhImport, blockEnergyKVAhLag, blockEnergyKVAhLead, blockE
 gxRegister cumulativeEnergyKWhImport, cumulativeEnergyKVAhImport;
 
 // Define variables to store the KIGG registers' values
-static uint16_t voltageL1Value = 0, voltageL2Value = 0, voltageL3Value = 0;
-static uint16_t currentL1Value = 0, currentL2Value = 0, currentL3Value = 0;
-static uint16_t frequencyValue = 0;
+static uint32_t voltageL1Value = 0, voltageL2Value = 0, voltageL3Value = 0;
+static uint32_t currentL1Value = 0, currentL2Value = 0, currentL3Value = 0;
+static uint32_t frequencyValue = 0;
 static float powerFactorL1Value = 0.0, powerFactorL2Value = 0.0, powerFactorL3Value = 0.0;
 static uint32_t blockEnergyKWhImportValue = 0, blockEnergyKVAhLagValue = 0, blockEnergyKVAhLeadValue = 0, blockEnergyKVAhImportValue = 0;
 static uint32_t cumulativeEnergyKWhImportValue = 0, cumulativeEnergyKVAhImportValue = 0;
 
 // Define variables for upper and lower limits
-static uint16_t voltageL1ValueMin = 50000, voltageL1ValueMax = 60000;
-static uint16_t voltageL2ValueMin = 50000, voltageL2ValueMax = 60000;
-static uint16_t voltageL3ValueMin = 50000, voltageL3ValueMax = 60000;
+static uint32_t voltageL1ValueMin = 50000, voltageL1ValueMax = 60000;
+static uint32_t voltageL2ValueMin = 50000, voltageL2ValueMax = 60000;
+static uint32_t voltageL3ValueMin = 50000, voltageL3ValueMax = 60000;
 
-static uint16_t currentL1ValueMin = 1, currentL1ValueMax = 10000;
-static uint16_t currentL2ValueMin = 1, currentL2ValueMax = 10000;
-static uint16_t currentL3ValueMin = 1, currentL3ValueMax = 10000;
+static uint32_t currentL1ValueMin = 1, currentL1ValueMax = 10000;
+static uint32_t currentL2ValueMin = 1, currentL2ValueMax = 10000;
+static uint32_t currentL3ValueMin = 1, currentL3ValueMax = 10000;
 
-static uint16_t frequencyValueMin = 45000, frequencyValueMax = 55000;
+static uint32_t frequencyValueMin = 45000, frequencyValueMax = 55000;
 
 static float powerFactorL1ValueMin = 800.0, powerFactorL1ValueMax = 1000.0;
 static float powerFactorL2ValueMin = 800.0, powerFactorL2ValueMax = 1000.0;
@@ -122,7 +122,7 @@ int addVoltageL1()
     if ((ret = INIT_OBJECT(voltageL1, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
     {
         voltageL1Value = 115;
-        GX_UINT16_BYREF(voltageL1.value, voltageL1Value);
+        GX_UINT32_BYREF(voltageL1.value, voltageL1Value);
         // Set additional properties  
         voltageL1.scaler = -3;
         voltageL1.unit = 35;   
@@ -173,7 +173,7 @@ int addVoltageL2()
     if ((ret = INIT_OBJECT(voltageL2, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
     {
         voltageL2Value = 112;
-        GX_UINT16_BYREF(voltageL2.value, voltageL2Value);
+        GX_UINT32_BYREF(voltageL2.value, voltageL2Value);
         voltageL2.scaler = -3;
         voltageL2.unit = 35;
     }
@@ -223,7 +223,7 @@ int addVoltageL3()
     if ((ret = INIT_OBJECT(voltageL3, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
     {
         voltageL3Value = 117;
-        GX_UINT16_BYREF(voltageL3.value, voltageL3Value);
+        GX_UINT32_BYREF(voltageL3.value, voltageL3Value);
         voltageL3.scaler = -3;
         voltageL3.unit = 35;
     }
@@ -273,7 +273,7 @@ int addCurrentL1()
     if ((ret = INIT_OBJECT(currentL1, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
     {
         currentL1Value = 10;
-        GX_UINT16_BYREF(currentL1.value, currentL1Value);
+        GX_UINT32_BYREF(currentL1.value, currentL1Value);
         currentL1.scaler = -5;
         currentL1.unit = 33;
     }
@@ -323,7 +323,7 @@ int addCurrentL2()
     if ((ret = INIT_OBJECT(currentL2, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
     {
         currentL2Value = 10;
-        GX_UINT16_BYREF(currentL2.value, currentL2Value);
+        GX_UINT32_BYREF(currentL2.value, currentL2Value);
         currentL2.scaler = -5;
         currentL2.unit = 33;
     }
@@ -373,7 +373,7 @@ int addCurrentL3()
     if ((ret = INIT_OBJECT(currentL3, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
     {
         currentL3Value = 10;
-        GX_UINT16_BYREF(currentL3.value, currentL3Value);
+        GX_UINT32_BYREF(currentL3.value, currentL3Value);
         currentL3.scaler = -5;
         currentL3.unit = 33;
     }
@@ -423,7 +423,7 @@ int addFrequency()
     if ((ret = INIT_OBJECT(frequency, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
     {
         frequencyValue = 50;
-        GX_UINT16_BYREF(frequency.value, frequencyValue);
+        GX_UINT32_BYREF(frequency.value, frequencyValue);
         frequency.scaler = -3;
         frequency.unit = 44;
     }
@@ -936,8 +936,8 @@ void initializeCounters(void)
     cumulativeEnergyKVAhImportCounter = resetCounter();
 }
 
-// Initialize limits
-bool initializeLimits(const char* filePath)
+// Set upper and lower limits for all registers' values
+bool setRegisterLimits(const char* filePath)
 {
     // Open the file for reading
     FILE* file = fopen(filePath, "r");
@@ -982,16 +982,67 @@ bool initializeLimits(const char* filePath)
         return false;
     }
 
-    // Print the JSON in a pretty format
-    char* jsonString = cJSON_Print(json);
-    if (jsonString == NULL)
+    // Parse and store limits
+    cJSON* voltageLimits = cJSON_GetObjectItem(json, "voltage_limits");
+    if (voltageLimits)
     {
-        printf("Failed to print JSON content.\n");
+        voltageL1ValueMin = cJSON_GetObjectItem(cJSON_GetObjectItem(voltageLimits, "L1"), "lower_limit")->valueint;
+        voltageL1ValueMax = cJSON_GetObjectItem(cJSON_GetObjectItem(voltageLimits, "L1"), "upper_limit")->valueint;
+        voltageL2ValueMin = cJSON_GetObjectItem(cJSON_GetObjectItem(voltageLimits, "L2"), "lower_limit")->valueint;
+        voltageL2ValueMax = cJSON_GetObjectItem(cJSON_GetObjectItem(voltageLimits, "L2"), "upper_limit")->valueint;
+        voltageL3ValueMin = cJSON_GetObjectItem(cJSON_GetObjectItem(voltageLimits, "L3"), "lower_limit")->valueint;
+        voltageL3ValueMax = cJSON_GetObjectItem(cJSON_GetObjectItem(voltageLimits, "L3"), "upper_limit")->valueint;
     }
-    else
+
+    cJSON* currentLimits = cJSON_GetObjectItem(json, "current_limits");
+    if (currentLimits)
     {
-        printf("Contents of the configuration file:\n%s\n", jsonString);
-        free(jsonString); // Free the printed JSON string
+        currentL1ValueMin = cJSON_GetObjectItem(cJSON_GetObjectItem(currentLimits, "L1"), "lower_limit")->valueint;
+        currentL1ValueMax = cJSON_GetObjectItem(cJSON_GetObjectItem(currentLimits, "L1"), "upper_limit")->valueint;
+        currentL2ValueMin = cJSON_GetObjectItem(cJSON_GetObjectItem(currentLimits, "L2"), "lower_limit")->valueint;
+        currentL2ValueMax = cJSON_GetObjectItem(cJSON_GetObjectItem(currentLimits, "L2"), "upper_limit")->valueint;
+        currentL3ValueMin = cJSON_GetObjectItem(cJSON_GetObjectItem(currentLimits, "L3"), "lower_limit")->valueint;
+        currentL3ValueMax = cJSON_GetObjectItem(cJSON_GetObjectItem(currentLimits, "L3"), "upper_limit")->valueint;
+    }
+
+    cJSON* frequencyLimits = cJSON_GetObjectItem(json, "frequency_limits");
+    if (frequencyLimits)
+    {
+        frequencyValueMin = cJSON_GetObjectItem(frequencyLimits, "lower_limit")->valueint; // Convert to integer
+        frequencyValueMax = cJSON_GetObjectItem(frequencyLimits, "upper_limit")->valueint; // Convert to integer
+    }
+
+    cJSON* powerFactorLimits = cJSON_GetObjectItem(json, "power_factor_limits");
+    if (powerFactorLimits)
+    {
+        powerFactorL1ValueMin = cJSON_GetObjectItem(cJSON_GetObjectItem(powerFactorLimits, "L1"), "lower_limit")->valuedouble;
+        powerFactorL1ValueMax = cJSON_GetObjectItem(cJSON_GetObjectItem(powerFactorLimits, "L1"), "upper_limit")->valuedouble;
+        powerFactorL2ValueMin = cJSON_GetObjectItem(cJSON_GetObjectItem(powerFactorLimits, "L2"), "lower_limit")->valuedouble;
+        powerFactorL2ValueMax = cJSON_GetObjectItem(cJSON_GetObjectItem(powerFactorLimits, "L2"), "upper_limit")->valuedouble;
+        powerFactorL3ValueMin = cJSON_GetObjectItem(cJSON_GetObjectItem(powerFactorLimits, "L3"), "lower_limit")->valuedouble;
+        powerFactorL3ValueMax = cJSON_GetObjectItem(cJSON_GetObjectItem(powerFactorLimits, "L3"), "upper_limit")->valuedouble;
+    }
+
+    cJSON* blockEnergyLimits = cJSON_GetObjectItem(json, "block_energy_limits");
+    if (blockEnergyLimits)
+    {
+        blockEnergyKWhImportValueMin = cJSON_GetObjectItem(cJSON_GetObjectItem(blockEnergyLimits, "kWh_import"), "lower_limit")->valueint;
+        blockEnergyKWhImportValueMax = cJSON_GetObjectItem(cJSON_GetObjectItem(blockEnergyLimits, "kWh_import"), "upper_limit")->valueint;
+        blockEnergyKVAhLagValueMin = cJSON_GetObjectItem(cJSON_GetObjectItem(blockEnergyLimits, "kVAh_lag"), "lower_limit")->valueint;
+        blockEnergyKVAhLagValueMax = cJSON_GetObjectItem(cJSON_GetObjectItem(blockEnergyLimits, "kVAh_lag"), "upper_limit")->valueint;
+        blockEnergyKVAhLeadValueMin = cJSON_GetObjectItem(cJSON_GetObjectItem(blockEnergyLimits, "kVAh_lead"), "lower_limit")->valueint;
+        blockEnergyKVAhLeadValueMax = cJSON_GetObjectItem(cJSON_GetObjectItem(blockEnergyLimits, "kVAh_lead"), "upper_limit")->valueint;
+        blockEnergyKVAhImportValueMin = cJSON_GetObjectItem(cJSON_GetObjectItem(blockEnergyLimits, "kVAh_import"), "lower_limit")->valueint;
+        blockEnergyKVAhImportValueMax = cJSON_GetObjectItem(cJSON_GetObjectItem(blockEnergyLimits, "kVAh_import"), "upper_limit")->valueint;
+    }
+
+    cJSON* cumulativeEnergyLimits = cJSON_GetObjectItem(json, "cumulative_energy_limits");
+    if (cumulativeEnergyLimits)
+    {
+        cumulativeEnergyKWhImportValueMin = cJSON_GetObjectItem(cJSON_GetObjectItem(cumulativeEnergyLimits, "kWh_import"), "lower_limit")->valueint;
+        cumulativeEnergyKWhImportValueMax = cJSON_GetObjectItem(cJSON_GetObjectItem(cumulativeEnergyLimits, "kWh_import"), "upper_limit")->valueint;
+        cumulativeEnergyKVAhImportValueMin = cJSON_GetObjectItem(cJSON_GetObjectItem(cumulativeEnergyLimits, "kVAh_import"), "lower_limit")->valueint;
+        cumulativeEnergyKVAhImportValueMax = cJSON_GetObjectItem(cJSON_GetObjectItem(cumulativeEnergyLimits, "kVAh_import"), "upper_limit")->valueint;
     }
 
     // Cleanup the JSON object
