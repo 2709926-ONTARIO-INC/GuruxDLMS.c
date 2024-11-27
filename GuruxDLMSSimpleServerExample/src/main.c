@@ -3386,13 +3386,13 @@ int main(int argc, char* argv[])
             printf("The meter is set to send garbage values at random counts.\n");
             break;
         case 'c':
-            if (initializeLimits(optarg))
+            if (setRegisterLimits(optarg))
             {
-                printf("Successfully set the meter registers limits from the configuration file.\n");
+                printf("Register limits successfully set from the configuration file.\n");
             }
             else
             {
-                printf("Failed to set the meter registers limits from the configuration file.\n");
+                printf("Failed to set registers limits from the configuration file.\n");
                 return 1;
             }
             break;
