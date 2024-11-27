@@ -57,7 +57,7 @@ void writeBlockEnergyKVAhImportValue(uint32_t value);
 void writeCumulativeEnergyKWhImportValue(uint32_t value);
 void writeCumulativeEnergyKVAhImportValue(uint32_t value);
 
-void initializeCounters();
+void initializeCounters(void);
 bool initializeLimits(const char* filePath);
 
 #endif
