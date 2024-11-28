@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <time.h>
 #include <stdio.h>
+#include <math.h>
 
 #include "../cJSON/include/cJSON.h"
 
@@ -11,6 +12,7 @@
 #include "../../development/include/variant.h"
 #include "../../development/include/cosem.h"
 
+
 // Include the getter for enableGarbageValues
 extern bool isGarbageValuesEnabled();
 
@@ -19,13 +21,14 @@ extern bool isGarbageValuesEnabled();
 #define MAX_GARBAGE_COUNT   7
 #define SIZE                50
 
+
 // Garbage value arrays for each variable
 uint32_t voltageL1GarbageValues[] = {500000, 999000, 1100000};
 uint32_t voltageL2GarbageValues[] = {600000, 888000, 1200000};
-uint32_t voltageL3GarbageValues[] = {550000, 100000, 1300000};
-uint32_t currentL1GarbageValues[] = {500000, 990000, 1100000};
-uint32_t currentL2GarbageValues[] = {600000, 980000, 1200000};
-uint32_t currentL3GarbageValues[] = {550000, 100000, 1300000};
+uint32_t voltageL3GarbageValues[] = {5500000, 6000000, 70000000};
+uint32_t currentL1GarbageValues[] = {5000000, 9900000, 11000000};
+uint32_t currentL2GarbageValues[] = {6000000, 9800000, 12000000};
+uint32_t currentL3GarbageValues[] = {5500000, 1000000, 13000000};
 uint32_t frequencyGarbageValues[] = {555000, 999000, 1100000};
 float powerFactorL1GarbageValues[] = {800000.0, 210000.0, 200000.0};
 float powerFactorL2GarbageValues[] = {900000.0, 210000.0, 210000.0};
@@ -34,8 +37,9 @@ uint32_t blockEnergyKWhImportGarbageValues[] = {99999, 12345, 214745};
 uint32_t blockEnergyKVAhLagGarbageValues[] = {99995, 23455, 198765};
 uint32_t blockEnergyKVAhLeadGarbageValues[] = {88885, 34565, 109875};
 uint32_t blockEnergyKVAhImportGarbageValues[] = {77775, 45675, 987655};
-uint32_t cumulativeEnergyKWhImportGarbageValues[] = {99995, 98765, 765435};
-uint32_t cumulativeEnergyKVAhImportGarbageValues[] = {88885, 87655, 6543265};
+uint32_t cumulativeEnergyKWhImportGarbageValues[] = {90, 98, 76};
+uint32_t cumulativeEnergyKVAhImportGarbageValues[] = {88, 87, 65};
+
 
 // Define the KIGG register objects globally.
 gxRegister voltageL1, voltageL2, voltageL3;
@@ -45,6 +49,7 @@ gxRegister powerFactorL1, powerFactorL2, powerFactorL3;
 gxRegister blockEnergyKWhImport, blockEnergyKVAhLag, blockEnergyKVAhLead, blockEnergyKVAhImport;
 gxRegister cumulativeEnergyKWhImport, cumulativeEnergyKVAhImport;
 
+
 // Define variables to store the KIGG registers' values
 static uint32_t voltageL1Value = 0, voltageL2Value = 0, voltageL3Value = 0;
 static uint32_t currentL1Value = 0, currentL2Value = 0, currentL3Value = 0;
@@ -52,6 +57,7 @@ static uint32_t frequencyValue = 0;
 static float powerFactorL1Value = 0.0, powerFactorL2Value = 0.0, powerFactorL3Value = 0.0;
 static uint32_t blockEnergyKWhImportValue = 0, blockEnergyKVAhLagValue = 0, blockEnergyKVAhLeadValue = 0, blockEnergyKVAhImportValue = 0;
 static uint32_t cumulativeEnergyKWhImportValue = 0, cumulativeEnergyKVAhImportValue = 0;
+
 
 // Define variables for upper and lower limits
 static uint32_t voltageL1ValueMin = 50000, voltageL1ValueMax = 60000;
@@ -76,6 +82,7 @@ static uint32_t blockEnergyKVAhImportValueMin = 100, blockEnergyKVAhImportValueM
 static uint32_t cumulativeEnergyKWhImportValueMin = 450, cumulativeEnergyKWhImportValueMax = 500;
 static uint32_t cumulativeEnergyKVAhImportValueMin = 500, cumulativeEnergyKVAhImportValueMax = 600;
 
+
 // Garbage counters for each variable
 static int voltageL1Counter = 0, voltageL2Counter = 0, voltageL3Counter = 0;
 static int currentL1Counter = 0, currentL2Counter = 0, currentL3Counter = 0;
@@ -84,7 +91,23 @@ static int powerFactorL1Counter = 0, powerFactorL2Counter = 0, powerFactorL3Coun
 static int blockEnergyKWhImportCounter = 0, blockEnergyKVAhLagCounter = 0, blockEnergyKVAhLeadCounter = 0, blockEnergyKVAhImportCounter = 0;
 static int cumulativeEnergyKWhImportCounter = 0, cumulativeEnergyKVAhImportCounter = 0;
 
+
 static char* current_timestamp = NULL;
+
+
+// Variables to keep track of if the cumulative energy values are read once
+static bool isCumulativeEnergyKWhImportReadOnce = false;
+static bool isCumulativeEnergyKVAhImportReadOnce = false;
+
+
+// Variable to track if garbage values were read once 
+static bool isCumulativeEnergyKWhImportGarbageValueSent = false;
+static bool isCumulativeEnergyKVAhImportGarbageValueSent = false;
+
+
+// Variable to store the last cumulative energy values when garbage injection is enabled
+static uint32_t lastCumulativeEnergyKWhImportValue = 0;
+static uint32_t lastCumulativeEnergyKVAhImportValue = 0;
 
 // Helper to reset a counter
 int resetCounter()
@@ -822,7 +845,10 @@ int addCumulativeEnergyKWhImport()
 
     if ((ret = INIT_OBJECT(cumulativeEnergyKWhImport, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
     {
-        cumulativeEnergyKWhImportValue = 1000; 
+        cumulativeEnergyKWhImportValue = (uint32_t)(
+                                        (voltageL1Value * currentL1Value * cos(powerFactorL1Value)) +
+                                        (voltageL2Value * currentL2Value * cos(powerFactorL2Value)) +
+                                        (voltageL3Value * currentL3Value * cos(powerFactorL3Value)));
         GX_UINT32_BYREF(cumulativeEnergyKWhImport.value, cumulativeEnergyKWhImportValue);
         cumulativeEnergyKWhImport.scaler = 2;
         cumulativeEnergyKWhImport.unit = 30;  
@@ -845,21 +871,49 @@ uint32_t readCumulativeEnergyKWhImportValue()
         if (cumulativeEnergyKWhImportCounter == 0)
         {
             // Select a random garbage value
+            lastCumulativeEnergyKWhImportValue = cumulativeEnergyKWhImportValue;
             cumulativeEnergyKWhImportValue = cumulativeEnergyKWhImportGarbageValues[rand() % (sizeof(cumulativeEnergyKWhImportGarbageValues) / sizeof(cumulativeEnergyKWhImportGarbageValues[0]))];
             current_timestamp = getFormattedTimestamp();
             printf("%s -> Meter sending garbage value %u for cumulative energy kWh import.\n", current_timestamp, cumulativeEnergyKWhImportValue);
             // Reset the counter
             cumulativeEnergyKWhImportCounter = resetCounter();
+            isCumulativeEnergyKWhImportGarbageValueSent = true;
+            return cumulativeEnergyKWhImportValue;
         }
         else
         {
-            cumulativeEnergyKWhImportValue = cumulativeEnergyKWhImportValueMin + rand() % (cumulativeEnergyKWhImportValueMax - cumulativeEnergyKWhImportValueMin + 1); // Normal value
+            // Check if garbage value was sent, then restore the previous value
+            if (isCumulativeEnergyKWhImportGarbageValueSent)
+            {
+                isCumulativeEnergyKWhImportGarbageValueSent = false;
+                cumulativeEnergyKWhImportValue = lastCumulativeEnergyKWhImportValue;
+            }
+
+            if (!isCumulativeEnergyKWhImportReadOnce) 
+            {
+                isCumulativeEnergyKWhImportReadOnce = true;
+            }
+            else
+            {
+                // Increment the value randomly by 1, 2, or 3
+                cumulativeEnergyKWhImportValue += (rand() % 3) + 1;
+            }
+            // cumulativeEnergyKWhImportValue = cumulativeEnergyKWhImportValueMin + rand() % (cumulativeEnergyKWhImportValueMax - cumulativeEnergyKWhImportValueMin + 1); // Normal value
             cumulativeEnergyKWhImportCounter--;
         }
     }
     else
     {
-        cumulativeEnergyKWhImportValue = cumulativeEnergyKWhImportValueMin + rand() % (cumulativeEnergyKWhImportValueMax - cumulativeEnergyKWhImportValueMin + 1); // Normal value
+        if (!isCumulativeEnergyKWhImportReadOnce) 
+        {
+            isCumulativeEnergyKWhImportReadOnce = true;
+        }
+        else
+        {
+            // Increment the value randomly by 1, 2, or 3
+            cumulativeEnergyKWhImportValue += (rand() % 3) + 1;
+        }
+        // cumulativeEnergyKWhImportValue = cumulativeEnergyKWhImportValueMin + rand() % (cumulativeEnergyKWhImportValueMax - cumulativeEnergyKWhImportValueMin + 1); // Normal value
     }
     return cumulativeEnergyKWhImportValue;
 }
@@ -872,7 +926,9 @@ int addCumulativeEnergyKVAhImport()
 
     if ((ret = INIT_OBJECT(cumulativeEnergyKVAhImport, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
     {
-        cumulativeEnergyKVAhImportValue = 1000; 
+        cumulativeEnergyKVAhImportValue = (voltageL1Value * currentL1Value) +
+                                          (voltageL2Value * currentL2Value) +
+                                          (voltageL3Value * currentL3Value); 
         GX_UINT32_BYREF(cumulativeEnergyKVAhImport.value, cumulativeEnergyKVAhImportValue);
         cumulativeEnergyKVAhImport.scaler = 2;
         cumulativeEnergyKVAhImport.unit = 31;  
@@ -895,21 +951,49 @@ uint32_t readCumulativeEnergyKVAhImportValue()
         if (cumulativeEnergyKVAhImportCounter == 0)
         {
             // Select a random garbage value
+            lastCumulativeEnergyKVAhImportValue = cumulativeEnergyKVAhImportValue;
             cumulativeEnergyKVAhImportValue = cumulativeEnergyKVAhImportGarbageValues[rand() % (sizeof(cumulativeEnergyKVAhImportGarbageValues) / sizeof(cumulativeEnergyKVAhImportGarbageValues[0]))];
             current_timestamp = getFormattedTimestamp();
             printf("%s -> Meter sending garbage value %u for cumulative energy kVAh import.\n", current_timestamp, cumulativeEnergyKVAhImportValue);
             // Reset the counter
             cumulativeEnergyKVAhImportCounter = resetCounter();
+            isCumulativeEnergyKVAhImportGarbageValueSent = true;
+            return cumulativeEnergyKVAhImportValue;
         }
         else
         {
-            cumulativeEnergyKVAhImportValue = cumulativeEnergyKVAhImportValueMin + rand() % (cumulativeEnergyKVAhImportValueMax - cumulativeEnergyKVAhImportValueMin + 1); // Normal value
+            // Check if garbage value was sent, then restore the previous value
+            if (isCumulativeEnergyKVAhImportGarbageValueSent)
+            {
+                isCumulativeEnergyKVAhImportGarbageValueSent = false;
+                cumulativeEnergyKVAhImportValue = lastCumulativeEnergyKVAhImportValue;
+            }
+
+            if (!isCumulativeEnergyKVAhImportReadOnce) 
+            {
+                isCumulativeEnergyKVAhImportReadOnce = true;
+            }
+            else 
+            {
+                // Increment the value randomly by 1, 2, or 3
+                cumulativeEnergyKVAhImportValue += (rand() % 3) + 1;
+            } 
+            // cumulativeEnergyKVAhImportValue = cumulativeEnergyKVAhImportValueMin + rand() % (cumulativeEnergyKVAhImportValueMax - cumulativeEnergyKVAhImportValueMin + 1); // Normal value
             cumulativeEnergyKVAhImportCounter--;
         }
     }
     else
     {
-        cumulativeEnergyKVAhImportValue = cumulativeEnergyKVAhImportValueMin + rand() % (cumulativeEnergyKVAhImportValueMax - cumulativeEnergyKVAhImportValueMin + 1); // Normal value
+        if (!isCumulativeEnergyKVAhImportReadOnce) 
+        {
+            isCumulativeEnergyKVAhImportReadOnce = true;
+        }
+        else
+        {
+            // Increment the value randomly by 1, 2, or 3
+            cumulativeEnergyKVAhImportValue += (rand() % 3) + 1;
+        }
+        // cumulativeEnergyKVAhImportValue = cumulativeEnergyKVAhImportValueMin + rand() % (cumulativeEnergyKVAhImportValueMax - cumulativeEnergyKVAhImportValueMin + 1); // Normal value
     }
     return cumulativeEnergyKVAhImportValue;
 }
@@ -1036,14 +1120,14 @@ bool setRegisterLimits(const char* filePath)
         blockEnergyKVAhImportValueMax = cJSON_GetObjectItem(cJSON_GetObjectItem(blockEnergyLimits, "kVAh_import"), "upper_limit")->valueint;
     }
 
-    cJSON* cumulativeEnergyLimits = cJSON_GetObjectItem(json, "cumulative_energy_limits");
-    if (cumulativeEnergyLimits)
-    {
-        cumulativeEnergyKWhImportValueMin = cJSON_GetObjectItem(cJSON_GetObjectItem(cumulativeEnergyLimits, "kWh_import"), "lower_limit")->valueint;
-        cumulativeEnergyKWhImportValueMax = cJSON_GetObjectItem(cJSON_GetObjectItem(cumulativeEnergyLimits, "kWh_import"), "upper_limit")->valueint;
-        cumulativeEnergyKVAhImportValueMin = cJSON_GetObjectItem(cJSON_GetObjectItem(cumulativeEnergyLimits, "kVAh_import"), "lower_limit")->valueint;
-        cumulativeEnergyKVAhImportValueMax = cJSON_GetObjectItem(cJSON_GetObjectItem(cumulativeEnergyLimits, "kVAh_import"), "upper_limit")->valueint;
-    }
+    // cJSON* cumulativeEnergyLimits = cJSON_GetObjectItem(json, "cumulative_energy_limits");
+    // if (cumulativeEnergyLimits)
+    // {
+    //     cumulativeEnergyKWhImportValueMin = cJSON_GetObjectItem(cJSON_GetObjectItem(cumulativeEnergyLimits, "kWh_import"), "lower_limit")->valueint;
+    //     cumulativeEnergyKWhImportValueMax = cJSON_GetObjectItem(cJSON_GetObjectItem(cumulativeEnergyLimits, "kWh_import"), "upper_limit")->valueint;
+    //     cumulativeEnergyKVAhImportValueMin = cJSON_GetObjectItem(cJSON_GetObjectItem(cumulativeEnergyLimits, "kVAh_import"), "lower_limit")->valueint;
+    //     cumulativeEnergyKVAhImportValueMax = cJSON_GetObjectItem(cJSON_GetObjectItem(cumulativeEnergyLimits, "kVAh_import"), "upper_limit")->valueint;
+    // }
 
     // Cleanup the JSON object
     cJSON_Delete(json);
