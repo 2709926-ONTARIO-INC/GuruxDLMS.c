@@ -61,6 +61,9 @@ GX_TRACE_LEVEL trace = GX_TRACE_LEVEL_OFF;
 
 const static char* FLAG_ID = "GRX";
 
+//Space for client password.
+static unsigned char PASSWORD[20] = {0};
+static unsigned char password_setting[20];
 //Space for client challenge.
 static unsigned char C2S_CHALLENGE[64];
 //Space for server challenge.
@@ -634,13 +637,15 @@ int addAssociationNone()
 int addAssociationLow()
 {
     int ret;
+    static char SECRET[20];
+    strcpy(SECRET, "Gurux");
     const unsigned char ln[6] = { 0, 0, 40, 0, 2, 255 };
     if ((ret = INIT_OBJECT(associationLow, DLMS_OBJECT_TYPE_ASSOCIATION_LOGICAL_NAME, ln)) == 0)
     {
         //Only Logical Device Name is add to this Association View.
         OA_ATTACH(associationLow.objectList, ALL_OBJECTS);
         associationLow.authenticationMechanismName.mechanismId = DLMS_AUTHENTICATION_LOW;
-        associationLow.clientSAP = 0x11;
+        associationLow.clientSAP = 0x20;
         associationLow.xDLMSContextInfo.maxSendPduSize = associationLow.xDLMSContextInfo.maxReceivePduSize = PDU_BUFFER_SIZE;
         associationLow.xDLMSContextInfo.conformance = (DLMS_CONFORMANCE)(DLMS_CONFORMANCE_BLOCK_TRANSFER_WITH_ACTION |
             DLMS_CONFORMANCE_BLOCK_TRANSFER_WITH_SET_OR_WRITE |
@@ -650,7 +655,7 @@ int addAssociationLow()
             DLMS_CONFORMANCE_ACTION |
             DLMS_CONFORMANCE_MULTIPLE_REFERENCES |
             DLMS_CONFORMANCE_GET);
-        bb_addString(&associationLow.secret, "Gurux");
+        BB_ATTACH_STR(associationLow.secret, SECRET, (uint16_t)strlen(SECRET));
         associationLow.securitySetup = NULL;
     }
     return ret;
@@ -2557,6 +2562,10 @@ DLMS_SOURCE_DIAGNOSTIC svr_validateAuthentication(
     {
         if (bb_compare(password, associationLow.secret.data, associationLow.secret.size) == 0)
         {
+            char* str = bb_toString(password);
+            GXTRACE(("Low level password passed."), str);
+            gxfree(str);
+            GXTRACE_INT("Password length.", associationLow.secret.size);
             GXTRACE(("Invalid low level password."), (const char*)associationLow.secret.data);
             return DLMS_SOURCE_DIAGNOSTIC_AUTHENTICATION_FAILURE;
         }
@@ -3348,7 +3357,7 @@ int main(int argc, char* argv[])
     int ret, ls = 0;
     struct sockaddr_in add = { 0 };
     char* serialPort = NULL;
-    while ((opt = getopt(argc, argv, "t:p:S:c:hg")) != -1)
+    while ((opt = getopt(argc, argv, "t:p:S:c:hgP:")) != -1)
     {
         switch (opt)
         {
@@ -3384,6 +3393,10 @@ int main(int argc, char* argv[])
             enableGarbageValues = true; // Set flag to true when -g is used
             initializeCounters();
             printf("The meter is set to send garbage values at random counts.\n");
+            break;
+        case 'P':
+            strncpy(&PASSWORD[0U], optarg, sizeof(PASSWORD) - 1U);
+            GXTRACE_INT("Password len.", strlen(PASSWORD));
             break;
         case 'c':
             if (setRegisterLimits(optarg))
@@ -3438,6 +3451,8 @@ int main(int argc, char* argv[])
     bb_attach(&reply, replyFrame, 0, sizeof(replyFrame));
     //Start server using logical name referencing and HDLC framing.
     svr_init(&settings, 1, DLMS_INTERFACE_TYPE_HDLC, HDLC_BUFFER_SIZE, PDU_BUFFER_SIZE, frameBuff, HDLC_HEADER_SIZE + HDLC_BUFFER_SIZE, pduBuff, PDU_BUFFER_SIZE);
+    //Allocate space for client password.
+    BB_ATTACH(settings.base.password, PASSWORD, 0);
     //Allocate space for client challenge.
     BB_ATTACH(settings.base.ctoSChallenge, C2S_CHALLENGE, 0);
     //Allocate space for server challenge.
@@ -3495,7 +3510,7 @@ int main(int argc, char* argv[])
     printf("----------------------------------------------------------\n");
     printf("Authentication levels:\n");
     printf("None: Client address 16 (0x10)\n");
-    printf("Low: Client address 17 (0x11)\n");
+    printf("Low: Client address 32 (0x20)\n");
     printf("High: Client address 18 (0x12)\n");
     printf("HighGMac: Client address 1 (1)\n");
     printf("----------------------------------------------------------\n");
