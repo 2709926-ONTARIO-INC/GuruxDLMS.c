@@ -140,12 +140,12 @@ extern gxRegister cumulativeEnergyKWhImport, cumulativeEnergyKVAhImport;
 
 static gxObject* ALL_OBJECTS[] = { BASE(associationNone), BASE(associationLow), BASE(associationHigh), BASE(associationHighGMac), BASE(securitySetupHigh), BASE(securitySetupHighGMac),
                                    BASE(ldn), BASE(sapAssignment), BASE(eventCode),
-                                   BASE(clock1), BASE(activePowerL1), BASE(pushSetup), BASE(scriptTableGlobalMeterReset), BASE(scriptTableDisconnectControl),
+                                   BASE(clock1), BASE(activePowerL1), BASE(voltageL1), BASE(pushSetup), BASE(scriptTableGlobalMeterReset), BASE(scriptTableDisconnectControl),
                                    BASE(scriptTableActivateTestMode), BASE(scriptTableActivateNormalMode), BASE(loadProfile), BASE(eventLog), BASE(hdlc),
                                    BASE(disconnectControl), BASE(actionScheduleDisconnectOpen), BASE(actionScheduleDisconnectClose), BASE(unixTime), BASE(invocationCounter),
 
                                    // Add KIGG registers
-                                   BASE(voltageL1), BASE(voltageL2), BASE(voltageL3),
+                                   BASE(voltageL2), BASE(voltageL3),
                                    BASE(currentL1), BASE(currentL2), BASE(currentL3),
                                    BASE(frequency),
                                    BASE(powerFactorL1), BASE(powerFactorL2), BASE(powerFactorL3),
@@ -1155,6 +1155,11 @@ int addLoadProfileProfileGeneric()
         capture->attributeIndex = 2;
         capture->dataIndex = 0;
         arr_push(&loadProfile.captureObjects, key_init(&activePowerL1, capture));
+        //Add L1 voltage.
+        capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&loadProfile.captureObjects, key_init(&voltageL1, capture));
         ///////////////////////////////////////////////////////////////////
         //Update amount of capture objects.
         //Set clock to sort object.
