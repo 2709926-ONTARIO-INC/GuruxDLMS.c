@@ -135,21 +135,56 @@ extern gxRegister powerFactorL1, powerFactorL2, powerFactorL3;
 extern gxRegister blockEnergyKWhImport, blockEnergyKVAhLag, blockEnergyKVAhLead, blockEnergyKVAhImport;
 extern gxRegister cumulativeEnergyKWhImport, cumulativeEnergyKVAhImport;
 
+// Define external KIGG Average registers
+extern gxRegister voltageL1Average, voltageL2Average, voltageL3Average;
+extern gxRegister currentL1Average, currentL2Average, currentL3Average;
+
 //static gxObject* NONE_OBJECTS[] = { BASE(associationNone), BASE(ldn), BASE(sapAssignment), BASE(clock1) };
 
-static gxObject* ALL_OBJECTS[] = { BASE(associationNone), BASE(associationLow), BASE(associationHigh), BASE(associationHighGMac), BASE(securitySetupHigh), BASE(securitySetupHighGMac),
-                                   BASE(ldn), BASE(sapAssignment), BASE(eventCode),
-                                   BASE(clock1), BASE(activePowerL1), BASE(voltageL1), BASE(pushSetup), BASE(scriptTableGlobalMeterReset), BASE(scriptTableDisconnectControl),
-                                   BASE(scriptTableActivateTestMode), BASE(scriptTableActivateNormalMode), BASE(loadProfile), BASE(eventLog), BASE(hdlc),
-                                   BASE(disconnectControl), BASE(actionScheduleDisconnectOpen), BASE(actionScheduleDisconnectClose), BASE(unixTime), BASE(invocationCounter),
-
-                                   // Add KIGG registers
-                                   BASE(voltageL2), BASE(voltageL3),
-                                   BASE(currentL1), BASE(currentL2), BASE(currentL3),
-                                   BASE(frequency),
-                                   BASE(powerFactorL1), BASE(powerFactorL2), BASE(powerFactorL3),
-                                   BASE(blockEnergyKWhImport), BASE(blockEnergyKVAhLag), BASE(blockEnergyKVAhLead), BASE(blockEnergyKVAhImport),
-                                   BASE(cumulativeEnergyKWhImport), BASE(cumulativeEnergyKVAhImport)
+static gxObject *ALL_OBJECTS[] = {
+    BASE(associationNone),
+    BASE(associationLow),
+    BASE(associationHigh),
+    BASE(associationHighGMac),
+    BASE(securitySetupHigh),
+    BASE(securitySetupHighGMac),
+    BASE(ldn),
+    BASE(sapAssignment),
+    BASE(eventCode),
+    BASE(clock1),
+    BASE(activePowerL1), 
+    
+    // Add KIGG registers 
+    BASE(voltageL1), 
+    BASE(voltageL2), 
+    BASE(voltageL3),
+    BASE(currentL1),
+    BASE(currentL2),
+    BASE(currentL3),
+    BASE(frequency),
+    BASE(powerFactorL1),
+    BASE(powerFactorL2),
+    BASE(powerFactorL3),
+    BASE(blockEnergyKWhImport),
+    BASE(blockEnergyKVAhLag),
+    BASE(blockEnergyKVAhLead),
+    BASE(blockEnergyKVAhImport),
+    BASE(cumulativeEnergyKWhImport),
+    BASE(cumulativeEnergyKVAhImport),
+    
+    BASE(pushSetup),
+    BASE(scriptTableGlobalMeterReset),
+    BASE(scriptTableDisconnectControl),
+    BASE(scriptTableActivateTestMode),
+    BASE(scriptTableActivateNormalMode),
+    BASE(loadProfile),
+    BASE(eventLog),
+    BASE(hdlc),
+    BASE(disconnectControl),
+    BASE(actionScheduleDisconnectOpen),
+    BASE(actionScheduleDisconnectClose),
+    BASE(unixTime),
+    BASE(invocationCounter),
 };
 
 ////////////////////////////////////////////////////
@@ -1029,6 +1064,42 @@ int addRegisterCumulativeEnergyKVAhImport()
     return ret;
 }
 
+int addRegisterVoltageL1Average()
+{
+    int ret = addVoltageL1Average();
+    return ret;
+}
+
+int addRegisterVoltageL2Average()
+{
+    int ret = addVoltageL2Average();
+    return ret;
+}
+
+int addRegisterVoltageL3Average()
+{
+    int ret = addVoltageL3Average();
+    return ret;
+}
+
+int addRegisterCurrentL1Average()
+{
+    int ret = addCurrentL1Average();
+    return ret;
+}
+
+int addRegisterCurrentL2Average()
+{
+    int ret = addCurrentL2Average();
+    return ret;
+}
+
+int addRegisterCurrentL3Average()
+{
+    int ret = addCurrentL3Average();
+    return ret;
+}
+
 uint16_t readEventCode()
 {
     return eventCode.value.uiVal;
@@ -1149,16 +1220,56 @@ int addLoadProfileProfileGeneric()
         capture->attributeIndex = 2;
         capture->dataIndex = 0;
         arr_push(&loadProfile.captureObjects, key_init(&clock1, capture));
-        //Add active power.
+        //Add L1 voltage Average.
         capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
         capture->attributeIndex = 2;
         capture->dataIndex = 0;
-        arr_push(&loadProfile.captureObjects, key_init(&activePowerL1, capture));
-        //Add L1 voltage.
+        arr_push(&loadProfile.captureObjects, key_init(&voltageL1Average, capture));
+        //Add L2 voltage Average.
         capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
         capture->attributeIndex = 2;
         capture->dataIndex = 0;
-        arr_push(&loadProfile.captureObjects, key_init(&voltageL1, capture));
+        arr_push(&loadProfile.captureObjects, key_init(&voltageL2Average, capture));
+        //Add L3 voltage Average.
+        capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&loadProfile.captureObjects, key_init(&voltageL3Average, capture));
+        //Add L1 current Average.
+        capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&loadProfile.captureObjects, key_init(&currentL1Average, capture));
+        //Add L2 current Average.
+        capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&loadProfile.captureObjects, key_init(&currentL2Average, capture));
+        //Add L3 current Average.
+        capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&loadProfile.captureObjects, key_init(&currentL3Average, capture));
+        //Add Block Energy Wh - Import.
+        capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&loadProfile.captureObjects, key_init(&blockEnergyKWhImport, capture));
+        //Add Block Energy VAh - Lag.
+        capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&loadProfile.captureObjects, key_init(&blockEnergyKVAhLag, capture));
+        //Add Block Energy VAh - Lead.
+        capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&loadProfile.captureObjects, key_init(&blockEnergyKVAhLead, capture));
+        //Add Block Energy VAh - Import.
+        capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&loadProfile.captureObjects, key_init(&blockEnergyKVAhImport, capture));
         ///////////////////////////////////////////////////////////////////
         //Update amount of capture objects.
         //Set clock to sort object.
@@ -1379,6 +1490,12 @@ int createObjects()
         (ret = addRegisterBlockEnergyKVAhImport()) != 0 ||
         (ret = addRegisterCumulativeEnergyKWhImport()) != 0 ||
         (ret = addRegisterCumulativeEnergyKVAhImport()) != 0 ||
+        (ret = addRegisterVoltageL1Average()) != 0 ||
+        (ret = addRegisterVoltageL2Average()) != 0 ||
+        (ret = addRegisterVoltageL3Average()) != 0 ||
+        (ret = addRegisterCurrentL1Average()) != 0 ||
+        (ret = addRegisterCurrentL2Average()) != 0 ||
+        (ret = addRegisterCurrentL3Average()) != 0 ||
         (ret = addAssociationNone()) != 0 ||
         (ret = addAssociationLow()) != 0 ||
         (ret = addAssociationHigh()) != 0 ||
