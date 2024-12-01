@@ -25,7 +25,6 @@
 #include <Winsock2.h> //Add support for sockets
 #include <time.h>
 #include <process.h>//Add support for threads
-#include "../include/registers.h"
 #include "../include/getopt.h"
 #else //Linux includes.
 #define closesocket close
@@ -44,6 +43,7 @@
 #include <fcntl.h>
 #endif
 
+#include "../include/registers.h"
 #include "../../development/include/gxmem.h"
 #include "../../development/include/dlmssettings.h"
 #include "../../development/include/variant.h"
@@ -63,7 +63,6 @@ const static char* FLAG_ID = "GRX";
 
 //Space for client password.
 static unsigned char PASSWORD[20] = {0};
-static unsigned char password_setting[20];
 //Space for client challenge.
 static unsigned char C2S_CHALLENGE[64];
 //Space for server challenge.
@@ -571,7 +570,7 @@ void GXTRACE(const char* str, const char* data)
 void GXTRACE_INT(const char* str, int32_t value)
 {
     char data[10];
-    sprintf(data, " %ld", value);
+    sprintf(data, " %d", value);
     GXTRACE(str, data);
 }
 
@@ -781,7 +780,7 @@ int addSapAssignment()
         char tmp[17];
         gxSapItem* it = (gxSapItem*)gxmalloc(sizeof(gxSapItem));
         bb_init(&it->name);
-        ret = sprintf(tmp, "%s%.13lu", FLAG_ID, SERIAL_NUMBER);
+        ret = sprintf(tmp, "%s%.13u", FLAG_ID, SERIAL_NUMBER);
         bb_addString(&it->name, tmp);
         it->id = 1;
         ret = arr_push(&sapAssignment.sapAssignmentList, it);
@@ -804,7 +803,7 @@ int addLogicalDeviceName()
     if ((ret = INIT_OBJECT(ldn, DLMS_OBJECT_TYPE_DATA, ln)) == 0)
     {
         char tmp[17];
-        sprintf(tmp, "%s%.13lu", FLAG_ID, SERIAL_NUMBER);
+        sprintf(tmp, "%s%.13u", FLAG_ID, SERIAL_NUMBER);
         var_addBytes(&ldn.value, (unsigned char*)tmp, 16);
     }
     return ret;
@@ -3400,8 +3399,8 @@ int main(int argc, char* argv[])
             printf("The meter is set to send garbage values at random counts.\n");
             break;
         case 'P':
-            strncpy(&PASSWORD[0U], optarg, sizeof(PASSWORD) - 1U);
-            GXTRACE_INT("Password len.", strlen(PASSWORD));
+            strncpy((char *)&PASSWORD[0U], optarg, sizeof(PASSWORD) - 1U);
+            GXTRACE_INT("Password len.", strlen((const char *)PASSWORD));
             break;
         case 'c':
             if (setRegisterLimits(optarg))
@@ -3540,7 +3539,7 @@ int main(int argc, char* argv[])
                 time_t tmp = start;
                 printf("%s", ctime(&tmp));
                 tmp = executeTime;
-                printf("%lu seconds before next invoke %s", executeTime - start, ctime(&tmp));
+                printf("%u seconds before next invoke %s", executeTime - start, ctime(&tmp));
             }
         }
 #if defined(_WIN32) || defined(_WIN64)//Windows includes
