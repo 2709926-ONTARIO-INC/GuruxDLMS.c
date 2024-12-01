@@ -653,9 +653,9 @@ int addAssociationNone()
     if ((ret = INIT_OBJECT(associationNone, DLMS_OBJECT_TYPE_ASSOCIATION_LOGICAL_NAME, ln)) == 0)
     {
         //All objects are shown also without authentication.
-        OA_ATTACH(associationNone.objectList, NONE_OBJECTS);
+        // OA_ATTACH(associationNone.objectList, ALL_OBJECTS);
         //Uncomment this if you want to show only part of the objects without authentication.
-        //OA_ATTACH(associationNone.objectList, NONE_OBJECTS);
+        OA_ATTACH(associationNone.objectList, NONE_OBJECTS);
         associationNone.authenticationMechanismName.mechanismId = DLMS_AUTHENTICATION_NONE;
         associationNone.clientSAP = 0x10;
         //Max PDU is half of PDU size. This is for demonstration purposes only.
