@@ -139,7 +139,7 @@ extern gxRegister cumulativeEnergyKWhImport, cumulativeEnergyKVAhImport;
 extern gxRegister voltageL1Average, voltageL2Average, voltageL3Average;
 extern gxRegister currentL1Average, currentL2Average, currentL3Average;
 
-//static gxObject* NONE_OBJECTS[] = { BASE(associationNone), BASE(ldn), BASE(sapAssignment), BASE(clock1) };
+static gxObject *NONE_OBJECTS[] = {BASE(associationNone), BASE(ldn), BASE(sapAssignment), BASE(clock1)};
 
 static gxObject *ALL_OBJECTS[] = {
     BASE(associationNone),
@@ -653,7 +653,7 @@ int addAssociationNone()
     if ((ret = INIT_OBJECT(associationNone, DLMS_OBJECT_TYPE_ASSOCIATION_LOGICAL_NAME, ln)) == 0)
     {
         //All objects are shown also without authentication.
-        OA_ATTACH(associationNone.objectList, ALL_OBJECTS);
+        OA_ATTACH(associationNone.objectList, NONE_OBJECTS);
         //Uncomment this if you want to show only part of the objects without authentication.
         //OA_ATTACH(associationNone.objectList, NONE_OBJECTS);
         associationNone.authenticationMechanismName.mechanismId = DLMS_AUTHENTICATION_NONE;
