@@ -49,6 +49,10 @@ gxRegister powerFactorL1, powerFactorL2, powerFactorL3;
 gxRegister blockEnergyKWhImport, blockEnergyKVAhLag, blockEnergyKVAhLead, blockEnergyKVAhImport;
 gxRegister cumulativeEnergyKWhImport, cumulativeEnergyKVAhImport;
 
+// Defin the objects to store KIGG register's averages
+gxRegister voltageL1Average, voltageL2Average, voltageL3Average;
+gxRegister currentL1Average, currentL2Average, currentL3Average;
+
 
 // Define variables to store the KIGG registers' values
 static uint32_t voltageL1Value = 0, voltageL2Value = 0, voltageL3Value = 0;
@@ -57,6 +61,10 @@ static uint32_t frequencyValue = 0;
 static float powerFactorL1Value = 0.0, powerFactorL2Value = 0.0, powerFactorL3Value = 0.0;
 static uint32_t blockEnergyKWhImportValue = 0, blockEnergyKVAhLagValue = 0, blockEnergyKVAhLeadValue = 0, blockEnergyKVAhImportValue = 0;
 static uint32_t cumulativeEnergyKWhImportValue = 0, cumulativeEnergyKVAhImportValue = 0;
+
+// Define variables to store the KIGG registers' averages
+uint32_t voltageL1AverageValue = 0, voltageL2AverageValue = 0, voltageL3AverageValue = 0;
+uint32_t currentL1AverageValue = 0, currentL2AverageValue = 0, currentL3AverageValue = 0;
 
 
 // Define variables for upper and lower limits
@@ -79,8 +87,8 @@ static uint32_t blockEnergyKVAhLagValueMin = 100, blockEnergyKVAhLagValueMax = 1
 static uint32_t blockEnergyKVAhLeadValueMin = 100, blockEnergyKVAhLeadValueMax = 1000;
 static uint32_t blockEnergyKVAhImportValueMin = 100, blockEnergyKVAhImportValueMax = 1000;
 
-static uint32_t cumulativeEnergyKWhImportValueMin = 450, cumulativeEnergyKWhImportValueMax = 500;
-static uint32_t cumulativeEnergyKVAhImportValueMin = 500, cumulativeEnergyKVAhImportValueMax = 600;
+// static uint32_t cumulativeEnergyKWhImportValueMin = 450, cumulativeEnergyKWhImportValueMax = 500;
+// static uint32_t cumulativeEnergyKVAhImportValueMin = 500, cumulativeEnergyKVAhImportValueMax = 600;
 
 
 // Garbage counters for each variable
@@ -90,6 +98,10 @@ static int frequencyCounter = 0;
 static int powerFactorL1Counter = 0, powerFactorL2Counter = 0, powerFactorL3Counter = 0;
 static int blockEnergyKWhImportCounter = 0, blockEnergyKVAhLagCounter = 0, blockEnergyKVAhLeadCounter = 0, blockEnergyKVAhImportCounter = 0;
 static int cumulativeEnergyKWhImportCounter = 0, cumulativeEnergyKVAhImportCounter = 0;
+
+// Average value counters for each variable
+static int voltageL1AverageCounter = 0, voltageL2AverageCounter = 0, voltageL3AverageCounter = 0;
+static int currentL1AverageCounter = 0, currentL2AverageCounter = 0, currentL3AverageCounter = 0;
 
 
 static char* current_timestamp = NULL;
@@ -135,6 +147,12 @@ char* getFormattedTimestamp()
     return formattedTime;
 }
 
+uint32_t calculateAverageUint32(uint32_t average, uint32_t value, int count) 
+{
+    int new_average = ((average * (count - 1) + value) / (count));
+    return new_average;
+}   
+
 // Function to add the voltageL1 register to the DLMS server
 int addVoltageL1()
 {
@@ -155,13 +173,13 @@ int addVoltageL1()
 }
 
 // Function to set the voltageL1 registers' value
-void writeVoltageL1Value(uint16_t value) 
+void writeVoltageL1Value(uint32_t value) 
 {
     voltageL1Value = value;
 }
 
 // Function to get the voltageL1 registers' value with garbage value injection
-uint16_t readVoltageL1Value()
+uint32_t readVoltageL1Value()
 {
     if (isGarbageValuesEnabled())
     {
@@ -178,11 +196,15 @@ uint16_t readVoltageL1Value()
         {
             voltageL1Value = voltageL1ValueMin + rand() % (voltageL1ValueMax - voltageL1ValueMin + 1); // Normal value
             voltageL1Counter--;
+            voltageL1AverageCounter++; // Increment the average counter to calculate new average
+            voltageL1AverageValue = calculateAverageUint32(voltageL1AverageValue, voltageL1Value, voltageL1AverageCounter);
         }
     }
     else
     {
         voltageL1Value = voltageL1ValueMin + rand() % (voltageL1ValueMax - voltageL1ValueMin + 1); // Normal value
+        voltageL1AverageCounter++; // Increment the average counter to calculate new average
+        voltageL1AverageValue = calculateAverageUint32(voltageL1AverageValue, voltageL1Value, voltageL1AverageCounter);
     }
     return voltageL1Value;
 }
@@ -205,13 +227,13 @@ int addVoltageL2()
 }
 
 // Function to set the voltageL2 registers' value
-void writeVoltageL2Value(uint16_t value)
+void writeVoltageL2Value(uint32_t value)
 {
     voltageL2Value = value;
 }
 
 // Function to get the voltageL2 registers' value with garbage value injection
-uint16_t readVoltageL2Value()
+uint32_t readVoltageL2Value()
 {
     if (isGarbageValuesEnabled())
     {
@@ -228,11 +250,15 @@ uint16_t readVoltageL2Value()
         {
             voltageL2Value = voltageL2ValueMin + rand() % (voltageL2ValueMax - voltageL2ValueMin + 1); // Normal value
             voltageL2Counter--;
+            voltageL2AverageCounter++; // Increment the average counter to calculate new average
+            voltageL2AverageValue = calculateAverageUint32(voltageL2AverageValue, voltageL2Value, voltageL2AverageCounter);
         }
     }
     else
     {
         voltageL2Value = voltageL2ValueMin + rand() % (voltageL2ValueMax - voltageL2ValueMin + 1); // Normal value
+        voltageL2AverageCounter++; // Increment the average counter to calculate new average
+        voltageL2AverageValue = calculateAverageUint32(voltageL2AverageValue, voltageL2Value, voltageL2AverageCounter);
     }
     return voltageL2Value;
 }
@@ -255,13 +281,13 @@ int addVoltageL3()
 }
 
 // Function to set the voltageL3 registers' value
-void writeVoltageL3Value(uint16_t value)
+void writeVoltageL3Value(uint32_t value)
 {
     voltageL3Value = value;
 }
 
 // Function to get the voltageL3 registers' value with garbage value injection
-uint16_t readVoltageL3Value()
+uint32_t readVoltageL3Value()
 {
     if (isGarbageValuesEnabled())
     {
@@ -278,11 +304,15 @@ uint16_t readVoltageL3Value()
         {
             voltageL3Value = voltageL3ValueMin + rand() % (voltageL3ValueMax - voltageL3ValueMin + 1); // Normal value
             voltageL3Counter--;
+            voltageL3AverageCounter++; // Increment the average counter to calculate new average
+            voltageL3AverageValue = calculateAverageUint32(voltageL3AverageValue, voltageL3Value, voltageL3AverageCounter);
         }
     }
     else
     {
         voltageL3Value = voltageL3ValueMin + rand() % (voltageL3ValueMax - voltageL3ValueMin + 1); // Normal value
+        voltageL3AverageCounter++; // Increment the average counter to calculate new average
+        voltageL3AverageValue = calculateAverageUint32(voltageL3AverageValue, voltageL3Value, voltageL3AverageCounter);
     }
     return voltageL3Value;
 }
@@ -305,13 +335,13 @@ int addCurrentL1()
 }
 
 // Function to set the currentL1 registers' value
-void writeCurrentL1Value(uint16_t value)
+void writeCurrentL1Value(uint32_t value)
 {
     currentL1Value = value;
 }
 
 // Function to get the currentL1 registers' value with garbage value injection
-uint16_t readCurrentL1Value()
+uint32_t readCurrentL1Value()
 {
     if (isGarbageValuesEnabled())
     {
@@ -328,11 +358,15 @@ uint16_t readCurrentL1Value()
         {
             currentL1Value = currentL1ValueMin + rand() % (currentL1ValueMax - currentL1ValueMin + 1); // Normal value
             currentL1Counter--;
+            currentL1AverageCounter++; // Increment the average counter to calculate new average
+            currentL1AverageValue = calculateAverageUint32(currentL1AverageValue, currentL1Value, currentL1AverageCounter);
         }
     }
     else
     {
         currentL1Value = currentL1ValueMin + rand() % (currentL1ValueMax - currentL1ValueMin + 1); // Normal value
+        currentL1AverageCounter++; // Increment the average counter to calculate new average
+        currentL1AverageValue = calculateAverageUint32(currentL1AverageValue, currentL1Value, currentL1AverageCounter);
     }
     return currentL1Value;
 }
@@ -355,13 +389,13 @@ int addCurrentL2()
 }
 
 // Function to set the currentL2 registers' value
-void writeCurrentL2Value(uint16_t value)
+void writeCurrentL2Value(uint32_t value)
 {
     currentL2Value = value;
 }
 
 // Function to get the currentL2 registers' value with garbage value injection
-uint16_t readCurrentL2Value()
+uint32_t readCurrentL2Value()
 {
     if (isGarbageValuesEnabled())
     {
@@ -378,11 +412,15 @@ uint16_t readCurrentL2Value()
         {
             currentL2Value = currentL2ValueMin + rand() % (currentL2ValueMax - currentL2ValueMin + 1); // Normal value
             currentL2Counter--;
+            currentL2AverageCounter++; // Increment the average counter to calculate new average
+            currentL2AverageValue = calculateAverageUint32(currentL2AverageValue, currentL2Value, currentL2AverageCounter);
         }
     }
     else
     {
         currentL2Value = currentL2ValueMin + rand() % (currentL2ValueMax - currentL2ValueMin + 1); // Normal value
+        currentL2AverageCounter++; // Increment the average counter to calculate new average
+        currentL2AverageValue = calculateAverageUint32(currentL2AverageValue, currentL2Value, currentL2AverageCounter);
     }
     return currentL2Value;
 }
@@ -405,13 +443,13 @@ int addCurrentL3()
 }
 
 // Function to set the currentL3 registers' value
-void writeCurrentL3Value(uint16_t value)
+void writeCurrentL3Value(uint32_t value)
 {
     currentL3Value = value;
 }
 
 // Function to get the currentL3 registers' value with garbage value injection
-uint16_t readCurrentL3Value()
+uint32_t readCurrentL3Value()
 {
     if (isGarbageValuesEnabled())
     {
@@ -428,11 +466,15 @@ uint16_t readCurrentL3Value()
         {
             currentL3Value = currentL3ValueMin + rand() % (currentL3ValueMax - currentL3ValueMin + 1); // Normal value
             currentL3Counter--;
+            currentL3AverageCounter++; // Increment the average counter to calculate new average
+            currentL3AverageValue = calculateAverageUint32(currentL3AverageValue, currentL3Value, currentL3AverageCounter);
         }
     }
     else
     {
         currentL3Value = currentL3ValueMin + rand() % (currentL3ValueMax - currentL3ValueMin + 1); // Normal value
+        currentL3AverageCounter++; // Increment the average counter to calculate new average
+        currentL3AverageValue = calculateAverageUint32(currentL3AverageValue, currentL3Value, currentL3AverageCounter);
     }
     return currentL3Value;
 }
@@ -455,13 +497,13 @@ int addFrequency()
 }
 
 // Function to set the frequency registers' value
-void writeFrequencyValue(uint16_t value)
+void writeFrequencyValue(uint32_t value)
 {
     frequencyValue = value;
 }
 
 // Function to get the frequency registers' value with garbage value injection
-uint16_t readFrequencyValue()
+uint32_t readFrequencyValue()
 {
     if (isGarbageValuesEnabled())
     {
@@ -505,7 +547,7 @@ int addPowerFactorL1()
 }
 
 // Function to set the powerFactorL1 registers' value
-void writePowerFactorL1Value(int16_t value)
+void writePowerFactorL1Value(float value)
 {
     powerFactorL1Value = value;
 }
@@ -555,7 +597,7 @@ int addPowerFactorL2()
 }
 
 // Function to set Power Factor L2 register's value
-void writePowerFactorL2Value(int16_t value)
+void writePowerFactorL2Value(float value)
 {
     powerFactorL2Value = value;
 }
@@ -605,7 +647,7 @@ int addPowerFactorL3()
 }
 
 // Function to set Power Factor L3 register's value
-void writePowerFactorL3Value(int16_t value)
+void writePowerFactorL3Value(float value)
 {
     powerFactorL3Value = value;
 }
@@ -997,6 +1039,151 @@ uint32_t readCumulativeEnergyKVAhImportValue()
     }
     return cumulativeEnergyKVAhImportValue;
 }
+
+// Function to add the voltageL1Average register to the DLMS server
+int addVoltageL1Average()
+{
+    int ret;
+    const unsigned char ln[6] = { 1, 0, 32, 27, 0, 255 };  // Example LN for voltageL1 average
+
+    // Initialize the voltageL1 average register object
+    if ((ret = INIT_OBJECT(voltageL1Average, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
+    {
+        GX_UINT32_BYREF(voltageL1Average.value, voltageL1AverageValue);
+        // Set additional properties  
+        voltageL1Average.scaler = 3;
+        voltageL1Average.unit = 35;   
+    }
+    
+    return ret;
+}
+
+// Function to get the voltageL1Average registers' value
+uint32_t readVoltageL1AverageValue()
+{
+    return voltageL1AverageValue;
+}
+
+// Function to add the voltageL1Average register to the DLMS server
+int addVoltageL2Average()
+{
+    int ret;
+    const unsigned char ln[6] = { 1, 0, 52, 27, 0, 255 };  // Example LN for voltageL2 average
+
+    // Initialize the voltageL2 average register object
+    if ((ret = INIT_OBJECT(voltageL2Average, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
+    {
+        GX_UINT32_BYREF(voltageL2Average.value, voltageL2AverageValue);
+        // Set additional properties  
+        voltageL2Average.scaler = 3;
+        voltageL2Average.unit = 35;   
+    }
+    
+    return ret;
+}
+
+// Function to get the voltageL2Average registers' value 
+uint32_t readVoltageL2AverageValue()
+{
+    return voltageL2AverageValue;
+}
+
+// Function to add the voltageL3Average register to the DLMS server
+int addVoltageL3Average()
+{
+    int ret;
+    const unsigned char ln[6] = { 1, 0, 72, 27, 0, 255 };  // Example LN for voltageL3 average
+
+    // Initialize the voltageL3 average register object
+    if ((ret = INIT_OBJECT(voltageL3Average, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
+    {
+        GX_UINT32_BYREF(voltageL3Average.value, voltageL3AverageValue);
+        // Set additional properties  
+        voltageL3Average.scaler = 3;
+        voltageL3Average.unit = 35;   
+    }
+    
+    return ret;
+}
+
+// Function to get the voltageL3Average registers' value 
+uint32_t readVoltageL3AverageValue()
+{
+    return voltageL3AverageValue;
+}
+
+// Function to add the currentL1Average register to the DLMS server
+int addCurrentL1Average()
+{
+    int ret;
+    const unsigned char ln[6] = { 1, 0, 31, 27, 0, 255 };  // Example LN for currentL1 average
+
+    // Initialize the currentL1 average register object
+    if ((ret = INIT_OBJECT(currentL1Average, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
+    {
+        GX_UINT32_BYREF(currentL1Average.value, currentL1AverageValue);
+        // Set additional properties  
+        currentL1Average.scaler = 3;
+        currentL1Average.unit = 35;   
+    }
+    
+    return ret;
+}
+
+// Function to get the currentL1Average register's value
+uint32_t readCurrentL1AverageValue()
+{
+    return currentL1AverageValue;
+}
+
+// Function to add the currentL2Average register to the DLMS server
+int addCurrentL2Average()
+{
+    int ret;
+    const unsigned char ln[6] = { 1, 0, 51, 27, 0, 255 };  // Example LN for currentL2 average
+
+    // Initialize the currentL2 average register object
+    if ((ret = INIT_OBJECT(currentL2Average, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
+    {
+        GX_UINT32_BYREF(currentL2Average.value, currentL2AverageValue);
+        // Set additional properties  
+        currentL2Average.scaler = 3;
+        currentL2Average.unit = 35;   
+    }
+    
+    return ret;
+}
+
+// Function to get the currentL2Average register's value
+uint32_t readCurrentL2AverageValue()
+{
+    return currentL2AverageValue;
+}
+
+// Function to add the currentL3Average register to the DLMS server
+int addCurrentL3Average()
+{
+    int ret;
+    const unsigned char ln[6] = { 1, 0, 71, 27, 0, 255 };  // Example LN for currentL3 average
+
+    // Initialize the currentL3 average register object
+    if ((ret = INIT_OBJECT(currentL3Average, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
+    {
+        GX_UINT32_BYREF(currentL3Average.value, currentL3AverageValue);
+        // Set additional properties  
+        currentL3Average.scaler = 3;
+        currentL3Average.unit = 35;   
+    }
+    
+    return ret;
+}
+
+// Function to get the currentL3Average register's value
+uint32_t readCurrentL3AverageValue()
+{
+    return currentL3AverageValue;
+}
+
 
 // Initialize counters
 void initializeCounters(void)
