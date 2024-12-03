@@ -30,9 +30,9 @@ uint32_t currentL1GarbageValues[] = {5000000, 9900000, 11000000};
 uint32_t currentL2GarbageValues[] = {6000000, 9800000, 12000000};
 uint32_t currentL3GarbageValues[] = {5500000, 1000000, 13000000};
 uint32_t frequencyGarbageValues[] = {555000, 999000, 1100000};
-float powerFactorL1GarbageValues[] = {800000.0, 210000.0, 200000.0};
-float powerFactorL2GarbageValues[] = {900000.0, 210000.0, 210000.0};
-float powerFactorL3GarbageValues[] = {800000.0, 210000.0, 220000.0};
+uint32_t powerFactorL1GarbageValues[] = {800000, 210000, 200000};
+uint32_t powerFactorL2GarbageValues[] = {900000, 210000, 210000};
+uint32_t powerFactorL3GarbageValues[] = {800000, 210000, 220000};
 uint32_t blockEnergyKWhImportGarbageValues[] = {99999, 12345, 214745};
 uint32_t blockEnergyKVAhLagGarbageValues[] = {99995, 23455, 198765};
 uint32_t blockEnergyKVAhLeadGarbageValues[] = {88885, 34565, 109875};
@@ -58,7 +58,7 @@ gxRegister currentL1Average, currentL2Average, currentL3Average;
 static uint32_t voltageL1Value = 0, voltageL2Value = 0, voltageL3Value = 0;
 static uint32_t currentL1Value = 0, currentL2Value = 0, currentL3Value = 0;
 static uint32_t frequencyValue = 0;
-static float powerFactorL1Value = 0.0, powerFactorL2Value = 0.0, powerFactorL3Value = 0.0;
+static uint32_t powerFactorL1Value = 0, powerFactorL2Value = 0, powerFactorL3Value = 0;
 static uint32_t blockEnergyKWhImportValue = 0, blockEnergyKVAhLagValue = 0, blockEnergyKVAhLeadValue = 0, blockEnergyKVAhImportValue = 0;
 static uint32_t cumulativeEnergyKWhImportValue = 0, cumulativeEnergyKVAhImportValue = 0;
 
@@ -68,24 +68,24 @@ uint32_t currentL1AverageValue = 0, currentL2AverageValue = 0, currentL3AverageV
 
 
 // Define variables for upper and lower limits
-static uint32_t voltageL1ValueMin = 50000, voltageL1ValueMax = 60000;
-static uint32_t voltageL2ValueMin = 50000, voltageL2ValueMax = 60000;
-static uint32_t voltageL3ValueMin = 50000, voltageL3ValueMax = 60000;
+static uint32_t voltageL1ValueMin = 108000, voltageL1ValueMax = 112000;
+static uint32_t voltageL2ValueMin = 108000, voltageL2ValueMax = 112000;
+static uint32_t voltageL3ValueMin = 108000, voltageL3ValueMax = 112000;
 
-static uint32_t currentL1ValueMin = 1, currentL1ValueMax = 10000;
-static uint32_t currentL2ValueMin = 1, currentL2ValueMax = 10000;
-static uint32_t currentL3ValueMin = 1, currentL3ValueMax = 10000;
+static uint32_t currentL1ValueMin = 0, currentL1ValueMax = 1000000;
+static uint32_t currentL2ValueMin = 0, currentL2ValueMax = 1000000;
+static uint32_t currentL3ValueMin = 0, currentL3ValueMax = 1000000;
 
-static uint32_t frequencyValueMin = 45000, frequencyValueMax = 55000;
+static uint32_t frequencyValueMin = 49800, frequencyValueMax = 50200;
 
-static float powerFactorL1ValueMin = 800.0, powerFactorL1ValueMax = 1000.0;
-static float powerFactorL2ValueMin = 800.0, powerFactorL2ValueMax = 1000.0;
-static float powerFactorL3ValueMin = 800.0, powerFactorL3ValueMax = 1000.0;
+static uint32_t powerFactorL1ValueMin = 100, powerFactorL1ValueMax = 990;
+static uint32_t powerFactorL2ValueMin = 100, powerFactorL2ValueMax = 990;
+static uint32_t powerFactorL3ValueMin = 100, powerFactorL3ValueMax = 990;
 
-static uint32_t blockEnergyKWhImportValueMin = 100, blockEnergyKWhImportValueMax = 1000;
-static uint32_t blockEnergyKVAhLagValueMin = 100, blockEnergyKVAhLagValueMax = 1000;
-static uint32_t blockEnergyKVAhLeadValueMin = 100, blockEnergyKVAhLeadValueMax = 1000;
-static uint32_t blockEnergyKVAhImportValueMin = 100, blockEnergyKVAhImportValueMax = 1000;
+static uint32_t blockEnergyKWhImportValueMin = 0, blockEnergyKWhImportValueMax = 10000;
+static uint32_t blockEnergyKVAhLagValueMin = 0, blockEnergyKVAhLagValueMax = 10000;
+static uint32_t blockEnergyKVAhLeadValueMin = 0, blockEnergyKVAhLeadValueMax = 10000;
+static uint32_t blockEnergyKVAhImportValueMin = 0, blockEnergyKVAhImportValueMax = 10000;
 
 // static uint32_t cumulativeEnergyKWhImportValueMin = 450, cumulativeEnergyKWhImportValueMax = 500;
 // static uint32_t cumulativeEnergyKVAhImportValueMin = 500, cumulativeEnergyKVAhImportValueMax = 600;
@@ -538,7 +538,7 @@ int addPowerFactorL1()
     if ((ret = INIT_OBJECT(powerFactorL1, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
     {
         powerFactorL1Value = 1;
-        GX_FLOAT_BYREF(powerFactorL1.value, powerFactorL1Value);
+        GX_UINT32_BYREF(powerFactorL1.value, powerFactorL1Value);
         powerFactorL1.scaler = -3;
         powerFactorL1.unit = 0;  
     }
@@ -547,13 +547,13 @@ int addPowerFactorL1()
 }
 
 // Function to set the powerFactorL1 registers' value
-void writePowerFactorL1Value(float value)
+void writePowerFactorL1Value(uint32_t value)
 {
     powerFactorL1Value = value;
 }
 
 // Function to get the powerFactorL1 registers' value with garbage value injection
-float readPowerFactorL1Value()
+uint32_t readPowerFactorL1Value()
 {
     if (isGarbageValuesEnabled())
     {
@@ -562,19 +562,19 @@ float readPowerFactorL1Value()
             // Select a random garbage value
             powerFactorL1Value = powerFactorL1GarbageValues[rand() % (sizeof(powerFactorL1GarbageValues) / sizeof(powerFactorL1GarbageValues[0]))];
             current_timestamp = getFormattedTimestamp();
-            printf("%s -> Meter sending garbage value %f for power factor L1.\n", current_timestamp, powerFactorL1Value);
+            printf("%s -> Meter sending garbage value %u for power factor L1.\n", current_timestamp, powerFactorL1Value);
             // Reset the counter
             powerFactorL1Counter = resetCounter();
         }
         else
         {
-            powerFactorL1Value = powerFactorL1ValueMin + ((float)rand() / RAND_MAX) * (powerFactorL1ValueMax - powerFactorL1ValueMin); // Normal value
+            powerFactorL1Value = powerFactorL1ValueMin + rand() % (powerFactorL1ValueMax - powerFactorL1ValueMin + 1); // Normal value
             powerFactorL1Counter--;
         }
     }
     else
     {
-        powerFactorL1Value = powerFactorL1ValueMin + ((float)rand() / RAND_MAX) * (powerFactorL1ValueMax - powerFactorL1ValueMin); // Normal value // Normal value
+        powerFactorL1Value = powerFactorL1ValueMin + rand() % (powerFactorL1ValueMax - powerFactorL1ValueMin + 1); // Normal value
     }
     return powerFactorL1Value;
 }
@@ -588,7 +588,7 @@ int addPowerFactorL2()
     if ((ret = INIT_OBJECT(powerFactorL2, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
     {
         powerFactorL2Value = 1; 
-        GX_FLOAT_BYREF(powerFactorL2.value, powerFactorL2Value);
+        GX_UINT32_BYREF(powerFactorL2.value, powerFactorL2Value);
         powerFactorL2.scaler = -3;
         powerFactorL2.unit = 0;  
     }
@@ -597,13 +597,13 @@ int addPowerFactorL2()
 }
 
 // Function to set Power Factor L2 register's value
-void writePowerFactorL2Value(float value)
+void writePowerFactorL2Value(uint32_t value)
 {
     powerFactorL2Value = value;
 }
 
 // Function to get the powerFactorL2 registers' value with garbage value injection
-float readPowerFactorL2Value()
+uint32_t readPowerFactorL2Value()
 {
     if (isGarbageValuesEnabled())
     {
@@ -612,19 +612,19 @@ float readPowerFactorL2Value()
             // Select a random garbage value
             powerFactorL2Value = powerFactorL2GarbageValues[rand() % (sizeof(powerFactorL2GarbageValues) / sizeof(powerFactorL2GarbageValues[0]))];
             current_timestamp = getFormattedTimestamp();
-            printf("%s -> Meter sending garbage value %f for power factor L2.\n", current_timestamp, powerFactorL2Value);
+            printf("%s -> Meter sending garbage value %u for power factor L2.\n", current_timestamp, powerFactorL2Value);
             // Reset the counter
             powerFactorL2Counter = resetCounter();
         }
         else
         {
-            powerFactorL2Value = powerFactorL2ValueMin + ((float)rand() / RAND_MAX) * (powerFactorL2ValueMax - powerFactorL2ValueMin); // Normal value
+            powerFactorL2Value = powerFactorL2ValueMin + rand() % (powerFactorL2ValueMax - powerFactorL2ValueMin + 1); // Normal value
             powerFactorL2Counter--;
         }
     }
     else
     {
-        powerFactorL2Value = powerFactorL2ValueMin + ((float)rand() / RAND_MAX) * (powerFactorL2ValueMax - powerFactorL2ValueMin); // Normal value
+        powerFactorL2Value = powerFactorL2ValueMin + rand() % (powerFactorL2ValueMax - powerFactorL2ValueMin + 1); // Normal value
     }
     return powerFactorL2Value;
 }
@@ -638,7 +638,7 @@ int addPowerFactorL3()
     if ((ret = INIT_OBJECT(powerFactorL3, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
     {
         powerFactorL3Value = 1; 
-        GX_FLOAT_BYREF(powerFactorL3.value, powerFactorL3Value);
+        GX_UINT32_BYREF(powerFactorL3.value, powerFactorL3Value);
         powerFactorL3.scaler = -3;
         powerFactorL3.unit = 0;  
     }
@@ -647,13 +647,13 @@ int addPowerFactorL3()
 }
 
 // Function to set Power Factor L3 register's value
-void writePowerFactorL3Value(float value)
+void writePowerFactorL3Value(uint32_t value)
 {
     powerFactorL3Value = value;
 }
 
 // Function to get the powerFactorL3 registers' value with garbage value injection
-float readPowerFactorL3Value()
+uint32_t readPowerFactorL3Value()
 {
     if (isGarbageValuesEnabled())
     {
@@ -662,19 +662,19 @@ float readPowerFactorL3Value()
             // Select a random garbage value
             powerFactorL3Value = powerFactorL3GarbageValues[rand() % (sizeof(powerFactorL3GarbageValues) / sizeof(powerFactorL3GarbageValues[0]))];
             current_timestamp = getFormattedTimestamp();
-            printf("%s -> Meter sending garbage value %f for power factor L3.\n", current_timestamp, powerFactorL3Value);
+            printf("%s -> Meter sending garbage value %u for power factor L3.\n", current_timestamp, powerFactorL3Value);
             // Reset the counter
             powerFactorL3Counter = resetCounter();
         }
         else
         {
-            powerFactorL3Value = powerFactorL3ValueMin + ((float)rand() / RAND_MAX) * (powerFactorL3ValueMax - powerFactorL3ValueMin); // Normal value
+            powerFactorL3Value = powerFactorL3ValueMin + rand() % (powerFactorL3ValueMax - powerFactorL3ValueMin + 1); // Normal value
             powerFactorL3Counter--;
         }
     }
     else
     {
-        powerFactorL3Value = powerFactorL3ValueMin + ((float)rand() / RAND_MAX) * (powerFactorL3ValueMax - powerFactorL3ValueMin); // Normal value
+        powerFactorL3Value = powerFactorL3ValueMin + rand() % (powerFactorL3ValueMax - powerFactorL3ValueMin + 1); // Normal value
     }
     return powerFactorL3Value;
 }
