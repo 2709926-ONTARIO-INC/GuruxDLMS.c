@@ -492,6 +492,7 @@ int captureProfileGeneric(gxProfileGeneric* pg)
     gxValueEventArg e;
     ve_init(&e);
     FILE* f = NULL;
+    GXTRACE(("Running captureProfileGeneric"), NULL);
 #if _MSC_VER > 1400
     fopen_s(&f, fileName, "r+b");
 #else
@@ -566,6 +567,10 @@ int captureProfileGeneric(gxProfileGeneric* pg)
             //Total amount of the entries.
             --pg->entriesInUse;
         }
+    }
+    else
+    {
+        GXTRACE("Error: [Error opening file for capture]. Error code: %d", ret);
     }
     return ret;
 }
@@ -3253,6 +3258,17 @@ void* UnixListenerThread(void* pVoid)
     return NULL;
 }
 
+void* captureThreadFunction(void* pVoid)
+{
+    (void) pVoid;
+    while(true)
+    {
+        sleep(30);
+        captureProfileGeneric(&loadProfile);
+    }
+    return NULL;
+}
+
 char _getch()
 {
     struct timeval tv;
@@ -3463,9 +3479,11 @@ int main(int argc, char* argv[])
 #if defined(_WIN32) || defined(_WIN64)//If Windows
     //Receiver thread handle.
     HANDLE receiverThread;
+    HANDLE captureThread;
 #else //If Linux.
     //Receiver thread handle.
     pthread_t receiverThread;
+    pthread_t captureThread;
 #endif
 
     //Serial port handlers.
@@ -3645,6 +3663,13 @@ int main(int argc, char* argv[])
     println("Master key (KEK)", settings.base.kek.data, settings.base.kek.size);
     printf("----------------------------------------------------------\n");
     printf("Press Enter to close application.\r\n");
+
+    //Now start a thread for running capture at regular interval
+    #if defined(_WIN32) || defined(_WIN64)//Windows includes
+        captureThread = (HANDLE)_beginthread(serialPortThread, 0, NULL);
+    #else
+            ret = pthread_create(&captureThread, NULL, captureThreadFunction, NULL);
+    #endif
     while (1)
     {
         uint32_t start = time_current();
