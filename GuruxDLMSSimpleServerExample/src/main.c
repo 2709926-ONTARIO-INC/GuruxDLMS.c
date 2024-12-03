@@ -228,6 +228,51 @@ typedef enum
     GURUX_EVENT_CODES_GLOBAL_METER_RESET = 0x100
 } GURUX_EVENT_CODES;
 
+///////////////////////////////////////////////////////////////////////
+// Write trace to the serial port.
+//
+// This can be used for debugging.
+///////////////////////////////////////////////////////////////////////
+void GXTRACE(const char* str, const char* data)
+{
+    //Send trace to the serial port in test mode.
+    if (testMode)
+    {
+        if (data == NULL)
+        {
+            printf("%s\r\n", str);
+        }
+        else
+        {
+            printf("%s %s\r\n", str, data);
+        }
+    }
+}
+
+///////////////////////////////////////////////////////////////////////
+// Write trace to the serial port.
+//
+// This can be used for debugging.
+///////////////////////////////////////////////////////////////////////
+void GXTRACE_INT(const char* str, int32_t value)
+{
+    char data[10];
+    sprintf(data, " %d", value);
+    GXTRACE(str, data);
+}
+
+///////////////////////////////////////////////////////////////////////
+// Write trace to the serial port.
+//
+// This can be used for debugging.
+///////////////////////////////////////////////////////////////////////
+void GXTRACE_LN(const char* str, uint16_t type, unsigned char* ln)
+{
+    char buff[30];
+    sprintf(buff, "%d %d.%d.%d.%d.%d.%d", type, ln[0], ln[1], ln[2], ln[3], ln[4], ln[5]);
+    GXTRACE(str, buff);
+}
+
 /////////////////////////////////////////////////////////////////////////////
 // Save security settings to the EEPROM.
 //
@@ -570,7 +615,9 @@ int captureProfileGeneric(gxProfileGeneric* pg)
     }
     else
     {
-        GXTRACE("Error: [Error opening file for capture]. Error code: %d", ret);
+        char errorCodeBuffer[32]; // Allocate enough space for the error code as a string
+        snprintf(errorCodeBuffer, sizeof(errorCodeBuffer), "%d", ret); // Convert the int to a string
+        GXTRACE("Error: [Error opening file for capture]. Error code: %s", errorCodeBuffer);
     }
     return ret;
 }
@@ -579,51 +626,6 @@ void updateState(uint16_t value)
 {
     GX_UINT16(eventCode.value) = value;
     captureProfileGeneric(&eventLog);
-}
-
-///////////////////////////////////////////////////////////////////////
-// Write trace to the serial port.
-//
-// This can be used for debugging.
-///////////////////////////////////////////////////////////////////////
-void GXTRACE(const char* str, const char* data)
-{
-    //Send trace to the serial port in test mode.
-    if (testMode)
-    {
-        if (data == NULL)
-        {
-            printf("%s\r\n", str);
-        }
-        else
-        {
-            printf("%s %s\r\n", str, data);
-        }
-    }
-}
-
-///////////////////////////////////////////////////////////////////////
-// Write trace to the serial port.
-//
-// This can be used for debugging.
-///////////////////////////////////////////////////////////////////////
-void GXTRACE_INT(const char* str, int32_t value)
-{
-    char data[10];
-    sprintf(data, " %d", value);
-    GXTRACE(str, data);
-}
-
-///////////////////////////////////////////////////////////////////////
-// Write trace to the serial port.
-//
-// This can be used for debugging.
-///////////////////////////////////////////////////////////////////////
-void GXTRACE_LN(const char* str, uint16_t type, unsigned char* ln)
-{
-    char buff[30];
-    sprintf(buff, "%d %d.%d.%d.%d.%d.%d", type, ln[0], ln[1], ln[2], ln[3], ln[4], ln[5]);
-    GXTRACE(str, buff);
 }
 
 ///////////////////////////////////////////////////////////////////////
