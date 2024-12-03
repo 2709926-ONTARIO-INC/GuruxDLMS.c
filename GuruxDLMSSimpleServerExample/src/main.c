@@ -79,6 +79,9 @@ uint32_t SERIAL_NUMBER = 123456;
 #define HDLC_BUFFER_SIZE 128
 #define PDU_BUFFER_SIZE 512
 #define WRAPPER_BUFFER_SIZE 8 + PDU_BUFFER_SIZE
+
+#define STACK_SIZE 4 * 1024 * 1024  // 4 MB stack size
+
 //Buffer where frames are saved.
 static unsigned char frameBuff[HDLC_BUFFER_SIZE + HDLC_HEADER_SIZE];
 //Buffer where PDUs are saved.
@@ -471,7 +474,7 @@ uint16_t getProfileGenericBufferMaxRowCount(
     if (f == NULL)
     {
         //Allocate space for the profile generic buffer.
-        allocateProfileGenericBuffer(fileName, 1024);
+        allocateProfileGenericBuffer(fileName, STACK_SIZE);
 #if _MSC_VER > 1400
         fopen_s(&f, fileName, "r+b");
 #else
@@ -1219,7 +1222,7 @@ int addLoadProfileProfileGeneric()
     {
         gxTarget* capture;
         //Set default values if load the first time.
-        loadProfile.sortMethod = DLMS_SORT_METHOD_FIFO;
+        loadProfile.sortMethod = DLMS_SORT_METHOD_LIFO;
         ///////////////////////////////////////////////////////////////////
         //Add 2 columns.
         //Add clock obect.
@@ -3516,6 +3519,7 @@ int main(int argc, char* argv[])
     //Receiver thread handle.
     pthread_t receiverThread;
     pthread_t captureThread;
+    pthread_attr_t attr; // Thread attributes to set stack size
 #endif
 
     //Serial port handlers.
@@ -3650,9 +3654,14 @@ int main(int argc, char* argv[])
             return ret;
         }
 #if defined(_WIN32) || defined(_WIN64)//Windows includes
-        receiverThread = (HANDLE)_beginthread(serialPortThread, 0, &comPort);
+        // receiverThread = (HANDLE)_beginthread(serialPortThread, 0, &comPort);
+        receiverThread = (HANDLE)_beginthreadex(NULL, STACK_SIZE, serialPortThread, &comPort, 0, NULL);
 #else
-        ret = pthread_create(&receiverThread, NULL, UnixSerialPortThread, &comPort);
+        // ret = pthread_create(&receiverThread, NULL, UnixSerialPortThread, &comPort);
+        pthread_attr_init(&attr);
+        pthread_attr_setstacksize(&attr, STACK_SIZE);
+        ret = pthread_create(&receiverThread, &attr, UnixSerialPortThread, &comPort);
+        pthread_attr_destroy(&attr);
 #endif
 
     }
@@ -3673,9 +3682,14 @@ int main(int argc, char* argv[])
             return DLMS_ERROR_TYPE_COMMUNICATION_ERROR | ret;
         }
 #if defined(_WIN32) || defined(_WIN64)//Windows includes
-        receiverThread = (HANDLE)_beginthread(ListenerThread, 0, &ls);
+        // receiverThread = (HANDLE)_beginthread(ListenerThread, 0, &ls);
+        receiverThread = (HANDLE)_beginthreadex(NULL, STACK_SIZE, ListenerThread, &ls, 0, NULL);
 #else
-        ret = pthread_create(&receiverThread, NULL, UnixListenerThread, &ls);
+        // ret = pthread_create(&receiverThread, NULL, UnixListenerThread, &ls);
+        pthread_attr_init(&attr);
+        pthread_attr_setstacksize(&attr, STACK_SIZE);
+        ret = pthread_create(&receiverThread, &attr, UnixListenerThread, &ls);
+        pthread_attr_destroy(&attr);
 #endif
     }
     printf("----------------------------------------------------------\n");
@@ -3698,9 +3712,14 @@ int main(int argc, char* argv[])
 
     //Now start a thread for running capture at regular interval
     #if defined(_WIN32) || defined(_WIN64)//Windows includes
-        captureThread = (HANDLE)_beginthread(serialPortThread, 0, NULL);
+        // captureThread = (HANDLE)_beginthread(serialPortThread, 0, NULL);
+        captureThread = (HANDLE)_beginthreadex(NULL, STACK_SIZE, serialPortThread, NULL, 0, NULL);
     #else
-            ret = pthread_create(&captureThread, NULL, captureThreadFunction, NULL);
+        // ret = pthread_create(&captureThread, NULL, captureThreadFunction, NULL);
+        pthread_attr_init(&attr);
+        pthread_attr_setstacksize(&attr, STACK_SIZE);
+        ret = pthread_create(&captureThread, &attr, captureThreadFunction, NULL);
+        pthread_attr_destroy(&attr);
     #endif
     while (1)
     {
