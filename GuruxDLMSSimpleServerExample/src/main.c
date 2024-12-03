@@ -1875,9 +1875,9 @@ int readProfileGeneric(
                 return -1;
             }
 #else
-            if ((f = fopen(fileName, "rb")) != 0)
+            if ((f = fopen(fileName, "rb")) == NULL)
             {
-                printf("Failed to open %s.\r\n", fileName);
+                printf("Failed to open %s. Error code: %d. Description: %s.\n", fileName, errno, strerror(errno));
                 return -1;
             }
 #endif
