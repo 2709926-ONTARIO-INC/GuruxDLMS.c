@@ -2084,6 +2084,36 @@ void svr_preRead(
         {
             readCumulativeEnergyKVAhImportValue();
         }
+        // Read value every time when user reads register.
+        if (e->target == BASE(voltageL1Average) && e->index == 2)
+        {
+            readVoltageL1AverageValue();
+        }
+        // Read value every time when user reads register.
+        if (e->target == BASE(voltageL2Average) && e->index == 2)
+        {
+            readVoltageL2AverageValue();
+        }
+        // Read value every time when user reads register.
+        if (e->target == BASE(voltageL3Average) && e->index == 2)
+        {
+            readVoltageL3AverageValue();
+        }
+        // Read value every time when user reads register.
+        if (e->target == BASE(currentL1Average) && e->index == 2)
+        {
+            readCurrentL1AverageValue();
+        }
+        // Read value every time when user reads register.
+        if (e->target == BASE(currentL2Average) && e->index == 2)
+        {
+            readCurrentL2AverageValue();
+        }
+        // Read value every time when user reads register.
+        if (e->target == BASE(currentL3Average) && e->index == 2)
+        {
+            readCurrentL3AverageValue();
+        }
         //Get time if user want to read date and time.
         if (e->target == BASE(clock1) && e->index == 2)
         {

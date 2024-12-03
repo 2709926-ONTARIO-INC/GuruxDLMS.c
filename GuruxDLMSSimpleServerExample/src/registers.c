@@ -197,14 +197,14 @@ uint32_t readVoltageL1Value()
             voltageL1Value = voltageL1ValueMin + rand() % (voltageL1ValueMax - voltageL1ValueMin + 1); // Normal value
             voltageL1Counter--;
             voltageL1AverageCounter++; // Increment the average counter to calculate new average
-            voltageL1AverageValue = calculateAverageUint32(voltageL1AverageValue, voltageL1Value, voltageL1AverageCounter);
+            voltageL1AverageValue = calculateAverageUint32(voltageL1AverageValue, voltageL1Value, voltageL1AverageCounter) / 1000;
         }
     }
     else
     {
         voltageL1Value = voltageL1ValueMin + rand() % (voltageL1ValueMax - voltageL1ValueMin + 1); // Normal value
         voltageL1AverageCounter++; // Increment the average counter to calculate new average
-        voltageL1AverageValue = calculateAverageUint32(voltageL1AverageValue, voltageL1Value, voltageL1AverageCounter);
+        voltageL1AverageValue = calculateAverageUint32(voltageL1AverageValue, voltageL1Value, voltageL1AverageCounter) / 1000;
     }
     return voltageL1Value;
 }
@@ -251,14 +251,14 @@ uint32_t readVoltageL2Value()
             voltageL2Value = voltageL2ValueMin + rand() % (voltageL2ValueMax - voltageL2ValueMin + 1); // Normal value
             voltageL2Counter--;
             voltageL2AverageCounter++; // Increment the average counter to calculate new average
-            voltageL2AverageValue = calculateAverageUint32(voltageL2AverageValue, voltageL2Value, voltageL2AverageCounter);
+            voltageL2AverageValue = calculateAverageUint32(voltageL2AverageValue, voltageL2Value, voltageL2AverageCounter) / 1000;
         }
     }
     else
     {
         voltageL2Value = voltageL2ValueMin + rand() % (voltageL2ValueMax - voltageL2ValueMin + 1); // Normal value
         voltageL2AverageCounter++; // Increment the average counter to calculate new average
-        voltageL2AverageValue = calculateAverageUint32(voltageL2AverageValue, voltageL2Value, voltageL2AverageCounter);
+        voltageL2AverageValue = calculateAverageUint32(voltageL2AverageValue, voltageL2Value, voltageL2AverageCounter) / 1000;
     }
     return voltageL2Value;
 }
@@ -305,14 +305,14 @@ uint32_t readVoltageL3Value()
             voltageL3Value = voltageL3ValueMin + rand() % (voltageL3ValueMax - voltageL3ValueMin + 1); // Normal value
             voltageL3Counter--;
             voltageL3AverageCounter++; // Increment the average counter to calculate new average
-            voltageL3AverageValue = calculateAverageUint32(voltageL3AverageValue, voltageL3Value, voltageL3AverageCounter);
+            voltageL3AverageValue = calculateAverageUint32(voltageL3AverageValue, voltageL3Value, voltageL3AverageCounter) / 1000;
         }
     }
     else
     {
         voltageL3Value = voltageL3ValueMin + rand() % (voltageL3ValueMax - voltageL3ValueMin + 1); // Normal value
         voltageL3AverageCounter++; // Increment the average counter to calculate new average
-        voltageL3AverageValue = calculateAverageUint32(voltageL3AverageValue, voltageL3Value, voltageL3AverageCounter);
+        voltageL3AverageValue = calculateAverageUint32(voltageL3AverageValue, voltageL3Value, voltageL3AverageCounter)/ 1000;
     }
     return voltageL3Value;
 }
@@ -359,14 +359,14 @@ uint32_t readCurrentL1Value()
             currentL1Value = currentL1ValueMin + rand() % (currentL1ValueMax - currentL1ValueMin + 1); // Normal value
             currentL1Counter--;
             currentL1AverageCounter++; // Increment the average counter to calculate new average
-            currentL1AverageValue = calculateAverageUint32(currentL1AverageValue, currentL1Value, currentL1AverageCounter);
+            currentL1AverageValue = calculateAverageUint32(currentL1AverageValue, currentL1Value, currentL1AverageCounter) / 100000;
         }
     }
     else
     {
         currentL1Value = currentL1ValueMin + rand() % (currentL1ValueMax - currentL1ValueMin + 1); // Normal value
         currentL1AverageCounter++; // Increment the average counter to calculate new average
-        currentL1AverageValue = calculateAverageUint32(currentL1AverageValue, currentL1Value, currentL1AverageCounter);
+        currentL1AverageValue = calculateAverageUint32(currentL1AverageValue, currentL1Value, currentL1AverageCounter) / 100000;
     }
     return currentL1Value;
 }
@@ -413,14 +413,14 @@ uint32_t readCurrentL2Value()
             currentL2Value = currentL2ValueMin + rand() % (currentL2ValueMax - currentL2ValueMin + 1); // Normal value
             currentL2Counter--;
             currentL2AverageCounter++; // Increment the average counter to calculate new average
-            currentL2AverageValue = calculateAverageUint32(currentL2AverageValue, currentL2Value, currentL2AverageCounter);
+            currentL2AverageValue = calculateAverageUint32(currentL2AverageValue, currentL2Value, currentL2AverageCounter) / 100000;
         }
     }
     else
     {
         currentL2Value = currentL2ValueMin + rand() % (currentL2ValueMax - currentL2ValueMin + 1); // Normal value
         currentL2AverageCounter++; // Increment the average counter to calculate new average
-        currentL2AverageValue = calculateAverageUint32(currentL2AverageValue, currentL2Value, currentL2AverageCounter);
+        currentL2AverageValue = calculateAverageUint32(currentL2AverageValue, currentL2Value, currentL2AverageCounter) / 100000;
     }
     return currentL2Value;
 }
@@ -467,14 +467,14 @@ uint32_t readCurrentL3Value()
             currentL3Value = currentL3ValueMin + rand() % (currentL3ValueMax - currentL3ValueMin + 1); // Normal value
             currentL3Counter--;
             currentL3AverageCounter++; // Increment the average counter to calculate new average
-            currentL3AverageValue = calculateAverageUint32(currentL3AverageValue, currentL3Value, currentL3AverageCounter);
+            currentL3AverageValue = calculateAverageUint32(currentL3AverageValue, currentL3Value, currentL3AverageCounter)/ 100000;
         }
     }
     else
     {
         currentL3Value = currentL3ValueMin + rand() % (currentL3ValueMax - currentL3ValueMin + 1); // Normal value
         currentL3AverageCounter++; // Increment the average counter to calculate new average
-        currentL3AverageValue = calculateAverageUint32(currentL3AverageValue, currentL3Value, currentL3AverageCounter);
+        currentL3AverageValue = calculateAverageUint32(currentL3AverageValue, currentL3Value, currentL3AverageCounter) / 100000;
     }
     return currentL3Value;
 }
@@ -1051,7 +1051,7 @@ int addVoltageL1Average()
     {
         GX_UINT32_BYREF(voltageL1Average.value, voltageL1AverageValue);
         // Set additional properties  
-        voltageL1Average.scaler = 3;
+        voltageL1Average.scaler = -3;
         voltageL1Average.unit = 35;   
     }
     
@@ -1075,7 +1075,7 @@ int addVoltageL2Average()
     {
         GX_UINT32_BYREF(voltageL2Average.value, voltageL2AverageValue);
         // Set additional properties  
-        voltageL2Average.scaler = 3;
+        voltageL2Average.scaler = -3;
         voltageL2Average.unit = 35;   
     }
     
@@ -1099,7 +1099,7 @@ int addVoltageL3Average()
     {
         GX_UINT32_BYREF(voltageL3Average.value, voltageL3AverageValue);
         // Set additional properties  
-        voltageL3Average.scaler = 3;
+        voltageL3Average.scaler = -3;
         voltageL3Average.unit = 35;   
     }
     
@@ -1123,7 +1123,7 @@ int addCurrentL1Average()
     {
         GX_UINT32_BYREF(currentL1Average.value, currentL1AverageValue);
         // Set additional properties  
-        currentL1Average.scaler = 3;
+        currentL1Average.scaler = -5;
         currentL1Average.unit = 35;   
     }
     
@@ -1147,7 +1147,7 @@ int addCurrentL2Average()
     {
         GX_UINT32_BYREF(currentL2Average.value, currentL2AverageValue);
         // Set additional properties  
-        currentL2Average.scaler = 3;
+        currentL2Average.scaler = -5;
         currentL2Average.unit = 35;   
     }
     
@@ -1171,7 +1171,7 @@ int addCurrentL3Average()
     {
         GX_UINT32_BYREF(currentL3Average.value, currentL3AverageValue);
         // Set additional properties  
-        currentL3Average.scaler = 3;
+        currentL3Average.scaler = -5;
         currentL3Average.unit = 35;   
     }
     
