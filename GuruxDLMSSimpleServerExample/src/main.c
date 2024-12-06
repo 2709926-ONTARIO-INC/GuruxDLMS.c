@@ -165,6 +165,12 @@ static gxObject *ALL_OBJECTS[] = {
     BASE(currentL1),
     BASE(currentL2),
     BASE(currentL3),
+    BASE(voltageL1Average),
+    BASE(voltageL2Average),
+    BASE(voltageL3Average),
+    BASE(currentL1Average),
+    BASE(currentL2Average),
+    BASE(currentL3Average),
     BASE(frequency),
     BASE(powerFactorL1),
     BASE(powerFactorL2),
@@ -551,8 +557,8 @@ int captureProfileGeneric(gxProfileGeneric* pg)
     if (f != NULL)
     {
         uint16_t dataSize = 0;
-        uint8_t columnSizes[10];
-        DLMS_DATA_TYPE dataTypes[10];
+        uint8_t columnSizes[11];
+        DLMS_DATA_TYPE dataTypes[11];
         //Load current entry index from the begin of the data.
         uint16_t index = 0;
         if (fread(pdu.data, 1, 2, f) == 2)
@@ -1797,181 +1803,203 @@ int readProfileGeneric(
     gxProfileGeneric* pg,
     gxValueEventArg* e)
 {
+    printf("Starting readProfileGeneric function.\n");
     unsigned char first = e->transactionEndIndex == 0;
     int ret = 0;
     gxArray captureObjects;
     arr_init(&captureObjects);
     char fileName[30];
     getProfileGenericFileName(pg, fileName);
-    if (ret == DLMS_ERROR_CODE_OK)
+    printf("ProfileGeneric file name: %s\n", fileName);
+
+    e->byteArray = 1;
+    e->handled = 1;
+
+    if (first)
     {
-        e->byteArray = 1;
-        e->handled = 1;
-        // If reading first time.
-        if (first)
+        printf("First read operation detected. Selector: %d\n", e->selector);
+        if (e->selector == 0)
         {
-            //Read all.
-            if (e->selector == 0)
+            printf("Selector is 0 - Reading all entries.\n");
+            e->transactionStartIndex = 1;
+            e->transactionEndIndex = pg->entriesInUse;
+            printf("Transaction Start Index: %d, End Index: %d\n", e->transactionStartIndex, e->transactionEndIndex);
+        }
+        else if (e->selector == 1)
+        {
+            printf("Selector is 1 - Reading by entry range.\n");
+            if ((ret = getProfileGenericDataByRangeFromRingBuffer(fileName, e)) != 0)
             {
-                e->transactionStartIndex = 1;
-                e->transactionEndIndex = pg->entriesInUse;
+                printf("Error getting profile generic data by range from ring buffer. Error code: %d\n", ret);
             }
-            else if (e->selector == 1)
+            else if ((ret = cosem_getColumns(&pg->captureObjects, e->selector, &e->parameters, &captureObjects)) != 0)
             {
-                //Read by entry. Find start and end index from the ring buffer.
-                if ((ret = getProfileGenericDataByRangeFromRingBuffer(fileName, e)) != 0 ||
-                    (ret = cosem_getColumns(&pg->captureObjects, e->selector, &e->parameters, &captureObjects)) != 0)
-                {
-                    e->transactionStartIndex = e->transactionEndIndex = 0;
-                }
-            }
-            else if (e->selector == 2)
-            {
-                dlmsVARIANT* it;
-                if ((ret = va_getByIndex(e->parameters.Arr, 0, &it)) == 0)
-                {
-                    e->transactionStartIndex = var_toInteger(it);
-                    if ((ret = va_getByIndex(e->parameters.Arr, 1, &it)) == 0)
-                    {
-                        e->transactionEndIndex = var_toInteger(it);
-                    }
-                }
-                if (ret != 0)
-                {
-                    e->transactionStartIndex = e->transactionEndIndex = 0;
-                }
-                else
-                {
-                    //If start index is too high.
-                    if (e->transactionStartIndex > pg->entriesInUse)
-                    {
-                        e->transactionStartIndex = e->transactionEndIndex = 0;
-                    }
-                    //If end index is too high.
-                    if (e->transactionEndIndex > pg->entriesInUse)
-                    {
-                        e->transactionEndIndex = pg->entriesInUse;
-                    }
-                }
+                printf("Error getting columns from captureObjects. Error code: %d\n", ret);
             }
         }
-        bb_clear(e->value.byteArr);
-        arr_clear(&captureObjects);
-        if (ret == 0 && first)
+        else if (e->selector == 2)
         {
-            if (e->transactionEndIndex == 0)
+            printf("Selector is 2 - Reading by specific entry.\n");
+            dlmsVARIANT* it;
+            if ((ret = va_getByIndex(e->parameters.Arr, 0, &it)) == 0)
             {
-                ret = cosem_setArray(e->value.byteArr, 0);
+                e->transactionStartIndex = var_toInteger(it);
+                if ((ret = va_getByIndex(e->parameters.Arr, 1, &it)) == 0)
+                {
+                    e->transactionEndIndex = var_toInteger(it);
+                }
+            }
+            if (ret != 0)
+            {
+                printf("Error reading by specific entry. Error code: %d\n", ret);
+                e->transactionStartIndex = e->transactionEndIndex = 0;
             }
             else
             {
-                ret = cosem_setArray(e->value.byteArr, (uint16_t)(e->transactionEndIndex - e->transactionStartIndex + 1));
-            }
-        }
-        if (ret == 0 && e->transactionEndIndex != 0)
-        {
-            //Loop items.
-            uint32_t pos;
-            gxtime tm;
-            uint16_t pduSize;
-            FILE* f = NULL;
-#if _MSC_VER > 1400
-            if (fopen_s(&f, fileName, "rb") != 0)
-            {
-                printf("Failed to open %s.\r\n", fileName);
-                return -1;
-            }
-#else
-            if ((f = fopen(fileName, "rb")) == NULL)
-            {
-                printf("Failed to open %s. Error code: %d. Description: %s.\n", fileName, errno, strerror(errno));
-                return -1;
-            }
-#endif
-            uint16_t dataSize = 0;
-            uint8_t columnSizes[10];
-            DLMS_DATA_TYPE dataTypes[10];
-            if (f != NULL)
-            {
-                getProfileGenericBufferColumnSizes(pg, dataTypes, columnSizes, &dataSize);
-        }
-            //Append data.
-            if (ret == 0 && dataSize != 0)
-            {
-                //Skip current index and total amount of the entries (+4 bytes).
-                if (fseek(f, 4 + ((e->transactionStartIndex - 1) * dataSize), SEEK_SET) != 0)
+                if (e->transactionStartIndex > pg->entriesInUse)
                 {
-                    printf("Failed to seek %s.\r\n", fileName);
-                    return -1;
+                    printf("Start index too high, adjusting to 0.\n");
+                    e->transactionStartIndex = e->transactionEndIndex = 0;
                 }
-                for (pos = e->transactionStartIndex - 1; pos != e->transactionEndIndex; ++pos)
+                if (e->transactionEndIndex > pg->entriesInUse)
                 {
-                    pduSize = (uint16_t)e->value.byteArr->size;
-                    if ((ret = cosem_setStructure(e->value.byteArr, pg->captureObjects.size)) != 0)
+                    printf("End index too high, adjusting to maximum entries.\n");
+                    e->transactionEndIndex = pg->entriesInUse;
+                }
+            }
+            printf("Transaction Start Index: %d, End Index: %d\n", e->transactionStartIndex, e->transactionEndIndex);
+        }
+    }
+
+    bb_clear(e->value.byteArr);
+    arr_clear(&captureObjects);
+
+    if (ret == 0 && first)
+    {
+        if (e->transactionEndIndex == 0)
+        {
+            ret = cosem_setArray(e->value.byteArr, 0);
+            printf("No entries to process, setting empty array.\n");
+        }
+        else
+        {
+            ret = cosem_setArray(e->value.byteArr, (uint16_t)(e->transactionEndIndex - e->transactionStartIndex + 1));
+            printf("Setting array with number of rows: %d\n", (uint16_t)(e->transactionEndIndex - e->transactionStartIndex + 1));
+        }
+    }
+
+    if (ret == 0 && e->transactionEndIndex != 0)
+    {
+        printf("Starting to read data from file.\n");
+        uint32_t pos;
+        gxtime tm;
+        uint16_t pduSize;
+        FILE* f = NULL;
+
+#if _MSC_VER > 1400
+        if (fopen_s(&f, fileName, "rb") != 0)
+        {
+            printf("Failed to open %s.\r\n", fileName);
+            return -1;
+        }
+#else
+        if ((f = fopen(fileName, "rb")) == NULL)
+        {
+            printf("Failed to open %s. Error code: %d. Description: %s.\n", fileName, errno, strerror(errno));
+            return -1;
+        }
+#endif
+
+        uint16_t dataSize = 0;
+        uint8_t columnSizes[11];
+        DLMS_DATA_TYPE dataTypes[11];
+        if (f != NULL)
+        {
+            getProfileGenericBufferColumnSizes(pg, dataTypes, columnSizes, &dataSize);
+            printf("Data size per row: %d bytes\n", dataSize);
+        }
+
+        if (ret == 0 && dataSize != 0)
+        {
+            printf("Skipping current index and starting to seek file to entry %d.\n", e->transactionStartIndex);
+            if (fseek(f, 4 + ((e->transactionStartIndex - 1) * dataSize), SEEK_SET) != 0)
+            {
+                printf("Failed to seek %s.\r\n", fileName);
+                fclose(f);
+                return -1;
+            }
+
+            for (pos = e->transactionStartIndex - 1; pos != e->transactionEndIndex; ++pos)
+            {
+                pduSize = (uint16_t)e->value.byteArr->size;
+                printf("Reading entry %d\n", pos + 1);
+                if ((ret = cosem_setStructure(e->value.byteArr, pg->captureObjects.size)) != 0)
+                {
+                    printf("Error setting structure for capture objects. Error code: %d\n", ret);
+                    break;
+                }
+
+                uint8_t colIndex;
+                gxKey* it;
+                for (colIndex = 0; colIndex != pg->captureObjects.size; ++colIndex)
+                {
+                    if ((ret = arr_getByIndex(&pg->captureObjects, colIndex, (void**)&it)) == 0)
                     {
-                        break;
-                    }
-                    uint8_t colIndex;
-                    gxKey* it;
-                    //Loop capture columns and get values.
-                    for (colIndex = 0; colIndex != pg->captureObjects.size; ++colIndex)
-                    {
-                        if ((ret = arr_getByIndex(&pg->captureObjects, colIndex, (void**)&it)) == 0)
+                        printf("Processing column index: %d\n", colIndex);
+                        if ((((gxObject*)it->key)->objectType == DLMS_OBJECT_TYPE_CLOCK || (gxObject*)it->key == BASE(unixTime)) &&
+                            ((gxTarget*)it->value)->attributeIndex == 2)
                         {
-                            //Date time is saved in EPOCH to save space.
-                            if ((((gxObject*)it->key)->objectType == DLMS_OBJECT_TYPE_CLOCK || (gxObject*)it->key == BASE(unixTime))
-                                && ((gxTarget*)it->value)->attributeIndex == 2)
+                            uint32_t time;
+                            fread(&time, 4, 1, f);
+                            printf("Read clock value: %u\n", time);
+                            time_initUnix(&tm, time);
+                            if (((gxObject*)it->key) != BASE(unixTime))
                             {
-                                uint32_t time;
-                                fread(&time, 4, 1, f);
-                                time_initUnix(&tm, time);
-                                //Convert to meter time if UNIX time is not used.
-                                if (((gxObject*)it->key) != BASE(unixTime))
-                                {
-                                    clock_utcToMeterTime(&clock1, &tm);
-                                }
-                                if ((ret = cosem_setDateTimeAsOctetString(e->value.byteArr, &tm)) != 0)
-                                {
-                                    //Error is handled later.
-                                }
+                                clock_utcToMeterTime(&clock1, &tm);
                             }
-                            else
+                            if ((ret = cosem_setDateTimeAsOctetString(e->value.byteArr, &tm)) != 0)
                             {
-                                //Append data type.
-                                e->value.byteArr->data[e->value.byteArr->size] = dataTypes[colIndex];
-                                ++e->value.byteArr->size;
-                                //Read data.
-                                fread(&e->value.byteArr->data[e->value.byteArr->size], columnSizes[colIndex], 1, f);
-                                e->value.byteArr->size += columnSizes[colIndex];
+                                printf("Error converting time to octet string. Error code: %d\n", ret);
                             }
                         }
-                        if (ret != 0)
+                        else
                         {
-                            //Don't set error if PDU is full.
-                            if (ret == DLMS_ERROR_CODE_OUTOFMEMORY)
-                            {
-                                --e->transactionStartIndex;
-                                e->value.byteArr->size = pduSize;
-                                ret = 0;
-                            }
-                            else
-                            {
-                                break;
-                            }
+                            e->value.byteArr->data[e->value.byteArr->size] = dataTypes[colIndex];
+                            ++e->value.byteArr->size;
+                            fread(&e->value.byteArr->data[e->value.byteArr->size], columnSizes[colIndex], 1, f);
+                            printf("Read column data (size %d): %.*s\n", columnSizes[colIndex], columnSizes[colIndex], &e->value.byteArr->data[e->value.byteArr->size]);
+                            e->value.byteArr->size += columnSizes[colIndex];
+                        }
+                    }
+                    if (ret != 0)
+                    {
+                        if (ret == DLMS_ERROR_CODE_OUTOFMEMORY)
+                        {
+                            printf("Out of memory error encountered. Resetting PDU.\n");
+                            --e->transactionStartIndex;
+                            e->value.byteArr->size = pduSize;
+                            ret = 0;
+                        }
+                        else
+                        {
+                            printf("Error processing column index %d. Error code: %d\n", colIndex, ret);
                             break;
                         }
                     }
-                    ++e->transactionStartIndex;
                 }
-                fclose(f);
+                ++e->transactionStartIndex;
             }
-            else
-            {
-                printf("Failed to open %s.\r\n", fileName);
-                return -1;
-            }
+            fclose(f);
+            printf("Finished reading from file.\n");
+        }
+        else
+        {
+            printf("Data size is zero, no data to read.\n");
+            fclose(f);
+            return -1;
+        }
     }
-}
+    printf("Finished readProfileGeneric function.\n");
     return ret;
 }
 
