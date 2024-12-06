@@ -4,7 +4,7 @@ TARGET   = gurux.dlms.simple.server.bin
 CC       = gcc
 
 # compiling flags here
-CFLAGS   = -std=gnu99 -Wall -I. -IcJSON/include
+CFLAGS   = -std=gnu99 -fstack-protector-all -Wall -I. -IcJSON/include
 
 LINKER   = gcc -o
 

@@ -73,7 +73,7 @@ int socket1 = -1;
 uint32_t SERIAL_NUMBER = 123456;
 
 //TODO: Allocate space where profile generic row values are serialized.
-#define PDU_MAX_PROFILE_GENERIC_COLUMN_SIZE 100
+#define PDU_MAX_PROFILE_GENERIC_COLUMN_SIZE 512
 
 #define HDLC_HEADER_SIZE 17
 #define HDLC_BUFFER_SIZE 128
@@ -81,6 +81,7 @@ uint32_t SERIAL_NUMBER = 123456;
 #define WRAPPER_BUFFER_SIZE 8 + PDU_BUFFER_SIZE
 
 #define STACK_SIZE 4 * 1024 * 1024  // 4 MB stack size
+#define LOG_FILE_SIZE   2048U
 
 //Buffer where frames are saved.
 static unsigned char frameBuff[HDLC_BUFFER_SIZE + HDLC_HEADER_SIZE];
@@ -474,7 +475,7 @@ uint16_t getProfileGenericBufferMaxRowCount(
     if (f == NULL)
     {
         //Allocate space for the profile generic buffer.
-        allocateProfileGenericBuffer(fileName, STACK_SIZE);
+        allocateProfileGenericBuffer(fileName, LOG_FILE_SIZE);
 #if _MSC_VER > 1400
         fopen_s(&f, fileName, "r+b");
 #else
@@ -491,9 +492,10 @@ uint16_t getProfileGenericBufferMaxRowCount(
             //Decrease current index and total amount of the entries.
             count -= 4;
             count /= rowSize;
-    }
+        }
         fclose(f);
-}
+    }
+    GXTRACE_INT("Number of rows in profile generic", count);
     return count;
 }
 
