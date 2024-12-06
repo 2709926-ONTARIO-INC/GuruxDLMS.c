@@ -72,16 +72,16 @@ unsigned char testMode = 1;
 int socket1 = -1;
 uint32_t SERIAL_NUMBER = 123456;
 
-//TODO: Allocate space where profile generic row values are serialized.
-#define PDU_MAX_PROFILE_GENERIC_COLUMN_SIZE 512
-
 #define HDLC_HEADER_SIZE 17
 #define HDLC_BUFFER_SIZE 128
-#define PDU_BUFFER_SIZE 512
+#define PDU_BUFFER_SIZE 4096
 #define WRAPPER_BUFFER_SIZE 8 + PDU_BUFFER_SIZE
 
 #define STACK_SIZE 4 * 1024 * 1024  // 4 MB stack size
 #define LOG_FILE_SIZE   2048U
+
+//TODO: Allocate space where profile generic row values are serialized.
+#define PDU_MAX_PROFILE_GENERIC_COLUMN_SIZE LOG_FILE_SIZE * 4U
 
 //Buffer where frames are saved.
 static unsigned char frameBuff[HDLC_BUFFER_SIZE + HDLC_HEADER_SIZE];
@@ -542,7 +542,7 @@ int captureProfileGeneric(gxProfileGeneric* pg)
     int ret = 0;
     char fileName[30];
     getProfileGenericFileName(pg, fileName);
-    unsigned char pduBuff[PDU_MAX_PROFILE_GENERIC_COLUMN_SIZE];
+    static unsigned char pduBuff[PDU_MAX_PROFILE_GENERIC_COLUMN_SIZE];
     gxByteBuffer pdu;
     bb_attach(&pdu, pduBuff, 0, sizeof(pduBuff));
     gxValueEventArg e;
