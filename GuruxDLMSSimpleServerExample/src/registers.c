@@ -38,6 +38,8 @@ uint32_t blockEnergyKVAhLagGarbageValues[] = {99995, 23455, 198765};
 uint32_t blockEnergyKVAhLeadGarbageValues[] = {88885, 34565, 109875};
 uint32_t blockEnergyKVAhImportGarbageValues[] = {77775, 45675, 987655};
 uint32_t cumulativeEnergyKWhImportGarbageValues[] = {90, 98, 76};
+uint32_t cumulativeEnergyKVAhLagGarbageValues[] = {88, 87, 65};
+uint32_t cumulativeEnergyKVAhLeadGarbageValues[] = {88, 87, 65};
 uint32_t cumulativeEnergyKVAhImportGarbageValues[] = {88, 87, 65};
 
 
@@ -47,7 +49,7 @@ gxRegister currentL1, currentL2, currentL3;
 gxRegister frequency;
 gxRegister powerFactorL1, powerFactorL2, powerFactorL3;
 gxRegister blockEnergyKWhImport, blockEnergyKVAhLag, blockEnergyKVAhLead, blockEnergyKVAhImport;
-gxRegister cumulativeEnergyKWhImport, cumulativeEnergyKVAhImport;
+gxRegister cumulativeEnergyKWhImport, cumulativeEnergyKVAhLag, cumulativeEnergyKVAhLead, cumulativeEnergyKVAhImport;
 
 // Defin the objects to store KIGG register's averages
 gxRegister voltageL1Average, voltageL2Average, voltageL3Average;
@@ -60,7 +62,7 @@ static uint32_t currentL1Value = 0, currentL2Value = 0, currentL3Value = 0;
 static uint32_t frequencyValue = 0;
 static uint32_t powerFactorL1Value = 0, powerFactorL2Value = 0, powerFactorL3Value = 0;
 static uint32_t blockEnergyKWhImportValue = 0, blockEnergyKVAhLagValue = 0, blockEnergyKVAhLeadValue = 0, blockEnergyKVAhImportValue = 0;
-static uint32_t cumulativeEnergyKWhImportValue = 0, cumulativeEnergyKVAhImportValue = 0;
+static uint32_t cumulativeEnergyKWhImportValue = 0, cumulativeEnergyKVAhLagValue = 0, cumulativeEnergyKVAhLeadValue = 0, cumulativeEnergyKVAhImportValue = 0;
 
 // Define variables to store the KIGG registers' averages
 uint32_t voltageL1AverageValue = 0, voltageL2AverageValue = 0, voltageL3AverageValue = 0;
@@ -97,7 +99,7 @@ static int currentL1Counter = 0, currentL2Counter = 0, currentL3Counter = 0;
 static int frequencyCounter = 0;
 static int powerFactorL1Counter = 0, powerFactorL2Counter = 0, powerFactorL3Counter = 0;
 static int blockEnergyKWhImportCounter = 0, blockEnergyKVAhLagCounter = 0, blockEnergyKVAhLeadCounter = 0, blockEnergyKVAhImportCounter = 0;
-static int cumulativeEnergyKWhImportCounter = 0, cumulativeEnergyKVAhImportCounter = 0;
+static int cumulativeEnergyKWhImportCounter = 0, cumulativeEnergyKVAhLagCounter = 0, cumulativeEnergyKVAhLeadCounter = 0, cumulativeEnergyKVAhImportCounter = 0;
 
 // Average value counters for each variable
 static int voltageL1AverageCounter = 0, voltageL2AverageCounter = 0, voltageL3AverageCounter = 0;
@@ -109,16 +111,22 @@ static char* current_timestamp = NULL;
 
 // Variables to keep track of if the cumulative energy values are read once
 static bool isCumulativeEnergyKWhImportReadOnce = false;
+static bool isCumulativeEnergyKVAhLagReadOnce = false;
+static bool isCumulativeEnergyKVAhLeadReadOnce = false;
 static bool isCumulativeEnergyKVAhImportReadOnce = false;
 
 
 // Variable to track if garbage values were read once 
 static bool isCumulativeEnergyKWhImportGarbageValueSent = false;
+static bool isCumulativeEnergyKVAhLagGarbageValueSent = false;
+static bool isCumulativeEnergyKVAhLeadGarbageValueSent = false;
 static bool isCumulativeEnergyKVAhImportGarbageValueSent = false;
 
 
 // Variable to store the last cumulative energy values when garbage injection is enabled
 static uint32_t lastCumulativeEnergyKWhImportValue = 0;
+static uint32_t lastCumulativeEnergyKVAhLagValue = 0;
+static uint32_t lastCumulativeEnergyKVAhLeadValue = 0;
 static uint32_t lastCumulativeEnergyKVAhImportValue = 0;
 
 // Helper to reset a counter
@@ -960,6 +968,168 @@ uint32_t readCumulativeEnergyKWhImportValue()
     return cumulativeEnergyKWhImportValue;
 }
 
+// Function to add Cumulative Energy (kVAh Lag) register to the DLMS server
+int addCumulativeEnergyKVAhLag()
+{
+    int ret;
+    const unsigned char ln[6] = { 1, 0, 5, 8, 0, 255 };  // LN for Cumulative Energy kVAh Lag
+
+    if ((ret = INIT_OBJECT(cumulativeEnergyKVAhLag, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
+    {
+        cumulativeEnergyKVAhLagValue = (uint32_t)(
+                                        (voltageL1Value * currentL1Value * sin(powerFactorL1Value)) +
+                                        (voltageL2Value * currentL2Value * sin(powerFactorL2Value)) +
+                                        (voltageL3Value * currentL3Value * sin(powerFactorL3Value)));
+        GX_UINT32_BYREF(cumulativeEnergyKVAhLag.value, cumulativeEnergyKVAhLagValue);
+        cumulativeEnergyKVAhLag.scaler = 2;
+        cumulativeEnergyKVAhLag.unit = 32;  
+    }
+
+    return ret;
+}
+
+// Function to set Cumulative Energy (kVAh Lag) register's value
+void writeCumulativeEnergyKVAhLagValue(uint32_t value)
+{
+    cumulativeEnergyKVAhLagValue = value;
+}
+
+// Function to get Cumulative Energy (kVAh Lag) register's value with garbage value injection
+uint32_t readCumulativeEnergyKVAhLagValue()
+{
+    if (isGarbageValuesEnabled())
+    {
+        if (cumulativeEnergyKVAhLagCounter == 0)
+        {
+            // Select a random garbage value
+            lastCumulativeEnergyKVAhLagValue = cumulativeEnergyKVAhLagValue;
+            cumulativeEnergyKVAhLagValue = cumulativeEnergyKVAhLagGarbageValues[rand() % (sizeof(cumulativeEnergyKVAhLagGarbageValues) / sizeof(cumulativeEnergyKVAhLagGarbageValues[0]))];
+            current_timestamp = getFormattedTimestamp();
+            printf("%s -> Meter sending garbage value %u for cumulative energy kVAh lag.\n", current_timestamp, cumulativeEnergyKVAhLagValue);
+            // Reset the counter
+            cumulativeEnergyKVAhLagCounter = resetCounter();
+            isCumulativeEnergyKVAhLagGarbageValueSent = true;
+            return cumulativeEnergyKVAhLagValue;
+        }
+        else
+        {
+            // Check if garbage value was sent, then restore the previous value
+            if (isCumulativeEnergyKVAhLagGarbageValueSent)
+            {
+                isCumulativeEnergyKVAhLagGarbageValueSent = false;
+                cumulativeEnergyKVAhLagValue = lastCumulativeEnergyKVAhLagValue;
+            }
+
+            if (!isCumulativeEnergyKVAhLagReadOnce) 
+            {
+                isCumulativeEnergyKVAhLagReadOnce = true;
+            }
+            else
+            {
+                // Increment the value randomly by 1, 2, or 3
+                cumulativeEnergyKVAhLagValue += (rand() % 3) + 1;
+            }
+            // cumulativeEnergyKVAhLagValue = cumulativeEnergyKVAhLagValueMin + rand() % (cumulativeEnergyKVAhLagValueMax - cumulativeEnergyKVAhLagValueMin + 1); // Normal value
+            cumulativeEnergyKVAhLagCounter--;
+        }
+    }
+    else
+    {
+        if (!isCumulativeEnergyKVAhLagReadOnce) 
+        {
+            isCumulativeEnergyKVAhLagReadOnce = true;
+        }
+        else
+        {
+            // Increment the value randomly by 1, 2, or 3
+            cumulativeEnergyKVAhLagValue += (rand() % 3) + 1;
+        }
+        // cumulativeEnergyKVAhLagValue = cumulativeEnergyKVAhLagValueMin + rand() % (cumulativeEnergyKVAhLagValueMax - cumulativeEnergyKVAhLagValueMin + 1); // Normal value
+    }
+    return cumulativeEnergyKVAhLagValue;
+}
+
+// Function to add Cumulative Energy (kVAh Lead) register to the DLMS server
+int addCumulativeEnergyKVAhLead()
+{
+    int ret;
+    const unsigned char ln[6] = { 1, 0, 8, 8, 0, 255 };  // LN for Cumulative Energy kVAh Lead
+
+    if ((ret = INIT_OBJECT(cumulativeEnergyKVAhLead, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
+    {
+        cumulativeEnergyKVAhLeadValue = (uint32_t)(
+                                        (voltageL1Value * currentL1Value * sin(powerFactorL1Value)) +
+                                        (voltageL2Value * currentL2Value * sin(powerFactorL2Value)) +
+                                        (voltageL3Value * currentL3Value * sin(powerFactorL3Value)));
+        GX_UINT32_BYREF(cumulativeEnergyKVAhLead.value, cumulativeEnergyKVAhLeadValue);
+        cumulativeEnergyKVAhLead.scaler = 2;
+        cumulativeEnergyKVAhLead.unit = 32;  
+    }
+
+    return ret;
+}
+
+// Function to set Cumulative Energy (kVAh Lead) register's value
+void writeCumulativeEnergyKVAhLeadValue(uint32_t value)
+{
+    cumulativeEnergyKVAhLeadValue = value;
+}
+
+// Function to get Cumulative Energy (kVAh Lead) register's value with garbage value injection
+uint32_t readCumulativeEnergyKVAhLeadValue()
+{
+    if (isGarbageValuesEnabled())
+    {
+        if (cumulativeEnergyKVAhLeadCounter == 0)
+        {
+            // Select a random garbage value
+            lastCumulativeEnergyKVAhLeadValue = cumulativeEnergyKVAhLeadValue;
+            cumulativeEnergyKVAhLeadValue = cumulativeEnergyKVAhLeadGarbageValues[rand() % (sizeof(cumulativeEnergyKVAhLeadGarbageValues) / sizeof(cumulativeEnergyKVAhLeadGarbageValues[0]))];
+            current_timestamp = getFormattedTimestamp();
+            printf("%s -> Meter sending garbage value %u for cumulative energy kVAh lead.\n", current_timestamp, cumulativeEnergyKVAhLeadValue);
+            // Reset the counter
+            cumulativeEnergyKVAhLeadCounter = resetCounter();
+            isCumulativeEnergyKVAhLeadGarbageValueSent = true;
+            return cumulativeEnergyKVAhLeadValue;
+        }
+        else
+        {
+            // Check if garbage value was sent, then restore the previous value
+            if (isCumulativeEnergyKVAhLeadGarbageValueSent)
+            {
+                isCumulativeEnergyKVAhLeadGarbageValueSent = false;
+                cumulativeEnergyKVAhLeadValue = lastCumulativeEnergyKVAhLeadValue;
+            }
+
+            if (!isCumulativeEnergyKVAhLeadReadOnce) 
+            {
+                isCumulativeEnergyKVAhLeadReadOnce = true;
+            }
+            else
+            {
+                // Increment the value randomly by 1, 2, or 3
+                cumulativeEnergyKVAhLeadValue += (rand() % 3) + 1;
+            }
+            // cumulativeEnergyKVAhLeadValue = cumulativeEnergyKVAhLeadValueMin + rand() % (cumulativeEnergyKVAhLeadValueMax - cumulativeEnergyKVAhLeadValueMin + 1); // Normal value
+            cumulativeEnergyKVAhLeadCounter--;
+        }
+    }
+    else
+    {
+        if (!isCumulativeEnergyKVAhLeadReadOnce) 
+        {
+            isCumulativeEnergyKVAhLeadReadOnce = true;
+        }
+        else
+        {
+            // Increment the value randomly by 1, 2, or 3
+            cumulativeEnergyKVAhLeadValue += (rand() % 3) + 1;
+        }
+        // cumulativeEnergyKVAhLeadValue = cumulativeEnergyKVAhLeadValueMin + rand() % (cumulativeEnergyKVAhLeadValueMax - cumulativeEnergyKVAhLeadValueMin + 1); // Normal value
+    }
+    return cumulativeEnergyKVAhLeadValue;
+}
+
 // Function to add Cumulative Energy (kVAh Import) register to the DLMS server
 int addCumulativeEnergyKVAhImport()
 {
@@ -1204,6 +1374,8 @@ void initializeCounters(void)
     blockEnergyKVAhLeadCounter = resetCounter();
     blockEnergyKVAhImportCounter = resetCounter();
     cumulativeEnergyKWhImportCounter = resetCounter();
+    cumulativeEnergyKVAhLagCounter = resetCounter();
+    cumulativeEnergyKVAhLeadCounter = resetCounter();
     cumulativeEnergyKVAhImportCounter = resetCounter();
 }
 

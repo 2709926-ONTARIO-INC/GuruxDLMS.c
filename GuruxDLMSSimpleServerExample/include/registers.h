@@ -19,6 +19,8 @@ int addBlockEnergyKVAhLag(void);
 int addBlockEnergyKVAhLead(void);
 int addBlockEnergyKVAhImport(void);
 int addCumulativeEnergyKWhImport(void);
+int addCumulativeEnergyKVAhLag(void);
+int addCumulativeEnergyKVAhLead(void);
 int addCumulativeEnergyKVAhImport(void);
 
 // Functions to get the KIGG registers' values
@@ -37,6 +39,8 @@ uint32_t readBlockEnergyKVAhLagValue(void);
 uint32_t readBlockEnergyKVAhLeadValue(void);
 uint32_t readBlockEnergyKVAhImportValue(void);
 uint32_t readCumulativeEnergyKWhImportValue(void);
+uint32_t readCumulativeEnergyKVAhLagValue(void);
+uint32_t readCumulativeEnergyKVAhLeadValue(void);
 uint32_t readCumulativeEnergyKVAhImportValue(void);
 
 // Functions to set the KIGG registers' values
@@ -55,6 +59,8 @@ void writeBlockEnergyKVAhLagValue(uint32_t value);
 void writeBlockEnergyKVAhLeadValue(uint32_t value);
 void writeBlockEnergyKVAhImportValue(uint32_t value);
 void writeCumulativeEnergyKWhImportValue(uint32_t value);
+void writeCumulativeEnergyKVAhLagValue(uint32_t value);
+void writeCumulativeEnergyKVAhLeadValue(uint32_t value);
 void writeCumulativeEnergyKVAhImportValue(uint32_t value);
 
 // Functions to add the KIGG average registers to the DLMS server
