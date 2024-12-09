@@ -83,6 +83,8 @@ uint32_t SERIAL_NUMBER = 123456;
 //TODO: Allocate space where profile generic row values are serialized.
 #define PDU_MAX_PROFILE_GENERIC_COLUMN_SIZE LOG_FILE_SIZE * 4U
 
+#define LOAD_PROFILE_COUNTER    4U
+
 //Buffer where frames are saved.
 static unsigned char frameBuff[HDLC_BUFFER_SIZE + HDLC_HEADER_SIZE];
 //Buffer where PDUs are saved.
@@ -124,7 +126,7 @@ static gxActionSchedule actionScheduleDisconnectOpen;
 static gxActionSchedule actionScheduleDisconnectClose;
 static gxPushSetup pushSetup;
 static gxDisconnectControl disconnectControl;
-static gxProfileGeneric loadProfile;
+static gxProfileGeneric loadProfile, dailyLoadProfile;
 static gxSapAssignment sapAssignment;
 //Security Setup High is for High authentication.
 static gxSecuritySetup securitySetupHigh;
@@ -137,7 +139,7 @@ extern gxRegister currentL1, currentL2, currentL3;
 extern gxRegister frequency;
 extern gxRegister powerFactorL1, powerFactorL2, powerFactorL3;
 extern gxRegister blockEnergyKWhImport, blockEnergyKVAhLag, blockEnergyKVAhLead, blockEnergyKVAhImport;
-extern gxRegister cumulativeEnergyKWhImport, cumulativeEnergyKVAhImport;
+extern gxRegister cumulativeEnergyKWhImport, cumulativeEnergyKVAhLag, cumulativeEnergyKVAhLead, cumulativeEnergyKVAhImport;
 
 // Define external KIGG Average registers
 extern gxRegister voltageL1Average, voltageL2Average, voltageL3Average;
@@ -174,6 +176,8 @@ static gxObject *ALL_OBJECTS[] = {
     BASE(blockEnergyKVAhLead),
     BASE(blockEnergyKVAhImport),
     BASE(cumulativeEnergyKWhImport),
+    BASE(cumulativeEnergyKVAhLag),
+    BASE(cumulativeEnergyKVAhLead),
     BASE(cumulativeEnergyKVAhImport),
     
     BASE(pushSetup),
@@ -182,6 +186,7 @@ static gxObject *ALL_OBJECTS[] = {
     BASE(scriptTableActivateTestMode),
     BASE(scriptTableActivateNormalMode),
     BASE(loadProfile),
+    BASE(dailyLoadProfile),
     BASE(eventLog),
     BASE(hdlc),
     BASE(disconnectControl),
@@ -1070,6 +1075,18 @@ int addRegisterCumulativeEnergyKWhImport()
     return ret;
 }
 
+int addRegisterCumulativeEnergyKVAhLag()
+{
+    int ret = addCumulativeEnergyKVAhLag();
+    return ret;
+}
+
+int addRegisterCumulativeEnergyKVAhLead()
+{
+    int ret = addCumulativeEnergyKVAhLead();
+    return ret;
+}
+
 int addRegisterCumulativeEnergyKVAhImport()
 {
     int ret = addCumulativeEnergyKVAhImport();
@@ -1226,7 +1243,7 @@ int addLoadProfileProfileGeneric()
         //Set default values if load the first time.
         loadProfile.sortMethod = DLMS_SORT_METHOD_LIFO;
         ///////////////////////////////////////////////////////////////////
-        //Add 2 columns.
+        //Add columns.
         //Add clock obect.
         capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
         capture->attributeIndex = 2;
@@ -1289,6 +1306,51 @@ int addLoadProfileProfileGeneric()
         loadProfile.sortObjectAttributeIndex = 2;
         loadProfile.profileEntries = getProfileGenericBufferMaxRowCount(&loadProfile);
         loadProfile.entriesInUse = getProfileGenericBufferEntriesInUse(&loadProfile);
+    }
+    return 0;
+}
+
+///////////////////////////////////////////////////////////////////////
+//Add profile generic (historical data) object.
+///////////////////////////////////////////////////////////////////////
+int addDailyLoadProfileProfileGeneric()
+{
+    int ret;
+    const unsigned char ln[6] = { 1, 0, 99, 2, 0, 255 };
+    if ((ret = INIT_OBJECT(dailyLoadProfile, DLMS_OBJECT_TYPE_PROFILE_GENERIC, ln)) == 0)
+    {
+        gxTarget* capture;
+        //Set default values if load the first time.
+        dailyLoadProfile.sortMethod = DLMS_SORT_METHOD_LIFO;
+        ///////////////////////////////////////////////////////////////////
+        //Add columns.
+        //Add clock obect.
+        capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&dailyLoadProfile.captureObjects, key_init(&clock1, capture));
+        //Add Cumulative Energy Wh - Import.
+        capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&dailyLoadProfile.captureObjects, key_init(&cumulativeEnergyKWhImport, capture));
+        //Add Cumulative Energy VAh - Lag.
+        capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&dailyLoadProfile.captureObjects, key_init(&cumulativeEnergyKVAhLag, capture));
+        //Add Cumulative Energy VAh - Import.
+        capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&dailyLoadProfile.captureObjects, key_init(&cumulativeEnergyKVAhImport, capture));
+        ///////////////////////////////////////////////////////////////////
+        //Update amount of capture objects.
+        //Set clock to sort object.
+        dailyLoadProfile.sortObject = BASE(clock1);
+        dailyLoadProfile.sortObjectAttributeIndex = 2;
+        dailyLoadProfile.profileEntries = getProfileGenericBufferMaxRowCount(&dailyLoadProfile);
+        dailyLoadProfile.entriesInUse = getProfileGenericBufferEntriesInUse(&dailyLoadProfile);
     }
     return 0;
 }
@@ -1501,6 +1563,8 @@ int createObjects()
         (ret = addRegisterBlockEnergyKVAhLead()) != 0 ||
         (ret = addRegisterBlockEnergyKVAhImport()) != 0 ||
         (ret = addRegisterCumulativeEnergyKWhImport()) != 0 ||
+        (ret = addRegisterCumulativeEnergyKVAhLag()) != 0 ||
+        (ret = addRegisterCumulativeEnergyKVAhLead()) != 0 ||
         (ret = addRegisterCumulativeEnergyKVAhImport()) != 0 ||
         (ret = addRegisterVoltageL1Average()) != 0 ||
         (ret = addRegisterVoltageL2Average()) != 0 ||
@@ -1520,6 +1584,7 @@ int createObjects()
         (ret = addscriptTableActivateTestMode()) != 0 ||
         (ret = addscriptTableActivateNormalMode()) != 0 ||
         (ret = addLoadProfileProfileGeneric()) != 0 ||
+        (ret = addDailyLoadProfileProfileGeneric()) != 0 ||
         (ret = addEventLogProfileGeneric()) != 0 ||
         (ret = addActionScheduleDisconnectOpen()) != 0 ||
         (ret = addActionScheduleDisconnectClose()) != 0 ||
@@ -2107,6 +2172,16 @@ void svr_preRead(
         if (e->target == BASE(cumulativeEnergyKWhImport) && e->index == 2)
         {
             readCumulativeEnergyKWhImportValue();
+        }
+        // Update value every time when user reads register.
+        if (e->target == BASE(cumulativeEnergyKVAhLag) && e->index == 2)
+        {
+            readCumulativeEnergyKVAhLagValue();
+        }
+        // Update value every time when user reads register.
+        if (e->target == BASE(cumulativeEnergyKVAhLead) && e->index == 2)
+        {
+            readCumulativeEnergyKVAhLeadValue();
         }
         // Update value every time when user reads register.
         if (e->target == BASE(cumulativeEnergyKVAhImport) && e->index == 2)
@@ -3320,10 +3395,19 @@ void* UnixListenerThread(void* pVoid)
 void* captureThreadFunction(void* pVoid)
 {
     (void) pVoid;
+    unsigned int loadProfileCounter = 0;
+
     while(true)
     {
         sleep(30);
         captureProfileGeneric(&loadProfile);
+        loadProfileCounter++;
+
+        if (loadProfileCounter == LOAD_PROFILE_COUNTER)
+        {
+            captureProfileGeneric(&dailyLoadProfile);
+            loadProfileCounter = 0;
+        }
     }
     return NULL;
 }
