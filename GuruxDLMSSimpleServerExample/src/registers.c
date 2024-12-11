@@ -1221,7 +1221,7 @@ int addVoltageL1Average()
     {
         GX_UINT32_BYREF(voltageL1Average.value, voltageL1AverageValue);
         // Set additional properties  
-        voltageL1Average.scaler = -3;
+        voltageL1Average.scaler = 0;
         voltageL1Average.unit = 35;   
     }
     
@@ -1245,7 +1245,7 @@ int addVoltageL2Average()
     {
         GX_UINT32_BYREF(voltageL2Average.value, voltageL2AverageValue);
         // Set additional properties  
-        voltageL2Average.scaler = -3;
+        voltageL2Average.scaler = 0;
         voltageL2Average.unit = 35;   
     }
     
@@ -1269,7 +1269,7 @@ int addVoltageL3Average()
     {
         GX_UINT32_BYREF(voltageL3Average.value, voltageL3AverageValue);
         // Set additional properties  
-        voltageL3Average.scaler = -3;
+        voltageL3Average.scaler = 0;
         voltageL3Average.unit = 35;   
     }
     
@@ -1293,7 +1293,7 @@ int addCurrentL1Average()
     {
         GX_UINT32_BYREF(currentL1Average.value, currentL1AverageValue);
         // Set additional properties  
-        currentL1Average.scaler = -5;
+        currentL1Average.scaler = 0;
         currentL1Average.unit = 35;   
     }
     
@@ -1317,7 +1317,7 @@ int addCurrentL2Average()
     {
         GX_UINT32_BYREF(currentL2Average.value, currentL2AverageValue);
         // Set additional properties  
-        currentL2Average.scaler = -5;
+        currentL2Average.scaler = 0;
         currentL2Average.unit = 35;   
     }
     
@@ -1341,7 +1341,7 @@ int addCurrentL3Average()
     {
         GX_UINT32_BYREF(currentL3Average.value, currentL3AverageValue);
         // Set additional properties  
-        currentL3Average.scaler = -5;
+        currentL3Average.scaler = 0;
         currentL3Average.unit = 35;   
     }
     
