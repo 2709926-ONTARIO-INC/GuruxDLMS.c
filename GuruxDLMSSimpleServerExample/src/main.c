@@ -126,7 +126,7 @@ static gxActionSchedule actionScheduleDisconnectOpen;
 static gxActionSchedule actionScheduleDisconnectClose;
 static gxPushSetup pushSetup;
 static gxDisconnectControl disconnectControl;
-static gxProfileGeneric loadProfile, dailyLoadProfile;
+static gxProfileGeneric loadProfile, dailyLoadProfile, nameplateProfile;
 static gxSapAssignment sapAssignment;
 //Security Setup High is for High authentication.
 static gxSecuritySetup securitySetupHigh;
@@ -208,6 +208,7 @@ static gxObject *ALL_OBJECTS[] = {
     BASE(scriptTableActivateNormalMode),
     BASE(loadProfile),
     BASE(dailyLoadProfile),
+    BASE(nameplateProfile),
     BASE(eventLog),
     BASE(hdlc),
     BASE(disconnectControl),
@@ -1433,6 +1434,73 @@ int addDailyLoadProfileProfileGeneric()
 ///////////////////////////////////////////////////////////////////////
 //Add profile generic (historical data) object.
 ///////////////////////////////////////////////////////////////////////
+int addNameplateProfileProfileGeneric()
+{
+    int ret;
+    const unsigned char ln[6] = { 0, 0, 94, 91, 10, 255 };
+    if ((ret = INIT_OBJECT(nameplateProfile, DLMS_OBJECT_TYPE_PROFILE_GENERIC, ln)) == 0)
+    {
+        gxTarget* capture;
+        //Set default values if load the first time.
+        nameplateProfile.sortMethod = DLMS_SORT_METHOD_FIFO;
+        ///////////////////////////////////////////////////////////////////
+        //Add columns.
+        //Add meter serial number object.
+        capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&nameplateProfile.captureObjects, key_init(&meterSerialNumber, capture));
+        //Add manufacturer name object.
+        capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&nameplateProfile.captureObjects, key_init(&manufacturerName, capture));
+        //Add firmware version object.
+        capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&nameplateProfile.captureObjects, key_init(&firmwareVersion, capture));
+        //Add meter type object.
+        capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&nameplateProfile.captureObjects, key_init(&meterType, capture));
+        //Add meter category object.
+        capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&nameplateProfile.captureObjects, key_init(&meterCategory, capture));
+        //Add current rating object.
+        capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&nameplateProfile.captureObjects, key_init(&currentRating, capture));
+        //Add ctr object
+        capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&nameplateProfile.captureObjects, key_init(&ctr, capture));
+        //Add ptr object
+        capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&nameplateProfile.captureObjects, key_init(&ptr, capture));
+        //Add year of manufacture object.
+        capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&nameplateProfile.captureObjects, key_init(&yearOfManufacture, capture));
+        ///////////////////////////////////////////////////////////////////
+        //Update amount of capture objects.
+        nameplateProfile.profileEntries = getProfileGenericBufferMaxRowCount(&nameplateProfile);
+        nameplateProfile.entriesInUse = getProfileGenericBufferEntriesInUse(&nameplateProfile);
+    }
+    return 0;
+}
+
+///////////////////////////////////////////////////////////////////////
+//Add profile generic (historical data) object.
+///////////////////////////////////////////////////////////////////////
 int addEventLogProfileGeneric()
 {
     int ret;
@@ -1668,6 +1736,7 @@ int createObjects()
         (ret = addscriptTableActivateTestMode()) != 0 ||
         (ret = addscriptTableActivateNormalMode()) != 0 ||
         (ret = addLoadProfileProfileGeneric()) != 0 ||
+        (ret = addNameplateProfileProfileGeneric()) != 0 ||
         (ret = addDailyLoadProfileProfileGeneric()) != 0 ||
         (ret = addEventLogProfileGeneric()) != 0 ||
         (ret = addActionScheduleDisconnectOpen()) != 0 ||
@@ -3537,6 +3606,8 @@ void* captureThreadFunction(void* pVoid)
             captureProfileGeneric(&dailyLoadProfile);
             loadProfileCounter = 0;
         }
+
+        captureProfileGeneric(&nameplateProfile);
     }
     return NULL;
 }
