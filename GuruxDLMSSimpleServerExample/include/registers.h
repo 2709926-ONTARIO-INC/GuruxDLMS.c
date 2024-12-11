@@ -79,6 +79,28 @@ uint32_t readCurrentL1AverageValue(void);
 uint32_t readCurrentL2AverageValue(void);
 uint32_t readCurrentL3AverageValue(void);
 
+// Functions to add nameplate profile data to the DLMS server
+int addMeterSerialNumber(void);
+int addManufacturerName(void);
+int addFirmwareVersion(void);
+int addMeterType(void);
+int addMeterCategory(void);
+int addCurrentRating(void);
+int addCTR(void);
+int addPTR(void);
+int addYearOfManufacture(void);
+
+// Functions to get the nameplate profile data values
+const char* readMeterSerialNumber(void);
+const char* readManufacturerName(void);
+const char* readFirmwareVersion(void);
+uint8_t readMeterType(void);
+const char* readMeterCategory(void);
+const char* readCurrentRating(void);
+uint8_t readCTR(void);
+uint8_t readPTR(void);
+uint16_t readYearOfManufacture(void);
+
 void initializeCounters(void);
 bool setRegisterLimits(const char* filePath);
 

@@ -51,9 +51,14 @@ gxRegister powerFactorL1, powerFactorL2, powerFactorL3;
 gxRegister blockEnergyKWhImport, blockEnergyKVAhLag, blockEnergyKVAhLead, blockEnergyKVAhImport;
 gxRegister cumulativeEnergyKWhImport, cumulativeEnergyKVAhLag, cumulativeEnergyKVAhLead, cumulativeEnergyKVAhImport;
 
-// Defin the objects to store KIGG register's averages
+// Define the objects to store KIGG register's averages
 gxRegister voltageL1Average, voltageL2Average, voltageL3Average;
 gxRegister currentL1Average, currentL2Average, currentL3Average;
+
+
+// Define individual objects for nameplate profile
+gxData meterSerialNumber, manufacturerName, firmwareVersion, meterType, meterCategory;
+gxData currentRating, ctr, ptr, yearOfManufacture;
 
 
 // Define variables to store the KIGG registers' values
@@ -91,6 +96,17 @@ static uint32_t blockEnergyKVAhImportValueMin = 0, blockEnergyKVAhImportValueMax
 
 // static uint32_t cumulativeEnergyKWhImportValueMin = 450, cumulativeEnergyKWhImportValueMax = 500;
 // static uint32_t cumulativeEnergyKVAhImportValueMin = 500, cumulativeEnergyKVAhImportValueMax = 600;
+
+
+const char* meterSerialNumberValue = "X1165172";
+const char* manufacturerNameValue = "SECURE METERS LTD.";
+const char* firmwareVersionValue = "M1XXG04";
+uint8_t meterTypeValue = 2;
+const char* meterCategoryValue = "C1";
+const char* currentRatingValue = "5 - 10 A";
+uint8_t ctrValue = 12;
+uint8_t ptrValue = 100;
+uint16_t yearOfManufactureValue = 2019;              // Fixed value for the register
 
 
 // Garbage counters for each variable
@@ -1352,6 +1368,168 @@ int addCurrentL3Average()
 uint32_t readCurrentL3AverageValue()
 {
     return currentL3AverageValue;
+}
+
+int addMeterSerialNumber()
+{
+    int ret;
+    const unsigned char ln[6] = { 0, 0, 96, 1, 0, 255 };
+
+    if ((ret = INIT_OBJECT(meterSerialNumber, DLMS_OBJECT_TYPE_DATA, ln)) == 0)
+    {
+        var_addBytes(&meterSerialNumber.value, (unsigned char*)meterSerialNumberValue, strlen(meterSerialNumberValue));
+    }
+
+    return ret;
+}
+
+const char* readMeterSerialNumber()
+{
+    return meterSerialNumberValue;
+}
+
+int addManufacturerName()
+{
+    int ret;
+    const unsigned char ln[6] = { 0, 0, 96, 1, 1, 255 }; // OBIS code for Manufacturer Name
+
+    if ((ret = INIT_OBJECT(manufacturerName, DLMS_OBJECT_TYPE_DATA, ln)) == 0)
+    {
+        var_addBytes(&manufacturerName.value, (unsigned char*)manufacturerNameValue, strlen(manufacturerNameValue));
+    }
+
+    return ret;
+}
+
+const char* readManufacturerName()
+{
+    return manufacturerNameValue;
+}
+
+int addFirmwareVersion()
+{
+    int ret;
+    const unsigned char ln[6] = { 1, 0, 0, 2, 0, 255 }; // OBIS code for Firmware Version
+
+    if ((ret = INIT_OBJECT(firmwareVersion, DLMS_OBJECT_TYPE_DATA, ln)) == 0)
+    {
+        var_addBytes(&firmwareVersion.value, (unsigned char*)firmwareVersionValue, strlen(firmwareVersionValue));
+    }
+
+    return ret;
+}
+
+const char* readFirmwareVersion()
+{
+    return firmwareVersionValue;
+}
+
+int addMeterType()
+{
+    int ret;
+    const unsigned char ln[6] = { 0, 0, 94, 91, 9, 255 }; // OBIS code for Meter Type
+
+    if ((ret = INIT_OBJECT(meterType, DLMS_OBJECT_TYPE_DATA, ln)) == 0)
+    {
+        var_setUInt8(&meterType.value, meterTypeValue);
+    }
+
+    return ret;
+}
+
+uint8_t readMeterType()
+{
+    return meterTypeValue;
+}
+
+int addMeterCategory()
+{
+    int ret;
+    const unsigned char ln[6] = { 0, 0, 94, 91, 11, 255 }; // OBIS code for Meter Category
+
+    if ((ret = INIT_OBJECT(meterCategory, DLMS_OBJECT_TYPE_DATA, ln)) == 0)
+    {
+        var_addBytes(&meterCategory.value, (unsigned char*)meterCategoryValue, strlen(meterCategoryValue));
+    }
+
+    return ret;
+}
+
+const char* readMeterCategory()
+{
+    return meterCategoryValue;
+}
+
+int addCurrentRating()
+{
+    int ret;
+    const unsigned char ln[6] = { 0, 0, 94, 91, 12, 255 }; // OBIS code for Current Rating
+
+    if ((ret = INIT_OBJECT(currentRating, DLMS_OBJECT_TYPE_DATA, ln)) == 0)
+    {
+        var_addBytes(&currentRating.value, (unsigned char*)currentRatingValue, strlen(currentRatingValue));
+    }
+
+    return ret;
+}
+
+const char* readCurrentRating()
+{
+    return currentRatingValue;
+}
+
+int addCTR()
+{
+    int ret;
+    const unsigned char ln[6] = { 1, 0, 0, 4, 2, 255 }; // OBIS code for CTR
+
+    if ((ret = INIT_OBJECT(ctr, DLMS_OBJECT_TYPE_DATA, ln)) == 0)
+    {
+        var_setUInt8(&ctr.value, ctrValue);
+    }
+
+    return ret;
+}
+
+uint8_t readCTR()
+{
+    return ctrValue;
+}
+
+int addPTR()
+{
+    int ret;
+    const unsigned char ln[6] = { 1, 0, 0, 4, 3, 255 }; // OBIS code for PTR
+
+    if ((ret = INIT_OBJECT(ptr, DLMS_OBJECT_TYPE_DATA, ln)) == 0)
+    {
+        var_setUInt8(&ptr.value, ptrValue);
+    }
+
+    return ret;
+}
+
+uint8_t readPTR()
+{
+    return ptrValue;
+}
+
+int addYearOfManufacture()
+{
+    int ret;
+    const unsigned char ln[6] = { 0, 0, 96, 1, 4, 255 }; // OBIS code for Year of Manufacture
+
+    if ((ret = INIT_OBJECT(yearOfManufacture, DLMS_OBJECT_TYPE_DATA, ln)) == 0)
+    {
+        var_setUInt16(&yearOfManufacture.value, yearOfManufactureValue);
+    }
+
+    return ret;
+}
+
+uint16_t readYearOfManufacture()
+{
+    return yearOfManufactureValue;
 }
 
 

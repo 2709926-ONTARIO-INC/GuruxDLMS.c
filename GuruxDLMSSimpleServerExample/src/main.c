@@ -145,6 +145,10 @@ extern gxRegister cumulativeEnergyKWhImport, cumulativeEnergyKVAhLag, cumulative
 extern gxRegister voltageL1Average, voltageL2Average, voltageL3Average;
 extern gxRegister currentL1Average, currentL2Average, currentL3Average;
 
+// Define external KIGG nameplate profile data
+extern gxData meterSerialNumber, manufacturerName, firmwareVersion, meterType, meterCategory;
+extern gxData currentRating, ctr, ptr, yearOfManufacture;
+
 static gxObject *NONE_OBJECTS[] = {BASE(associationNone), BASE(ldn), BASE(sapAssignment), BASE(clock1)};
 
 static gxObject *ALL_OBJECTS[] = {
@@ -185,6 +189,17 @@ static gxObject *ALL_OBJECTS[] = {
     BASE(cumulativeEnergyKVAhLag),
     BASE(cumulativeEnergyKVAhLead),
     BASE(cumulativeEnergyKVAhImport),
+    
+    // Add KIGG nameplate profile data
+    BASE(meterSerialNumber), 
+    BASE(manufacturerName),
+    BASE(firmwareVersion),
+    BASE(meterType),
+    BASE(meterCategory),
+    BASE(currentRating),
+    BASE(ctr),
+    BASE(ptr),
+    BASE(yearOfManufacture),
     
     BASE(pushSetup),
     BASE(scriptTableGlobalMeterReset),
@@ -1135,6 +1150,60 @@ int addRegisterCurrentL3Average()
     return ret;
 }
 
+int addDataMeterSerialNumber()
+{
+    int ret = addMeterSerialNumber();
+    return ret;
+}
+
+int addDataManufacturerName()
+{
+    int ret = addManufacturerName();
+    return ret;
+}
+
+int addDataFirmwareVersion()
+{
+    int ret = addFirmwareVersion();
+    return ret;
+}
+
+int addDataMeterType()
+{
+    int ret = addMeterType();
+    return ret;
+}
+
+int addDataMeterCategory()
+{
+    int ret = addMeterCategory();
+    return ret;
+}
+
+int addDataCurrentRating()
+{
+    int ret = addCurrentRating();
+    return ret;
+}
+
+int addDataCTR()
+{
+    int ret = addCTR();
+    return ret;
+}
+
+int addDataPTR()
+{
+    int ret = addPTR();
+    return ret;
+}
+
+int addDataYearOfManufacture()
+{
+    int ret = addYearOfManufacture();
+    return ret;
+}
+
 uint16_t readEventCode()
 {
     return eventCode.value.uiVal;
@@ -1578,6 +1647,15 @@ int createObjects()
         (ret = addRegisterCurrentL1Average()) != 0 ||
         (ret = addRegisterCurrentL2Average()) != 0 ||
         (ret = addRegisterCurrentL3Average()) != 0 ||
+        (ret = addDataMeterSerialNumber()) != 0 ||
+        (ret = addDataManufacturerName()) != 0 ||
+        (ret = addDataFirmwareVersion()) != 0 ||
+        (ret = addDataMeterType()) != 0 ||
+        (ret = addDataMeterCategory()) != 0 ||
+        (ret = addDataCurrentRating()) != 0 ||
+        (ret = addDataCTR()) != 0 ||
+        (ret = addDataPTR()) != 0 ||
+        (ret = addDataYearOfManufacture()) != 0 ||
         (ret = addAssociationNone()) != 0 ||
         (ret = addAssociationLow()) != 0 ||
         (ret = addAssociationHigh()) != 0 ||
@@ -2223,6 +2301,51 @@ void svr_preRead(
         if (e->target == BASE(currentL3Average) && e->index == 2)
         {
             readCurrentL3AverageValue();
+        }
+        // Read value every time when user reads register.
+        if (e->target == BASE(meterSerialNumber) && e->index == 2)
+        {
+            readMeterSerialNumber();
+        }
+        // Read value every time when user reads register.
+        if (e->target == BASE(manufacturerName) && e->index == 2)
+        {
+            readManufacturerName();
+        }
+        // Read value every time when user reads register.
+        if (e->target == BASE(firmwareVersion) && e->index == 2)
+        {
+            readFirmwareVersion();
+        }
+        // Read value every time when user reads register.
+        if (e->target == BASE(meterType) && e->index == 2)
+        {
+            readMeterType();
+        }
+        // Read value every time when user reads register.
+        if (e->target == BASE(meterCategory) && e->index == 2)
+        {
+            readMeterCategory();
+        }
+        // Read value every time when user reads register.
+        if (e->target == BASE(currentRating) && e->index == 2)
+        {
+            readCurrentRating();
+        }
+        // Read value every time when user reads register.
+        if (e->target == BASE(ctr) && e->index == 2)
+        {
+            readCTR();
+        }
+        // Read value every time when user reads register.
+        if (e->target == BASE(ptr) && e->index == 2)
+        {
+            readPTR();
+        }
+        // Read value every time when user reads register.
+        if (e->target == BASE(yearOfManufacture) && e->index == 2)
+        {
+            readYearOfManufacture();
         }
         //Get time if user want to read date and time.
         if (e->target == BASE(clock1) && e->index == 2)
