@@ -15,6 +15,7 @@
 //---------------------------------------------------------------------------
 #include <stdio.h>
 #include <stdbool.h>
+#include <sys/stat.h>
 
 #if defined(_WIN32) || defined(_WIN64)//Windows includes
 #if _MSC_VER > 1400
@@ -374,12 +375,35 @@ int saveSettings()
 //Allocate profile generic buffer.
 void allocateProfileGenericBuffer(const char* fileName, uint32_t size)
 {
+    const char *meterSerialNumber = readMeterSerialNumber();
+    char directoryPath[32];
+    char filePath[64];
+
+    // Create directory path using meter serial number if it does not exist.
+    snprintf(directoryPath, sizeof(directoryPath), "%s", meterSerialNumber);
+#if defined(_MSC_VER)
+    if (_mkdir(directoryPath) != 0 && errno != EEXIST)
+    {
+        printf("Failed to create directory: %s\n", directoryPath);
+        return;
+    }
+#else
+    if (mkdir(directoryPath, 0777) != 0 && errno != EEXIST)
+    {
+        printf("Failed to create directory: %s\n", directoryPath);
+        return;
+    }
+#endif
+
+    // Create file path inside the directory.
+    snprintf(filePath, sizeof(filePath), "%s/%s", directoryPath, fileName);
+
     uint32_t pos;
     FILE* f = NULL;
 #if _MSC_VER > 1400
-    fopen_s(&f, fileName, "ab");
+    fopen_s(&f, filePath, "ab");
 #else
-    f = fopen(fileName, "ab");
+    f = fopen(filePath, "ab");
 #endif
     if (f != NULL)
     {
@@ -390,7 +414,7 @@ void allocateProfileGenericBuffer(const char* fileName, uint32_t size)
             {
                 if (fputc(0x00, f) != 0)
                 {
-                    printf("Error Writing to %s\n", fileName);
+                    printf("Error Writing to %s\n", filePath);
                     break;
                 }
             }
@@ -401,7 +425,21 @@ void allocateProfileGenericBuffer(const char* fileName, uint32_t size)
 
 int getProfileGenericFileName(gxProfileGeneric* pg, char* fileName)
 {
+    const char* meterSerialNumber = readMeterSerialNumber();
+    char directoryPath[32];
+    char tempFileName[64]; // Temporary buffer to avoid overlap
+
     int ret = hlp_getLogicalNameToString(pg->base.logicalName, fileName);
+
+    // Create directory path using meter serial number.
+    snprintf(directoryPath, sizeof(directoryPath), "%s", meterSerialNumber);
+
+    // Prepend the directory path to the filename.
+    snprintf(tempFileName, sizeof(tempFileName), "%s/%s", directoryPath, fileName);
+
+    // Copy the constructed file path back into the original fileName buffer
+    strncpy(fileName, tempFileName, strlen(tempFileName));
+
 #if defined(_WIN64)
     strcat(fileName, "64.raw");
 #else // defined(_WIN32) || defined(__linux__)
@@ -479,7 +517,7 @@ uint16_t getProfileGenericBufferMaxRowCount(
     gxProfileGeneric* pg)
 {
     uint16_t count = 0;
-    char fileName[30];
+    char fileName[64];
     //Allocate space for load profile buffer.
     getProfileGenericFileName(pg, fileName);
     uint16_t rowSize = 0;
@@ -520,7 +558,7 @@ uint16_t getProfileGenericBufferMaxRowCount(
 uint16_t getProfileGenericBufferEntriesInUse(gxProfileGeneric* pg)
 {
     uint16_t index = 0;
-    char fileName[30];
+    char fileName[64];
     getProfileGenericFileName(pg, fileName);
     FILE* f = NULL;
 #if _MSC_VER > 1400
@@ -551,9 +589,10 @@ int captureProfileGeneric(gxProfileGeneric* pg)
     unsigned char pos;
     gxKey* it;
     int ret = 0;
-    char fileName[30];
+    char fileName[64];
     FILE* f = NULL;
     getProfileGenericFileName(pg, fileName);
+    printf("Filename: %s\n", fileName);
     static unsigned char pduBuff[PDU_MAX_PROFILE_GENERIC_COLUMN_SIZE];
     gxByteBuffer pdu;
     bb_attach(&pdu, pduBuff, 0, sizeof(pduBuff));
