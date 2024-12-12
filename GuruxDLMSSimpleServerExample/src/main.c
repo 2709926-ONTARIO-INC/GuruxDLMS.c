@@ -126,7 +126,7 @@ static gxActionSchedule actionScheduleDisconnectOpen;
 static gxActionSchedule actionScheduleDisconnectClose;
 static gxPushSetup pushSetup;
 static gxDisconnectControl disconnectControl;
-static gxProfileGeneric loadProfile, dailyLoadProfile, nameplateProfile;
+static gxProfileGeneric loadProfile, dailyLoadProfile, nameplateProfile, billingProfile;
 static gxSapAssignment sapAssignment;
 //Security Setup High is for High authentication.
 static gxSecuritySetup securitySetupHigh;
@@ -198,6 +198,7 @@ static gxObject *ALL_OBJECTS[] = {
     BASE(loadProfile),
     BASE(dailyLoadProfile),
     BASE(nameplateProfile),
+    BASE(billingProfile),
     BASE(eventLog),
     BASE(hdlc),
     BASE(disconnectControl),
@@ -1498,6 +1499,48 @@ int addNameplateProfileProfileGeneric()
 ///////////////////////////////////////////////////////////////////////
 //Add profile generic (historical data) object.
 ///////////////////////////////////////////////////////////////////////
+int addBillingProfileProfileGeneric()
+{
+    int ret;
+    const unsigned char ln[6] = { 1, 0, 98, 1, 0, 255 };
+    if ((ret = INIT_OBJECT(billingProfile, DLMS_OBJECT_TYPE_PROFILE_GENERIC, ln)) == 0)
+    {
+        gxTarget* capture;
+        //Set default values if load the first time.
+        billingProfile.sortMethod = DLMS_SORT_METHOD_LIFO;
+        ///////////////////////////////////////////////////////////////////
+        //Add columns.
+        //Add Cumulative Energy Wh - Import.
+        capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&billingProfile.captureObjects, key_init(&cumulativeEnergyKWhImport, capture));
+        //Add Cumulative Energy VAh - Lag.
+        capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&billingProfile.captureObjects, key_init(&cumulativeEnergyKVAhLag, capture));
+        //Add Cumulative Energy VAh - Lead.
+        capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&billingProfile.captureObjects, key_init(&cumulativeEnergyKVAhLead, capture));
+        //Add Cumulative Energy VAh - Import.
+        capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&billingProfile.captureObjects, key_init(&cumulativeEnergyKVAhImport, capture));
+        ///////////////////////////////////////////////////////////////////
+        //Update amount of capture objects.
+        billingProfile.profileEntries = getProfileGenericBufferMaxRowCount(&billingProfile);
+        billingProfile.entriesInUse = getProfileGenericBufferEntriesInUse(&billingProfile);
+    }
+    return 0;
+}
+
+///////////////////////////////////////////////////////////////////////
+//Add profile generic (historical data) object.
+///////////////////////////////////////////////////////////////////////
 int addEventLogProfileGeneric()
 {
     int ret;
@@ -1733,8 +1776,9 @@ int createObjects()
         (ret = addscriptTableActivateTestMode()) != 0 ||
         (ret = addscriptTableActivateNormalMode()) != 0 ||
         (ret = addLoadProfileProfileGeneric()) != 0 ||
-        (ret = addNameplateProfileProfileGeneric()) != 0 ||
         (ret = addDailyLoadProfileProfileGeneric()) != 0 ||
+        (ret = addNameplateProfileProfileGeneric()) != 0 ||
+        (ret = addBillingProfileProfileGeneric()) != 0 ||
         (ret = addEventLogProfileGeneric()) != 0 ||
         (ret = addActionScheduleDisconnectOpen()) != 0 ||
         (ret = addActionScheduleDisconnectClose()) != 0 ||
@@ -3612,6 +3656,8 @@ void* captureThreadFunction(void* pVoid)
             captureProfileGeneric(&nameplateProfile);
             isNameplateProfileRead = true;
         }
+
+        captureProfileGeneric(&billingProfile);
     }
     return NULL;
 }
