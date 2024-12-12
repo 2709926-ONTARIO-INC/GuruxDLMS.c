@@ -101,6 +101,7 @@ uint8_t readCTR(void);
 uint8_t readPTR(void);
 uint16_t readYearOfManufacture(void);
 
+void updateMeterSerialNumber(int value);
 void initializeCounters(void);
 bool setRegisterLimits(const char* filePath);
 

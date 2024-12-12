@@ -3693,6 +3693,7 @@ void showHelp()
     printf(" -S <serialPort>\t serial port.\n");
     printf(" -c <json file>\t\t Provide a configuration file with register limits.\n");
     printf(" -g\t\t\t Enable meter to send garbage values at random counts.\n");
+    printf(" -I <number>\t\t Use the specified instance number (e.g., 0, 1, 2, etc.) to modify the meter serial number.\n");
     printf(" -h, -help\t\t Show this help.\n");
 }
 
@@ -3890,7 +3891,7 @@ int main(int argc, char* argv[])
     int ret, ls = 0;
     struct sockaddr_in add = { 0 };
     char* serialPort = NULL;
-    while ((opt = getopt(argc, argv, "t:p:S:c:hgP:")) != -1)
+    while ((opt = getopt(argc, argv, "t:p:S:c:hgP:I:")) != -1)
     {
         switch (opt)
         {
@@ -3941,6 +3942,11 @@ int main(int argc, char* argv[])
                 printf("Failed to set registers limits from the configuration file.\n");
                 return 1;
             }
+            break;
+        case 'I':
+            int instanceNumber;
+            instanceNumber = atoi(optarg);
+            updateMeterSerialNumber(instanceNumber);
             break;
         case '?':
         {

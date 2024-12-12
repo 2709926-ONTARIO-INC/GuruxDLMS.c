@@ -98,15 +98,15 @@ static uint32_t blockEnergyKVAhImportValueMin = 0, blockEnergyKVAhImportValueMax
 // static uint32_t cumulativeEnergyKVAhImportValueMin = 500, cumulativeEnergyKVAhImportValueMax = 600;
 
 
-const char* meterSerialNumberValue = "X1165172";
-const char* manufacturerNameValue = "SECURE METERS LTD.";
-const char* firmwareVersionValue = "M1XXG04";
-uint8_t meterTypeValue = 2;
-const char* meterCategoryValue = "C1";
-const char* currentRatingValue = "5 - 10 A";
-uint8_t ctrValue = 12;
-uint8_t ptrValue = 100;
-uint16_t yearOfManufactureValue = 2019;              // Fixed value for the register
+static char meterSerialNumberValue[] = "X1165172";
+static const char* manufacturerNameValue = "SECURE METERS LTD.";
+static const char* firmwareVersionValue = "M1XXG04";
+static uint8_t meterTypeValue = 2;
+static const char* meterCategoryValue = "C1";
+static const char* currentRatingValue = "5 - 10 A";
+static uint8_t ctrValue = 12;
+static uint8_t ptrValue = 100;
+static uint16_t yearOfManufactureValue = 2019;              // Fixed value for the register
 
 
 // Garbage counters for each variable
@@ -1538,6 +1538,14 @@ uint16_t readYearOfManufacture()
     return yearOfManufactureValue;
 }
 
+
+void updateMeterSerialNumber(int value)
+{
+    char *numberPart = meterSerialNumberValue + 1; // Skip the first character ('X').
+    int number = atoi(numberPart); // Convert the numeric part to an integer.
+    number += value; // Add the value.
+    snprintf(numberPart, sizeof(meterSerialNumberValue) - 1, "%d", number); // Update the numeric part.
+}
 
 // Initialize counters
 void initializeCounters(void)
