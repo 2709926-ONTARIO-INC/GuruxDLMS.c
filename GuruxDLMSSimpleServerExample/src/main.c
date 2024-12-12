@@ -146,8 +146,8 @@ extern gxRegister voltageL1Average, voltageL2Average, voltageL3Average;
 extern gxRegister currentL1Average, currentL2Average, currentL3Average;
 
 // Define external KIGG nameplate profile data
-extern gxRegister meterSerialNumber, manufacturerName, firmwareVersion, meterType, meterCategory;
-extern gxRegister currentRating, ctr, ptr, yearOfManufacture;
+extern gxData meterSerialNumber, manufacturerName, firmwareVersion, meterType, meterCategory;
+extern gxData currentRating, ctr, ptr, yearOfManufacture;
 
 static gxObject *NONE_OBJECTS[] = {BASE(associationNone), BASE(ldn), BASE(sapAssignment), BASE(clock1)};
 
@@ -189,17 +189,6 @@ static gxObject *ALL_OBJECTS[] = {
     BASE(cumulativeEnergyKVAhLag),
     BASE(cumulativeEnergyKVAhLead),
     BASE(cumulativeEnergyKVAhImport),
-    
-    // Add KIGG nameplate profile data
-    BASE(meterSerialNumber), 
-    BASE(manufacturerName),
-    BASE(firmwareVersion),
-    BASE(meterType),
-    BASE(meterCategory),
-    BASE(currentRating),
-    BASE(ctr),
-    BASE(ptr),
-    BASE(yearOfManufacture),
     
     BASE(pushSetup),
     BASE(scriptTableGlobalMeterReset),
@@ -571,9 +560,9 @@ int captureProfileGeneric(gxProfileGeneric* pg)
     ve_init(&e);
     GXTRACE(("Running captureProfileGeneric"), NULL);
 #if _MSC_VER > 1400
-    fopen_s(&f, fileName, "w+b");
+    fopen_s(&f, fileName, "r+b");
 #else
-    f = fopen(fileName, "w+b");
+    f = fopen(fileName, "r+b");
 #endif
     if (f != NULL)
     {
@@ -597,12 +586,14 @@ int captureProfileGeneric(gxProfileGeneric* pg)
         //Update how many entries is used until buffer is full.
         if (ret == 0 && pg->entriesInUse != pg->profileEntries)
         {
-             if((0 == strncmp(fileName, "0.0.94.91.10.255.raw", strlen("0.0.94.91.10.255.raw"))) && (pg->entriesInUse > 0U))
+            #if 0
+            if((0 == strncmp(fileName, "0.0.94.91.10.255.raw", strlen("0.0.94.91.10.255.raw"))) && (pg->entriesInUse > 0U))
             {
                 fclose(f);
                 GXTRACE(("Name plate already present"), NULL);
                 return 0;
             }
+            #endif
             //Total amount of the entries.
             ++pg->entriesInUse;
         }
@@ -3602,6 +3593,7 @@ void* captureThreadFunction(void* pVoid)
 {
     (void) pVoid;
     unsigned int loadProfileCounter = 0;
+    bool isNameplateProfileRead = false;
 
     while(true)
     {
@@ -3615,7 +3607,11 @@ void* captureThreadFunction(void* pVoid)
             loadProfileCounter = 0;
         }
 
-        captureProfileGeneric(&nameplateProfile);
+        if (!isNameplateProfileRead)
+        {
+            captureProfileGeneric(&nameplateProfile);
+            isNameplateProfileRead = true;
+        }
     }
     return NULL;
 }

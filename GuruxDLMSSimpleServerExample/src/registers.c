@@ -57,8 +57,8 @@ gxRegister currentL1Average, currentL2Average, currentL3Average;
 
 
 // Define individual objects for nameplate profile
-gxRegister meterSerialNumber, manufacturerName, firmwareVersion, meterType, meterCategory;
-gxRegister currentRating, ctr, ptr, yearOfManufacture;
+gxData meterSerialNumber, manufacturerName, firmwareVersion, meterType, meterCategory;
+gxData currentRating, ctr, ptr, yearOfManufacture;
 
 
 // Define variables to store the KIGG registers' values
@@ -1375,7 +1375,7 @@ int addMeterSerialNumber()
     int ret;
     const unsigned char ln[6] = { 0, 0, 96, 1, 0, 255 };
 
-    if ((ret = INIT_OBJECT(meterSerialNumber, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
+    if ((ret = INIT_OBJECT(meterSerialNumber, DLMS_OBJECT_TYPE_DATA, ln)) == 0)
     {
         var_addBytes(&meterSerialNumber.value, (unsigned char*)meterSerialNumberValue, strlen(meterSerialNumberValue));
     }
@@ -1393,7 +1393,7 @@ int addManufacturerName()
     int ret;
     const unsigned char ln[6] = { 0, 0, 96, 1, 1, 255 }; // OBIS code for Manufacturer Name
 
-    if ((ret = INIT_OBJECT(manufacturerName, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
+    if ((ret = INIT_OBJECT(manufacturerName, DLMS_OBJECT_TYPE_DATA, ln)) == 0)
     {
         var_addBytes(&manufacturerName.value, (unsigned char*)manufacturerNameValue, strlen(manufacturerNameValue));
     }
@@ -1411,7 +1411,7 @@ int addFirmwareVersion()
     int ret;
     const unsigned char ln[6] = { 1, 0, 0, 2, 0, 255 }; // OBIS code for Firmware Version
 
-    if ((ret = INIT_OBJECT(firmwareVersion, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
+    if ((ret = INIT_OBJECT(firmwareVersion, DLMS_OBJECT_TYPE_DATA, ln)) == 0)
     {
         var_addBytes(&firmwareVersion.value, (unsigned char*)firmwareVersionValue, strlen(firmwareVersionValue));
     }
@@ -1429,7 +1429,7 @@ int addMeterType()
     int ret;
     const unsigned char ln[6] = { 0, 0, 94, 91, 9, 255 }; // OBIS code for Meter Type
 
-    if ((ret = INIT_OBJECT(meterType, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
+    if ((ret = INIT_OBJECT(meterType, DLMS_OBJECT_TYPE_DATA, ln)) == 0)
     {
         var_setUInt8(&meterType.value, meterTypeValue);
     }
@@ -1447,7 +1447,7 @@ int addMeterCategory()
     int ret;
     const unsigned char ln[6] = { 0, 0, 94, 91, 11, 255 }; // OBIS code for Meter Category
 
-    if ((ret = INIT_OBJECT(meterCategory, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
+    if ((ret = INIT_OBJECT(meterCategory, DLMS_OBJECT_TYPE_DATA, ln)) == 0)
     {
         var_addBytes(&meterCategory.value, (unsigned char*)meterCategoryValue, strlen(meterCategoryValue));
     }
@@ -1465,7 +1465,7 @@ int addCurrentRating()
     int ret;
     const unsigned char ln[6] = { 0, 0, 94, 91, 12, 255 }; // OBIS code for Current Rating
 
-    if ((ret = INIT_OBJECT(currentRating, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
+    if ((ret = INIT_OBJECT(currentRating, DLMS_OBJECT_TYPE_DATA, ln)) == 0)
     {
         var_addBytes(&currentRating.value, (unsigned char*)currentRatingValue, strlen(currentRatingValue));
     }
@@ -1483,7 +1483,7 @@ int addCTR()
     int ret;
     const unsigned char ln[6] = { 1, 0, 0, 4, 2, 255 }; // OBIS code for CTR
 
-    if ((ret = INIT_OBJECT(ctr, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
+    if ((ret = INIT_OBJECT(ctr, DLMS_OBJECT_TYPE_DATA, ln)) == 0)
     {
         var_setUInt8(&ctr.value, ctrValue);
     }
@@ -1501,7 +1501,7 @@ int addPTR()
     int ret;
     const unsigned char ln[6] = { 1, 0, 0, 4, 3, 255 }; // OBIS code for PTR
 
-    if ((ret = INIT_OBJECT(ptr, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
+    if ((ret = INIT_OBJECT(ptr, DLMS_OBJECT_TYPE_DATA, ln)) == 0)
     {
         var_setUInt8(&ptr.value, ptrValue);
     }
@@ -1519,7 +1519,7 @@ int addYearOfManufacture()
     int ret;
     const unsigned char ln[6] = { 0, 0, 96, 1, 4, 255 }; // OBIS code for Year of Manufacture
 
-    if ((ret = INIT_OBJECT(yearOfManufacture, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
+    if ((ret = INIT_OBJECT(yearOfManufacture, DLMS_OBJECT_TYPE_DATA, ln)) == 0)
     {
         var_setUInt16(&yearOfManufacture.value, yearOfManufactureValue);
     }
