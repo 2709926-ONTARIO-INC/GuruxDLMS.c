@@ -146,8 +146,8 @@ extern gxRegister voltageL1Average, voltageL2Average, voltageL3Average;
 extern gxRegister currentL1Average, currentL2Average, currentL3Average;
 
 // Define external KIGG nameplate profile data
-extern gxData meterSerialNumber, manufacturerName, firmwareVersion, meterType, meterCategory;
-extern gxData currentRating, ctr, ptr, yearOfManufacture;
+extern gxRegister meterSerialNumber, manufacturerName, firmwareVersion, meterType, meterCategory;
+extern gxRegister currentRating, ctr, ptr, yearOfManufacture;
 
 static gxObject *NONE_OBJECTS[] = {BASE(associationNone), BASE(ldn), BASE(sapAssignment), BASE(clock1)};
 
@@ -562,18 +562,18 @@ int captureProfileGeneric(gxProfileGeneric* pg)
     gxKey* it;
     int ret = 0;
     char fileName[30];
+    FILE* f = NULL;
     getProfileGenericFileName(pg, fileName);
     static unsigned char pduBuff[PDU_MAX_PROFILE_GENERIC_COLUMN_SIZE];
     gxByteBuffer pdu;
     bb_attach(&pdu, pduBuff, 0, sizeof(pduBuff));
     gxValueEventArg e;
     ve_init(&e);
-    FILE* f = NULL;
     GXTRACE(("Running captureProfileGeneric"), NULL);
 #if _MSC_VER > 1400
-    fopen_s(&f, fileName, "r+b");
+    fopen_s(&f, fileName, "w+b");
 #else
-    f = fopen(fileName, "r+b");
+    f = fopen(fileName, "w+b");
 #endif
     if (f != NULL)
     {
@@ -597,6 +597,12 @@ int captureProfileGeneric(gxProfileGeneric* pg)
         //Update how many entries is used until buffer is full.
         if (ret == 0 && pg->entriesInUse != pg->profileEntries)
         {
+             if((0 == strncmp(fileName, "0.0.94.91.10.255.raw", strlen("0.0.94.91.10.255.raw"))) && (pg->entriesInUse > 0U))
+            {
+                fclose(f);
+                GXTRACE(("Name plate already present"), NULL);
+                return 0;
+            }
             //Total amount of the entries.
             ++pg->entriesInUse;
         }
@@ -2636,11 +2642,13 @@ void handleProfileGenericActions(
     {
         //Increase power value before each load profile read to increase the value.
         //This is needed for demo purpose only.
+        #if 0
         if (it->target == BASE(loadProfile))
         {
             readActivePowerValue();
         }
         captureProfileGeneric(((gxProfileGeneric*)it->target));
+        #endif
     }
     saveSettings();
 }
