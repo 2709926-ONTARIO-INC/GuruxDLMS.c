@@ -1235,6 +1235,7 @@ int addVoltageL1Average()
     // Initialize the voltageL1 average register object
     if ((ret = INIT_OBJECT(voltageL1Average, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
     {
+        voltageL1AverageValue = 115;
         GX_UINT32_BYREF(voltageL1Average.value, voltageL1AverageValue);
         // Set additional properties  
         voltageL1Average.scaler = 0;
@@ -1259,6 +1260,7 @@ int addVoltageL2Average()
     // Initialize the voltageL2 average register object
     if ((ret = INIT_OBJECT(voltageL2Average, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
     {
+        voltageL2AverageValue = 112;
         GX_UINT32_BYREF(voltageL2Average.value, voltageL2AverageValue);
         // Set additional properties  
         voltageL2Average.scaler = 0;
@@ -1283,6 +1285,7 @@ int addVoltageL3Average()
     // Initialize the voltageL3 average register object
     if ((ret = INIT_OBJECT(voltageL3Average, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
     {
+        voltageL3AverageValue = 117;
         GX_UINT32_BYREF(voltageL3Average.value, voltageL3AverageValue);
         // Set additional properties  
         voltageL3Average.scaler = 0;
@@ -1307,6 +1310,7 @@ int addCurrentL1Average()
     // Initialize the currentL1 average register object
     if ((ret = INIT_OBJECT(currentL1Average, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
     {
+        currentL1AverageValue = 10;
         GX_UINT32_BYREF(currentL1Average.value, currentL1AverageValue);
         // Set additional properties  
         currentL1Average.scaler = 0;
@@ -1331,6 +1335,7 @@ int addCurrentL2Average()
     // Initialize the currentL2 average register object
     if ((ret = INIT_OBJECT(currentL2Average, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
     {
+        currentL2AverageValue = 10;
         GX_UINT32_BYREF(currentL2Average.value, currentL2AverageValue);
         // Set additional properties  
         currentL2Average.scaler = 0;
@@ -1355,6 +1360,7 @@ int addCurrentL3Average()
     // Initialize the currentL3 average register object
     if ((ret = INIT_OBJECT(currentL3Average, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
     {
+        currentL3AverageValue = 10;
         GX_UINT32_BYREF(currentL3Average.value, currentL3AverageValue);
         // Set additional properties  
         currentL3Average.scaler = 0;
