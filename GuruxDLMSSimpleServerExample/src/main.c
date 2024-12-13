@@ -631,6 +631,25 @@ int captureProfileGeneric(gxProfileGeneric* pg)
         DLMS_DATA_TYPE dataTypes[11];
         //Load current entry index from the begin of the data.
         uint16_t index = 0;
+        #if 1
+        if((NULL != strstr(fileName, "0.0.94.91.10.255.raw")))
+        {
+            uint8_t _data[16U];
+            if (fread(&_data[0U], 1, sizeof(_data), f) == 16)
+            {
+                for(uint8_t i = 0U; i < 16U; i++)
+                {
+                    if(0U != _data[i])
+                    {
+                        fclose(f);
+                        GXTRACE(("Name plate already present"), NULL);
+                        return 0;
+                    }
+                }
+                fseek(f, 0, SEEK_SET);
+            }
+        }
+        #endif
         if (fread(pdu.data, 1, 2, f) == 2)
         {
             pdu.size = 2;
@@ -646,14 +665,6 @@ int captureProfileGeneric(gxProfileGeneric* pg)
         //Update how many entries is used until buffer is full.
         if (ret == 0 && pg->entriesInUse != pg->profileEntries)
         {
-            #if 0
-            if((0 == strncmp(fileName, "0.0.94.91.10.255.raw", strlen("0.0.94.91.10.255.raw"))) && (pg->entriesInUse > 0U))
-            {
-                fclose(f);
-                GXTRACE(("Name plate already present"), NULL);
-                return 0;
-            }
-            #endif
             //Total amount of the entries.
             ++pg->entriesInUse;
         }
@@ -3701,6 +3712,7 @@ void* captureThreadFunction(void* pVoid)
 
     while(true)
     {
+        captureProfileGeneric(&nameplateProfile);
         sleep(30);
         captureProfileGeneric(&loadProfile);
         loadProfileCounter++;
@@ -3710,13 +3722,6 @@ void* captureThreadFunction(void* pVoid)
             captureProfileGeneric(&dailyLoadProfile);
             loadProfileCounter = 0;
         }
-
-        if (!isNameplateProfileRead)
-        {
-            captureProfileGeneric(&nameplateProfile);
-            isNameplateProfileRead = true;
-        }
-
         captureProfileGeneric(&billingProfile);
     }
     return NULL;
