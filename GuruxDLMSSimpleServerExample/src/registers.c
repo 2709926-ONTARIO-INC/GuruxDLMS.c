@@ -98,7 +98,7 @@ static uint32_t blockEnergyKVAhImportValueMin = 0, blockEnergyKVAhImportValueMax
 // static uint32_t cumulativeEnergyKVAhImportValueMin = 500, cumulativeEnergyKVAhImportValueMax = 600;
 
 
-static char meterSerialNumberValue[] = "X1165172";
+static char meterSerialNumberValue[64U] = "X0000000";
 static const char* manufacturerNameValue = "SECURE METERS LTD.";
 static const char* firmwareVersionValue = "M1XXG04";
 static uint8_t meterTypeValue = 2;
@@ -1544,7 +1544,7 @@ void updateMeterSerialNumber(int value)
     char *numberPart = meterSerialNumberValue + 1; // Skip the first character ('X').
     int number = atoi(numberPart); // Convert the numeric part to an integer.
     number += value; // Add the value.
-    snprintf(numberPart, sizeof(meterSerialNumberValue) - 1, "%d", number); // Update the numeric part.
+    snprintf(numberPart, sizeof(meterSerialNumberValue) - 1, "%07d", number); // Update the numeric part.
 }
 
 // Initialize counters

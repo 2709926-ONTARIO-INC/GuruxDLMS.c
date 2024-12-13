@@ -304,7 +304,8 @@ void GXTRACE_LN(const char* str, uint16_t type, unsigned char* ln)
 int saveSecurity()
 {
     int ret = 0;
-    const char* fileName = "security.raw";
+    char fileName[64U] = {'\0'};
+    snprintf(fileName, sizeof(fileName), "%s/security.raw", readMeterSerialNumber());
     //Save keys to own block in EEPROM.
 #if _MSC_VER > 1400
     FILE* f = NULL;
@@ -347,7 +348,8 @@ int saveSecurity()
 int saveSettings()
 {
     int ret = 0;
-    const char* fileName = "settings.raw";
+    char fileName[64U] = {'\0'};
+    snprintf(fileName, sizeof(fileName), "%s/settings.raw", readMeterSerialNumber());
     //Save keys to own block in EEPROM.
 #if _MSC_VER > 1400
     FILE* f = NULL;
@@ -425,17 +427,12 @@ void allocateProfileGenericBuffer(const char* fileName, uint32_t size)
 
 int getProfileGenericFileName(gxProfileGeneric* pg, char* fileName)
 {
-    const char* meterSerialNumber = readMeterSerialNumber();
-    char directoryPath[32];
-    char tempFileName[64]; // Temporary buffer to avoid overlap
+    char tempFileName[64U] = {'\0'}; // Temporary buffer to avoid overlap
 
     int ret = hlp_getLogicalNameToString(pg->base.logicalName, fileName);
 
-    // Create directory path using meter serial number.
-    snprintf(directoryPath, sizeof(directoryPath), "%s", meterSerialNumber);
-
     // Prepend the directory path to the filename.
-    snprintf(tempFileName, sizeof(tempFileName), "%s/%s", directoryPath, fileName);
+    snprintf(tempFileName, sizeof(tempFileName), "%s/%s", readMeterSerialNumber(), fileName);
 
     // Copy the constructed file path back into the original fileName buffer
     strncpy(fileName, tempFileName, strlen(tempFileName));
@@ -584,15 +581,46 @@ uint16_t getProfileGenericBufferEntriesInUse(gxProfileGeneric* pg)
     return index;
 }
 
+static int createDirectory(const char* path)
+{
+    struct stat st = {0};
+
+    // Check if the directory exists
+    if (stat(path, &st) == -1)
+    {
+        // Directory does not exist; attempt to create it
+#ifdef _WIN32
+        if (mkdir(path) != 0)
+#else
+        if (mkdir(path, 0700) != 0)
+#endif
+        {
+            // Failed to create directory
+            printf("Failed to create directory: %s. Error: %s\n", path, strerror(errno));
+            return -1;
+        }
+        else
+        {
+            printf("Directory created successfully: %s\n", path);
+        }
+    }
+    else
+    {
+        printf("Directory already exists: %s\n", path);
+    }
+    return 0; // Success
+}
+
 int captureProfileGeneric(gxProfileGeneric* pg)
 {
     unsigned char pos;
     gxKey* it;
     int ret = 0;
-    char fileName[64];
+    char fileName[64] = {'\0'};
     FILE* f = NULL;
-    getProfileGenericFileName(pg, fileName);
+    getProfileGenericFileName(pg, &fileName[0U]);
     printf("Filename: %s\n", fileName);
+    createDirectory(readMeterSerialNumber());
     static unsigned char pduBuff[PDU_MAX_PROFILE_GENERIC_COLUMN_SIZE];
     gxByteBuffer pdu;
     bb_attach(&pdu, pduBuff, 0, sizeof(pduBuff));
@@ -684,9 +712,7 @@ int captureProfileGeneric(gxProfileGeneric* pg)
     }
     else
     {
-        char errorCodeBuffer[32]; // Allocate enough space for the error code as a string
-        snprintf(errorCodeBuffer, sizeof(errorCodeBuffer), "%d", ret); // Convert the int to a string
-        GXTRACE("Error: [Error opening file for capture]. Error code: %s", errorCodeBuffer);
+        printf("Failed to open %s. Error code: %d. Description: %s.\n", fileName, errno, strerror(errno));
     }
     return ret;
 }
@@ -1680,7 +1706,8 @@ int addIecHdlcSetup()
 /////////////////////////////////////////////////////////////////////////////
 int loadSecurity()
 {
-    const char* fileName = "security.raw";
+    char fileName[64U] = {'\0'};
+    snprintf(fileName, sizeof(fileName), "%s/security.raw", readMeterSerialNumber());
     int ret = 0;
     //Update keys.
 #if _MSC_VER > 1400
@@ -1728,7 +1755,8 @@ int loadSecurity()
 /////////////////////////////////////////////////////////////////////////////
 int loadSettings()
 {
-    const char* fileName = "settings.raw";
+    char fileName[64U] = {'\0'};
+    snprintf(fileName, sizeof(fileName), "%s/settings.raw", readMeterSerialNumber());
     int ret = 0;
     //Update keys.
 #if _MSC_VER > 1400
@@ -2734,7 +2762,8 @@ void svr_preAction(
     dlmsSettings* settings,
     gxValueEventCollection* args)
 {
-    const char* fileName = "settings.raw";
+    char fileName[64U] = {'\0'};
+    snprintf(fileName, sizeof(fileName), "%s/settings.raw", readMeterSerialNumber());
     gxValueEventArg* e;
     int ret, pos;
     for (pos = 0; pos != args->size; ++pos)
@@ -3983,9 +4012,11 @@ int main(int argc, char* argv[])
             }
             break;
         case 'I':
-            int instanceNumber;
-            instanceNumber = atoi(optarg);
-            updateMeterSerialNumber(instanceNumber);
+            {
+                uint32_t instanceNumber = 0U;
+                instanceNumber = atoi(optarg);
+                updateMeterSerialNumber(instanceNumber);
+            }
             break;
         case '?':
         {
