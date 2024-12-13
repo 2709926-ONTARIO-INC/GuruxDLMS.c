@@ -31,7 +31,6 @@ def check_port_status_wsl(port):
     except Exception as e:
         print(f"Error checking port {port} in WSL: {e}")
         return False
-
 def convert_to_wsl_path(path):
     """Converts a Windows path to a WSL-compatible path."""
     if os.name == "nt":  # Check if the system is Windows
@@ -65,9 +64,16 @@ def start_servers(binary_path, config_path, num_servers, start_port, start_insta
     instances = range(start_instance, start_instance + num_servers)
     print(f"Starting servers on the following ports: {list(ports)}")
 
+    view_garbage = input("Do you want to enable garbage values? (yes/no): ").strip().lower() == "yes"
+
     for port, instance in zip(ports, instances):
         print(f"Preparing to start server on port: {port} with instance: {instance}")
-        command = [binary_path, "-p", str(port), "-c", config_path, "-I", str(instance)]
+        command = [binary_path, "-p", str(port)]
+
+        if view_garbage:
+            command += ["-g"]
+
+        command += ["-c", config_path, "-I", str(instance)]
 
         if use_wsl:
             command = ["wsl"] + command
