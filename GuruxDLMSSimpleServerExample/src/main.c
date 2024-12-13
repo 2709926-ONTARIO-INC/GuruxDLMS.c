@@ -377,12 +377,10 @@ int saveSettings()
 //Allocate profile generic buffer.
 void allocateProfileGenericBuffer(const char* fileName, uint32_t size)
 {
-    const char *meterSerialNumber = readMeterSerialNumber();
-    char directoryPath[32];
-    char filePath[64];
+    char directoryPath[32U] = {'\0'};
 
     // Create directory path using meter serial number if it does not exist.
-    snprintf(directoryPath, sizeof(directoryPath), "%s", meterSerialNumber);
+    snprintf(directoryPath, sizeof(directoryPath), "%s", readMeterSerialNumber());
 #if defined(_MSC_VER)
     if (_mkdir(directoryPath) != 0 && errno != EEXIST)
     {
@@ -397,15 +395,12 @@ void allocateProfileGenericBuffer(const char* fileName, uint32_t size)
     }
 #endif
 
-    // Create file path inside the directory.
-    snprintf(filePath, sizeof(filePath), "%s/%s", directoryPath, fileName);
-
     uint32_t pos;
     FILE* f = NULL;
 #if _MSC_VER > 1400
-    fopen_s(&f, filePath, "ab");
+    fopen_s(&f, fileName, "ab");
 #else
-    f = fopen(filePath, "ab");
+    f = fopen(fileName, "ab");
 #endif
     if (f != NULL)
     {
@@ -416,7 +411,7 @@ void allocateProfileGenericBuffer(const char* fileName, uint32_t size)
             {
                 if (fputc(0x00, f) != 0)
                 {
-                    printf("Error Writing to %s\n", filePath);
+                    printf("Error Writing to %s\n", fileName);
                     break;
                 }
             }
@@ -429,13 +424,9 @@ int getProfileGenericFileName(gxProfileGeneric* pg, char* fileName)
 {
     char tempFileName[64U] = {'\0'}; // Temporary buffer to avoid overlap
 
-    int ret = hlp_getLogicalNameToString(pg->base.logicalName, fileName);
-
+    int ret = hlp_getLogicalNameToString(pg->base.logicalName, tempFileName);
     // Prepend the directory path to the filename.
-    snprintf(tempFileName, sizeof(tempFileName), "%s/%s", readMeterSerialNumber(), fileName);
-
-    // Copy the constructed file path back into the original fileName buffer
-    strncpy(fileName, tempFileName, strlen(tempFileName));
+    snprintf(fileName, 64U, "%s/%s", readMeterSerialNumber(), tempFileName);
 
 #if defined(_WIN64)
     strcat(fileName, "64.raw");
@@ -514,7 +505,7 @@ uint16_t getProfileGenericBufferMaxRowCount(
     gxProfileGeneric* pg)
 {
     uint16_t count = 0;
-    char fileName[64];
+    char fileName[64U];
     //Allocate space for load profile buffer.
     getProfileGenericFileName(pg, fileName);
     uint16_t rowSize = 0;
@@ -581,32 +572,33 @@ uint16_t getProfileGenericBufferEntriesInUse(gxProfileGeneric* pg)
     return index;
 }
 
-static int createDirectory(const char* path)
+static int openOrCreateFile(const char* filePath)
 {
-    struct stat st = {0};
-
-    // Check if the directory exists
-    if (stat(path, &st) == -1)
+    FILE* file;
+    // Try to open the file in read/write mode
+    file = fopen(filePath, "r+b");
+    if (file == NULL)
     {
-        // Directory does not exist; attempt to create it
-#ifdef _WIN32
-        if (mkdir(path) != 0)
-#else
-        if (mkdir(path, 0700) != 0)
-#endif
+        // If the file doesn't exist, create it
+        if (errno == ENOENT) // File not found
         {
-            // Failed to create directory
-            printf("Failed to create directory: %s. Error: %s\n", path, strerror(errno));
-            return -1;
+            printf("File not found. Creating file: %s\n", filePath);
+            file = fopen(filePath, "wb+"); // Create the file
+            if (file == NULL)
+            {
+                // Log the error if creation fails
+                printf("Failed to create file: %s. Error code: %d. Description: %s\n",
+                       filePath, errno, strerror(errno));
+                return -1;
+            }
         }
         else
         {
-            printf("Directory created successfully: %s\n", path);
+            // Log other errors (e.g., permission issues)
+            printf("Failed to open file: %s. Error code: %d. Description: %s\n",
+                   filePath, errno, strerror(errno));
+            return -1;
         }
-    }
-    else
-    {
-        printf("Directory already exists: %s\n", path);
     }
     return 0; // Success
 }
@@ -620,7 +612,7 @@ int captureProfileGeneric(gxProfileGeneric* pg)
     FILE* f = NULL;
     getProfileGenericFileName(pg, &fileName[0U]);
     printf("Filename: %s\n", fileName);
-    createDirectory(readMeterSerialNumber());
+    //openOrCreateFile(fileName);
     static unsigned char pduBuff[PDU_MAX_PROFILE_GENERIC_COLUMN_SIZE];
     gxByteBuffer pdu;
     bb_attach(&pdu, pduBuff, 0, sizeof(pduBuff));
