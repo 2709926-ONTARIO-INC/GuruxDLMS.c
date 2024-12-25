@@ -409,7 +409,21 @@ int saveSettings()
         serializerSettings.stream = f;
         serializerSettings.ignoredAttributes = NON_SERIALIZED_OBJECTS;
         serializerSettings.count = sizeof(NON_SERIALIZED_OBJECTS) / sizeof(NON_SERIALIZED_OBJECTS[0]);
-        ret = ser_saveObjects(&serializerSettings, ALL_OBJECTS_THREE_PHASE_METER, sizeof(ALL_OBJECTS_THREE_PHASE_METER) / sizeof(ALL_OBJECTS_THREE_PHASE_METER[0]));
+
+        switch (selectedMeterType) 
+        {
+            case SINGLE_PHASE_METER:
+                ret = ser_saveObjects(&serializerSettings, ALL_OBJECTS_SINGLE_PHASE_METER, sizeof(ALL_OBJECTS_SINGLE_PHASE_METER) / sizeof(ALL_OBJECTS_SINGLE_PHASE_METER[0]));
+                break;
+
+            case THREE_PHASE_METER:
+                ret = ser_saveObjects(&serializerSettings, ALL_OBJECTS_THREE_PHASE_METER, sizeof(ALL_OBJECTS_THREE_PHASE_METER) / sizeof(ALL_OBJECTS_THREE_PHASE_METER[0]));
+                break;
+
+            default:
+                break;
+        }
+        
         fclose(f);
     }
     else
@@ -827,7 +841,20 @@ int addAssociationLow()
     if ((ret = INIT_OBJECT(associationLow, DLMS_OBJECT_TYPE_ASSOCIATION_LOGICAL_NAME, ln)) == 0)
     {
         //Only Logical Device Name is add to this Association View.
-        OA_ATTACH(associationLow.objectList, ALL_OBJECTS_THREE_PHASE_METER);
+        switch (selectedMeterType) 
+        {
+            case SINGLE_PHASE_METER:
+                OA_ATTACH(associationLow.objectList, ALL_OBJECTS_SINGLE_PHASE_METER);
+                break;
+
+            case THREE_PHASE_METER:
+                OA_ATTACH(associationLow.objectList, ALL_OBJECTS_THREE_PHASE_METER);
+                break;
+
+            default:
+                break;
+        }
+
         associationLow.authenticationMechanismName.mechanismId = DLMS_AUTHENTICATION_LOW;
         associationLow.clientSAP = 0x20;
         associationLow.xDLMSContextInfo.maxSendPduSize = associationLow.xDLMSContextInfo.maxReceivePduSize = PDU_BUFFER_SIZE;
@@ -858,7 +885,21 @@ int addAssociationHigh()
     if ((ret = INIT_OBJECT(associationHigh, DLMS_OBJECT_TYPE_ASSOCIATION_LOGICAL_NAME, ln)) == 0)
     {
         associationHigh.authenticationMechanismName.mechanismId = DLMS_AUTHENTICATION_HIGH;
-        OA_ATTACH(associationHigh.objectList, ALL_OBJECTS_THREE_PHASE_METER);
+
+        switch (selectedMeterType) 
+        {
+            case SINGLE_PHASE_METER:
+                OA_ATTACH(associationHigh.objectList, ALL_OBJECTS_SINGLE_PHASE_METER);
+                break;
+
+            case THREE_PHASE_METER:
+                OA_ATTACH(associationHigh.objectList, ALL_OBJECTS_THREE_PHASE_METER);
+                break;
+
+            default:
+                break;
+        }
+
         BB_ATTACH(associationHigh.xDLMSContextInfo.cypheringInfo, CYPHERING_INFO, 0);
         associationHigh.clientSAP = 0x12;
         associationHigh.xDLMSContextInfo.maxSendPduSize = associationHigh.xDLMSContextInfo.maxReceivePduSize = PDU_BUFFER_SIZE;
@@ -892,7 +933,21 @@ int addAssociationHighGMac()
     if ((ret = INIT_OBJECT(associationHighGMac, DLMS_OBJECT_TYPE_ASSOCIATION_LOGICAL_NAME, ln)) == 0)
     {
         associationHighGMac.authenticationMechanismName.mechanismId = DLMS_AUTHENTICATION_HIGH_GMAC;
-        OA_ATTACH(associationHighGMac.objectList, ALL_OBJECTS_THREE_PHASE_METER);
+
+        switch (selectedMeterType) 
+        {
+            case SINGLE_PHASE_METER:
+                OA_ATTACH(associationHighGMac.objectList, ALL_OBJECTS_SINGLE_PHASE_METER);
+                break;
+
+            case THREE_PHASE_METER:
+                OA_ATTACH(associationHighGMac.objectList, ALL_OBJECTS_THREE_PHASE_METER);
+                break;
+
+            default:
+                break;
+        }
+        
         associationHighGMac.clientSAP = 0x1;
         associationHighGMac.xDLMSContextInfo.maxSendPduSize = associationHighGMac.xDLMSContextInfo.maxReceivePduSize = PDU_BUFFER_SIZE;
         associationHighGMac.xDLMSContextInfo.conformance = (DLMS_CONFORMANCE)(DLMS_CONFORMANCE_BLOCK_TRANSFER_WITH_ACTION |
@@ -1862,7 +1917,21 @@ int loadSettings()
             serializerSettings.stream = f;
             serializerSettings.ignoredAttributes = NON_SERIALIZED_OBJECTS;
             serializerSettings.count = sizeof(NON_SERIALIZED_OBJECTS) / sizeof(NON_SERIALIZED_OBJECTS[0]);
-            ret = ser_loadObjects(&settings.base, &serializerSettings, ALL_OBJECTS_THREE_PHASE_METER, sizeof(ALL_OBJECTS_THREE_PHASE_METER) / sizeof(ALL_OBJECTS_THREE_PHASE_METER[0]));
+
+            switch (selectedMeterType) 
+            {
+                case SINGLE_PHASE_METER:
+                    ret = ser_loadObjects(&settings.base, &serializerSettings, ALL_OBJECTS_SINGLE_PHASE_METER, sizeof(ALL_OBJECTS_SINGLE_PHASE_METER) / sizeof(ALL_OBJECTS_SINGLE_PHASE_METER[0]));
+                    break;
+
+                case THREE_PHASE_METER:
+                    ret = ser_loadObjects(&settings.base, &serializerSettings, ALL_OBJECTS_THREE_PHASE_METER, sizeof(ALL_OBJECTS_THREE_PHASE_METER) / sizeof(ALL_OBJECTS_THREE_PHASE_METER[0]));
+                    break;
+
+                default:
+                    break;
+            }
+            
             fclose(f);
             return ret;
         }
@@ -1879,6 +1948,10 @@ int createObjects()
         case SINGLE_PHASE_METER:
             OA_ATTACH(associationLow.objectList, ALL_OBJECTS_SINGLE_PHASE_METER);
             if ((ret = addLogicalDeviceName()) != 0 ||
+                (ret = addSapAssignment()) != 0 ||
+                (ret = addEventCode()) != 0 ||
+                (ret = addUnixTime()) != 0 ||
+                (ret = addInvocationCounter()) != 0 ||
                 (ret = addClockObject()) != 0 ||
                 (ret = addRegisterObject()) != 0 ||
                 (ret = addRegisterPhaseCurrent()) != 0 ||
@@ -1887,6 +1960,13 @@ int createObjects()
                 (ret = addRegisterApparentPower()) != 0 ||
                 (ret = addRegisterVoltage()) != 0 ||
                 (ret = addRegisterSignedPowerFactor()) != 0 ||
+                (ret = addDataMeterSerialNumber()) != 0 ||
+                (ret = addDataManufacturerName()) != 0 ||
+                (ret = addDataFirmwareVersion()) != 0 ||
+                (ret = addDataMeterType()) != 0 ||
+                (ret = addDataMeterCategory()) != 0 ||
+                (ret = addDataCurrentRating()) != 0 ||
+                (ret = addDataYearOfManufacture()) != 0 ||
                 (ret = addAssociationNone()) != 0 ||
                 (ret = addAssociationLow()) != 0 ||
                 (ret = addAssociationHigh()) != 0 ||
@@ -1897,6 +1977,10 @@ int createObjects()
                 (ret = addDailyLoadProfileProfileGeneric()) != 0 ||
                 (ret = addNameplateProfileProfileGeneric()) != 0 ||
                 (ret = addBillingProfileProfileGeneric()) != 0 ||
+                (ret = addEventLogProfileGeneric()) != 0 ||
+                (ret = addActionScheduleDisconnectOpen()) != 0 ||
+                (ret = addActionScheduleDisconnectClose()) != 0 ||
+                (ret = addDisconnectControl()) != 0 ||
                 (ret = addIecHdlcSetup()) != 0 ||
                 (ret = oa_verify(&settings.base.objects)) != 0 ||
                 (ret = svr_initialize(&settings)) != 0)
