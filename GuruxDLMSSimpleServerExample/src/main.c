@@ -152,9 +152,52 @@ extern gxRegister currentL1Average, currentL2Average, currentL3Average;
 extern gxData meterSerialNumber, manufacturerName, firmwareVersion, meterType, meterCategory;
 extern gxData currentRating, ctr, ptr, yearOfManufacture;
 
+// Define external KIGG single phase meter registers
+extern gxRegister phaseCurrent, neutralCurrent;
+extern gxRegister activePower, apparentPower;
+extern gxRegister voltage, signedPowerFactor;
+
 static gxObject *NONE_OBJECTS[] = {BASE(associationNone), BASE(ldn), BASE(sapAssignment), BASE(clock1)};
 
-static gxObject *ALL_OBJECTS[] = {
+static gxObject *ALL_OBJECTS_SINGLE_PHASE_METER[] = {
+    BASE(associationNone),
+    BASE(associationLow),
+    BASE(associationHigh),
+    BASE(associationHighGMac),
+    BASE(securitySetupHigh),
+    BASE(securitySetupHighGMac),
+    BASE(ldn),
+    BASE(sapAssignment),
+    BASE(eventCode),
+    BASE(clock1),
+    
+    // Add KIGG registers 
+    BASE(phaseCurrent),
+    BASE(neutralCurrent),
+    BASE(activePower),
+    BASE(apparentPower),
+    BASE(voltage),
+    BASE(signedPowerFactor),
+
+    BASE(pushSetup),
+    BASE(scriptTableGlobalMeterReset),
+    BASE(scriptTableDisconnectControl),
+    BASE(scriptTableActivateTestMode),
+    BASE(scriptTableActivateNormalMode),
+    BASE(loadProfile),
+    BASE(dailyLoadProfile),
+    BASE(nameplateProfile),
+    BASE(billingProfile),
+    BASE(eventLog),
+    BASE(hdlc),
+    BASE(disconnectControl),
+    BASE(actionScheduleDisconnectOpen),
+    BASE(actionScheduleDisconnectClose),
+    BASE(unixTime),
+    BASE(invocationCounter),
+};
+
+static gxObject *ALL_OBJECTS_THREE_PHASE_METER[] = {
     BASE(associationNone),
     BASE(associationLow),
     BASE(associationHigh),
@@ -366,7 +409,7 @@ int saveSettings()
         serializerSettings.stream = f;
         serializerSettings.ignoredAttributes = NON_SERIALIZED_OBJECTS;
         serializerSettings.count = sizeof(NON_SERIALIZED_OBJECTS) / sizeof(NON_SERIALIZED_OBJECTS[0]);
-        ret = ser_saveObjects(&serializerSettings, ALL_OBJECTS, sizeof(ALL_OBJECTS) / sizeof(ALL_OBJECTS[0]));
+        ret = ser_saveObjects(&serializerSettings, ALL_OBJECTS_THREE_PHASE_METER, sizeof(ALL_OBJECTS_THREE_PHASE_METER) / sizeof(ALL_OBJECTS_THREE_PHASE_METER[0]));
         fclose(f);
     }
     else
@@ -784,7 +827,7 @@ int addAssociationLow()
     if ((ret = INIT_OBJECT(associationLow, DLMS_OBJECT_TYPE_ASSOCIATION_LOGICAL_NAME, ln)) == 0)
     {
         //Only Logical Device Name is add to this Association View.
-        OA_ATTACH(associationLow.objectList, ALL_OBJECTS);
+        OA_ATTACH(associationLow.objectList, ALL_OBJECTS_THREE_PHASE_METER);
         associationLow.authenticationMechanismName.mechanismId = DLMS_AUTHENTICATION_LOW;
         associationLow.clientSAP = 0x20;
         associationLow.xDLMSContextInfo.maxSendPduSize = associationLow.xDLMSContextInfo.maxReceivePduSize = PDU_BUFFER_SIZE;
@@ -815,7 +858,7 @@ int addAssociationHigh()
     if ((ret = INIT_OBJECT(associationHigh, DLMS_OBJECT_TYPE_ASSOCIATION_LOGICAL_NAME, ln)) == 0)
     {
         associationHigh.authenticationMechanismName.mechanismId = DLMS_AUTHENTICATION_HIGH;
-        OA_ATTACH(associationHigh.objectList, ALL_OBJECTS);
+        OA_ATTACH(associationHigh.objectList, ALL_OBJECTS_THREE_PHASE_METER);
         BB_ATTACH(associationHigh.xDLMSContextInfo.cypheringInfo, CYPHERING_INFO, 0);
         associationHigh.clientSAP = 0x12;
         associationHigh.xDLMSContextInfo.maxSendPduSize = associationHigh.xDLMSContextInfo.maxReceivePduSize = PDU_BUFFER_SIZE;
@@ -849,7 +892,7 @@ int addAssociationHighGMac()
     if ((ret = INIT_OBJECT(associationHighGMac, DLMS_OBJECT_TYPE_ASSOCIATION_LOGICAL_NAME, ln)) == 0)
     {
         associationHighGMac.authenticationMechanismName.mechanismId = DLMS_AUTHENTICATION_HIGH_GMAC;
-        OA_ATTACH(associationHighGMac.objectList, ALL_OBJECTS);
+        OA_ATTACH(associationHighGMac.objectList, ALL_OBJECTS_THREE_PHASE_METER);
         associationHighGMac.clientSAP = 0x1;
         associationHighGMac.xDLMSContextInfo.maxSendPduSize = associationHighGMac.xDLMSContextInfo.maxReceivePduSize = PDU_BUFFER_SIZE;
         associationHighGMac.xDLMSContextInfo.conformance = (DLMS_CONFORMANCE)(DLMS_CONFORMANCE_BLOCK_TRANSFER_WITH_ACTION |
@@ -1070,7 +1113,7 @@ int addRegisterObject()
     return ret;
 }
 
-uint16_t readActivePowerValue()
+uint16_t readActivePowerL1Value()
 {
     return ++activePowerL1Value;
 }
@@ -1216,6 +1259,42 @@ int addRegisterCurrentL2Average()
 int addRegisterCurrentL3Average()
 {
     int ret = addCurrentL3Average();
+    return ret;
+}
+
+int addRegisterPhaseCurrent()
+{
+    int ret = addPhaseCurrent();
+    return ret;
+}
+
+int addRegisterNeutralCurrent()
+{
+    int ret = addNeutralCurrent();
+    return ret;
+}
+
+int addRegisterActivePower()
+{
+    int ret = addActivePower();
+    return ret;
+}
+
+int addRegisterApparentPower()
+{
+    int ret = addApparentPower();
+    return ret;
+}
+
+int addRegisterVoltage()
+{
+    int ret = addVoltage();
+    return ret;
+}
+
+int addRegisterSignedPowerFactor()
+{
+    int ret = addSignedPowerFactor();
     return ret;
 }
 
@@ -1783,7 +1862,7 @@ int loadSettings()
             serializerSettings.stream = f;
             serializerSettings.ignoredAttributes = NON_SERIALIZED_OBJECTS;
             serializerSettings.count = sizeof(NON_SERIALIZED_OBJECTS) / sizeof(NON_SERIALIZED_OBJECTS[0]);
-            ret = ser_loadObjects(&settings.base, &serializerSettings, ALL_OBJECTS, sizeof(ALL_OBJECTS) / sizeof(ALL_OBJECTS[0]));
+            ret = ser_loadObjects(&settings.base, &serializerSettings, ALL_OBJECTS_THREE_PHASE_METER, sizeof(ALL_OBJECTS_THREE_PHASE_METER) / sizeof(ALL_OBJECTS_THREE_PHASE_METER[0]));
             fclose(f);
             return ret;
         }
@@ -1795,74 +1874,114 @@ int loadSettings()
 int createObjects()
 {
     int ret;
-    OA_ATTACH(settings.base.objects, ALL_OBJECTS);
-    if ((ret = addLogicalDeviceName()) != 0 ||
-        (ret = addSapAssignment()) != 0 ||
-        (ret = addEventCode()) != 0 ||
-        (ret = addUnixTime()) != 0 ||
-        (ret = addInvocationCounter()) != 0 ||
-        (ret = addClockObject()) != 0 ||
-        (ret = addRegisterObject()) != 0 ||
-        (ret = addRegisterVoltageL1()) != 0 ||
-        (ret = addRegisterVoltageL2()) != 0 ||
-        (ret = addRegisterVoltageL3()) != 0 ||
-        (ret = addRegisterCurrentL1()) != 0 ||
-        (ret = addRegisterCurrentL2()) != 0 ||
-        (ret = addRegisterCurrentL3()) != 0 ||
-        (ret = addRegisterFrequency()) != 0 ||
-        (ret = addRegisterPowerFactorL1()) != 0 ||
-        (ret = addRegisterPowerFactorL2()) != 0 ||
-        (ret = addRegisterPowerFactorL3()) != 0 ||
-        (ret = addRegisterBlockEnergyKWhImport()) != 0 ||
-        (ret = addRegisterBlockEnergyKVAhLag()) != 0 ||
-        (ret = addRegisterBlockEnergyKVAhLead()) != 0 ||
-        (ret = addRegisterBlockEnergyKVAhImport()) != 0 ||
-        (ret = addRegisterCumulativeEnergyKWhImport()) != 0 ||
-        (ret = addRegisterCumulativeEnergyKVAhLag()) != 0 ||
-        (ret = addRegisterCumulativeEnergyKVAhLead()) != 0 ||
-        (ret = addRegisterCumulativeEnergyKVAhImport()) != 0 ||
-        (ret = addRegisterVoltageL1Average()) != 0 ||
-        (ret = addRegisterVoltageL2Average()) != 0 ||
-        (ret = addRegisterVoltageL3Average()) != 0 ||
-        (ret = addRegisterCurrentL1Average()) != 0 ||
-        (ret = addRegisterCurrentL2Average()) != 0 ||
-        (ret = addRegisterCurrentL3Average()) != 0 ||
-        (ret = addDataMeterSerialNumber()) != 0 ||
-        (ret = addDataManufacturerName()) != 0 ||
-        (ret = addDataFirmwareVersion()) != 0 ||
-        (ret = addDataMeterType()) != 0 ||
-        (ret = addDataMeterCategory()) != 0 ||
-        (ret = addDataCurrentRating()) != 0 ||
-        (ret = addDataCTR()) != 0 ||
-        (ret = addDataPTR()) != 0 ||
-        (ret = addDataYearOfManufacture()) != 0 ||
-        (ret = addAssociationNone()) != 0 ||
-        (ret = addAssociationLow()) != 0 ||
-        (ret = addAssociationHigh()) != 0 ||
-        (ret = addAssociationHighGMac()) != 0 ||
-        (ret = addSecuritySetupHigh()) != 0 ||
-        (ret = addSecuritySetupHighGMac()) != 0 ||
-        (ret = addPushSetup()) != 0 ||
-        (ret = addscriptTableGlobalMeterReset()) != 0 ||
-        (ret = addscriptTableDisconnectControl()) != 0 ||
-        (ret = addscriptTableActivateTestMode()) != 0 ||
-        (ret = addscriptTableActivateNormalMode()) != 0 ||
-        (ret = addLoadProfileProfileGeneric()) != 0 ||
-        (ret = addDailyLoadProfileProfileGeneric()) != 0 ||
-        (ret = addNameplateProfileProfileGeneric()) != 0 ||
-        (ret = addBillingProfileProfileGeneric()) != 0 ||
-        (ret = addEventLogProfileGeneric()) != 0 ||
-        (ret = addActionScheduleDisconnectOpen()) != 0 ||
-        (ret = addActionScheduleDisconnectClose()) != 0 ||
-        (ret = addDisconnectControl()) != 0 ||
-        (ret = addIecHdlcSetup()) != 0 ||
-        (ret = oa_verify(&settings.base.objects)) != 0 ||
-        (ret = svr_initialize(&settings)) != 0)
+    switch (selectedMeterType)
     {
-        GXTRACE_INT(("Failed to start the meter!"), ret);
-        executeTime = 0;
-        return ret;
+        case SINGLE_PHASE_METER:
+            OA_ATTACH(associationLow.objectList, ALL_OBJECTS_SINGLE_PHASE_METER);
+            if ((ret = addLogicalDeviceName()) != 0 ||
+                (ret = addClockObject()) != 0 ||
+                (ret = addRegisterObject()) != 0 ||
+                (ret = addRegisterPhaseCurrent()) != 0 ||
+                (ret = addRegisterNeutralCurrent()) != 0 ||
+                (ret = addRegisterActivePower()) != 0 ||
+                (ret = addRegisterApparentPower()) != 0 ||
+                (ret = addRegisterVoltage()) != 0 ||
+                (ret = addRegisterSignedPowerFactor()) != 0 ||
+                (ret = addAssociationNone()) != 0 ||
+                (ret = addAssociationLow()) != 0 ||
+                (ret = addAssociationHigh()) != 0 ||
+                (ret = addAssociationHighGMac()) != 0 ||
+                (ret = addSecuritySetupHigh()) != 0 ||
+                (ret = addSecuritySetupHighGMac()) != 0 ||
+                (ret = addLoadProfileProfileGeneric()) != 0 ||
+                (ret = addDailyLoadProfileProfileGeneric()) != 0 ||
+                (ret = addNameplateProfileProfileGeneric()) != 0 ||
+                (ret = addBillingProfileProfileGeneric()) != 0 ||
+                (ret = addIecHdlcSetup()) != 0 ||
+                (ret = oa_verify(&settings.base.objects)) != 0 ||
+                (ret = svr_initialize(&settings)) != 0)
+            {
+                GXTRACE_INT(("Failed to start the meter!"), ret);
+                executeTime = 0;
+                return ret;
+            }
+            break;
+
+        case THREE_PHASE_METER:
+            OA_ATTACH(associationLow.objectList, ALL_OBJECTS_THREE_PHASE_METER);
+            if ((ret = addLogicalDeviceName()) != 0 ||
+                (ret = addSapAssignment()) != 0 ||
+                (ret = addEventCode()) != 0 ||
+                (ret = addUnixTime()) != 0 ||
+                (ret = addInvocationCounter()) != 0 ||
+                (ret = addClockObject()) != 0 ||
+                (ret = addRegisterObject()) != 0 ||
+                (ret = addRegisterVoltageL1()) != 0 ||
+                (ret = addRegisterVoltageL2()) != 0 ||
+                (ret = addRegisterVoltageL3()) != 0 ||
+                (ret = addRegisterCurrentL1()) != 0 ||
+                (ret = addRegisterCurrentL2()) != 0 ||
+                (ret = addRegisterCurrentL3()) != 0 ||
+                (ret = addRegisterFrequency()) != 0 ||
+                (ret = addRegisterPowerFactorL1()) != 0 ||
+                (ret = addRegisterPowerFactorL2()) != 0 ||
+                (ret = addRegisterPowerFactorL3()) != 0 ||
+                (ret = addRegisterBlockEnergyKWhImport()) != 0 ||
+                (ret = addRegisterBlockEnergyKVAhLag()) != 0 ||
+                (ret = addRegisterBlockEnergyKVAhLead()) != 0 ||
+                (ret = addRegisterBlockEnergyKVAhImport()) != 0 ||
+                (ret = addRegisterCumulativeEnergyKWhImport()) != 0 ||
+                (ret = addRegisterCumulativeEnergyKVAhLag()) != 0 ||
+                (ret = addRegisterCumulativeEnergyKVAhLead()) != 0 ||
+                (ret = addRegisterCumulativeEnergyKVAhImport()) != 0 ||
+                (ret = addRegisterVoltageL1Average()) != 0 ||
+                (ret = addRegisterVoltageL2Average()) != 0 ||
+                (ret = addRegisterVoltageL3Average()) != 0 ||
+                (ret = addRegisterCurrentL1Average()) != 0 ||
+                (ret = addRegisterCurrentL2Average()) != 0 ||
+                (ret = addRegisterCurrentL3Average()) != 0 ||
+                (ret = addDataMeterSerialNumber()) != 0 ||
+                (ret = addDataManufacturerName()) != 0 ||
+                (ret = addDataFirmwareVersion()) != 0 ||
+                (ret = addDataMeterType()) != 0 ||
+                (ret = addDataMeterCategory()) != 0 ||
+                (ret = addDataCurrentRating()) != 0 ||
+                (ret = addDataCTR()) != 0 ||
+                (ret = addDataPTR()) != 0 ||
+                (ret = addDataYearOfManufacture()) != 0 ||
+                (ret = addAssociationNone()) != 0 ||
+                (ret = addAssociationLow()) != 0 ||
+                (ret = addAssociationHigh()) != 0 ||
+                (ret = addAssociationHighGMac()) != 0 ||
+                (ret = addSecuritySetupHigh()) != 0 ||
+                (ret = addSecuritySetupHighGMac()) != 0 ||
+                (ret = addPushSetup()) != 0 ||
+                (ret = addscriptTableGlobalMeterReset()) != 0 ||
+                (ret = addscriptTableDisconnectControl()) != 0 ||
+                (ret = addscriptTableActivateTestMode()) != 0 ||
+                (ret = addscriptTableActivateNormalMode()) != 0 ||
+                (ret = addLoadProfileProfileGeneric()) != 0 ||
+                (ret = addDailyLoadProfileProfileGeneric()) != 0 ||
+                (ret = addNameplateProfileProfileGeneric()) != 0 ||
+                (ret = addBillingProfileProfileGeneric()) != 0 ||
+                (ret = addEventLogProfileGeneric()) != 0 ||
+                (ret = addActionScheduleDisconnectOpen()) != 0 ||
+                (ret = addActionScheduleDisconnectClose()) != 0 ||
+                (ret = addDisconnectControl()) != 0 ||
+                (ret = addIecHdlcSetup()) != 0 ||
+                (ret = oa_verify(&settings.base.objects)) != 0 ||
+                (ret = svr_initialize(&settings)) != 0)
+            {
+                GXTRACE_INT(("Failed to start the meter!"), ret);
+                executeTime = 0;
+                return ret;
+            }
+            break;
+
+        default:
+            break;
     }
+
     if ((ret = loadSettings()) != 0)
     {
         GXTRACE_INT(("Failed to load settings!"), ret);
@@ -2362,7 +2481,7 @@ void svr_preRead(
         //Update value by one every time when user reads register.
         if (e->target == BASE(activePowerL1) && e->index == 2)
         {
-            readActivePowerValue();
+            readActivePowerL1Value();
         }
         //Update value every time when user reads register.
         if (e->target == BASE(voltageL1) && e->index == 2)
@@ -2752,7 +2871,7 @@ void handleProfileGenericActions(
         #if 0
         if (it->target == BASE(loadProfile))
         {
-            readActivePowerValue();
+            readActivePowerL1Value();
         }
         captureProfileGeneric(((gxProfileGeneric*)it->target));
         #endif
