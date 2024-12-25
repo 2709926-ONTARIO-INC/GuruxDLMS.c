@@ -95,6 +95,8 @@ static unsigned char replyFrame[HDLC_BUFFER_SIZE + HDLC_HEADER_SIZE];
 static unsigned char SERVER_SYSTEM_TITLE[8] = { 0 };
 static gxByteBuffer reply;
 
+static MeterType_t selectedMeterType = SINGLE_PHASE_METER;
+
 uint32_t time_current(void)
 {
     //Get current time somewhere.
@@ -3708,7 +3710,6 @@ void* captureThreadFunction(void* pVoid)
 {
     (void) pVoid;
     unsigned int loadProfileCounter = 0;
-    bool isNameplateProfileRead = false;
 
     while(true)
     {
@@ -3759,6 +3760,7 @@ void showHelp()
     printf(" -c <json file>\t\t Provide a configuration file with register limits.\n");
     printf(" -g\t\t\t Enable meter to send garbage values at random counts.\n");
     printf(" -I <number>\t\t Use the specified instance number (e.g., 0, 1, 2, etc.) to modify the meter serial number.\n");
+    printf(" -m <meter type>\t Specify meter type [single, three]. Default is single.\n");
     printf(" -h, -help\t\t Show this help.\n");
 }
 
@@ -3956,7 +3958,7 @@ int main(int argc, char* argv[])
     int ret, ls = 0;
     struct sockaddr_in add = { 0 };
     char* serialPort = NULL;
-    while ((opt = getopt(argc, argv, "t:p:S:c:hgP:I:")) != -1)
+    while ((opt = getopt(argc, argv, "t:p:S:c:hgP:I:m:")) != -1)
     {
         switch (opt)
         {
@@ -4014,6 +4016,23 @@ int main(int argc, char* argv[])
                 instanceNumber = atoi(optarg);
                 updateMeterSerialNumber(instanceNumber);
             }
+            break;
+        case 'm':
+            if (strncmp("single", optarg, 6) == 0)
+            {
+                selectedMeterType = SINGLE_PHASE_METER;
+            }
+            else if (strncmp("three", optarg, 5) == 0)
+            {
+                selectedMeterType = THREE_PHASE_METER;
+            }
+            else
+            {
+                printf("Invalid meter type '%s'. Valid options are 'single' or 'three'.\n", optarg);
+                showHelp();
+                return 1;
+            }
+            printf("Selected meter type: %s\n", selectedMeterType == SINGLE_PHASE_METER ? "Single Phase" : "Three Phase");
             break;
         case '?':
         {
