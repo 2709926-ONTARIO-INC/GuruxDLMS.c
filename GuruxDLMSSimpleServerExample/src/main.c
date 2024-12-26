@@ -869,6 +869,10 @@ int addAssociationLow()
         BB_ATTACH_STR(associationLow.secret, SECRET, (uint16_t)strlen(SECRET));
         associationLow.securitySetup = NULL;
     }
+    else
+    {
+        GXTRACE("Unable to Initialize low assoiciation", NULL);
+    }
     return ret;
 }
 
@@ -1511,9 +1515,9 @@ int addscriptTableActivateNormalMode()
 ///////////////////////////////////////////////////////////////////////
 //Add profile generic (historical data) object.
 ///////////////////////////////////////////////////////////////////////
-int addLoadProfileProfileGeneric()
+int addLoadProfileProfileGeneric(MeterType_t m_type)
 {
-    int ret;
+    int ret = 0;
     const unsigned char ln[6] = { 1, 0, 99, 1, 0, 255 };
     if ((ret = INIT_OBJECT(loadProfile, DLMS_OBJECT_TYPE_PROFILE_GENERIC, ln)) == 0)
     {
@@ -1522,70 +1526,89 @@ int addLoadProfileProfileGeneric()
         loadProfile.sortMethod = DLMS_SORT_METHOD_LIFO;
         ///////////////////////////////////////////////////////////////////
         //Add columns.
-        //Add clock obect.
+        //Add clock obect whic is common to all
         capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
         capture->attributeIndex = 2;
         capture->dataIndex = 0;
         arr_push(&loadProfile.captureObjects, key_init(&clock1, capture));
-        //Add L1 voltage Average.
-        capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
-        capture->attributeIndex = 2;
-        capture->dataIndex = 0;
-        arr_push(&loadProfile.captureObjects, key_init(&voltageL1Average, capture));
-        //Add L2 voltage Average.
-        capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
-        capture->attributeIndex = 2;
-        capture->dataIndex = 0;
-        arr_push(&loadProfile.captureObjects, key_init(&voltageL2Average, capture));
-        //Add L3 voltage Average.
-        capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
-        capture->attributeIndex = 2;
-        capture->dataIndex = 0;
-        arr_push(&loadProfile.captureObjects, key_init(&voltageL3Average, capture));
-        //Add L1 current Average.
-        capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
-        capture->attributeIndex = 2;
-        capture->dataIndex = 0;
-        arr_push(&loadProfile.captureObjects, key_init(&currentL1Average, capture));
-        //Add L2 current Average.
-        capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
-        capture->attributeIndex = 2;
-        capture->dataIndex = 0;
-        arr_push(&loadProfile.captureObjects, key_init(&currentL2Average, capture));
-        //Add L3 current Average.
-        capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
-        capture->attributeIndex = 2;
-        capture->dataIndex = 0;
-        arr_push(&loadProfile.captureObjects, key_init(&currentL3Average, capture));
-        //Add Block Energy Wh - Import.
-        capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
-        capture->attributeIndex = 2;
-        capture->dataIndex = 0;
-        arr_push(&loadProfile.captureObjects, key_init(&blockEnergyKWhImport, capture));
-        //Add Block Energy VAh - Lag.
-        capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
-        capture->attributeIndex = 2;
-        capture->dataIndex = 0;
-        arr_push(&loadProfile.captureObjects, key_init(&blockEnergyKVAhLag, capture));
-        //Add Block Energy VAh - Lead.
-        capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
-        capture->attributeIndex = 2;
-        capture->dataIndex = 0;
-        arr_push(&loadProfile.captureObjects, key_init(&blockEnergyKVAhLead, capture));
-        //Add Block Energy VAh - Import.
-        capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
-        capture->attributeIndex = 2;
-        capture->dataIndex = 0;
-        arr_push(&loadProfile.captureObjects, key_init(&blockEnergyKVAhImport, capture));
+        if(m_type == SINGLE_PHASE_METER)
+        {
+            //Add phase current.
+            capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
+            capture->attributeIndex = 2;
+            capture->dataIndex = 0;
+            arr_push(&loadProfile.captureObjects, key_init(&phaseCurrent, capture));
+        }
+        else if(m_type == THREE_PHASE_METER)
+        {
+            //Add L1 voltage Average.
+            capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
+            capture->attributeIndex = 2;
+            capture->dataIndex = 0;
+            arr_push(&loadProfile.captureObjects, key_init(&voltageL1Average, capture));
+            //Add L2 voltage Average.
+            capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
+            capture->attributeIndex = 2;
+            capture->dataIndex = 0;
+            arr_push(&loadProfile.captureObjects, key_init(&voltageL2Average, capture));
+            //Add L3 voltage Average.
+            capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
+            capture->attributeIndex = 2;
+            capture->dataIndex = 0;
+            arr_push(&loadProfile.captureObjects, key_init(&voltageL3Average, capture));
+            //Add L1 current Average.
+            capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
+            capture->attributeIndex = 2;
+            capture->dataIndex = 0;
+            arr_push(&loadProfile.captureObjects, key_init(&currentL1Average, capture));
+            //Add L2 current Average.
+            capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
+            capture->attributeIndex = 2;
+            capture->dataIndex = 0;
+            arr_push(&loadProfile.captureObjects, key_init(&currentL2Average, capture));
+            //Add L3 current Average.
+            capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
+            capture->attributeIndex = 2;
+            capture->dataIndex = 0;
+            arr_push(&loadProfile.captureObjects, key_init(&currentL3Average, capture));
+            //Add Block Energy Wh - Import.
+            capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
+            capture->attributeIndex = 2;
+            capture->dataIndex = 0;
+            arr_push(&loadProfile.captureObjects, key_init(&blockEnergyKWhImport, capture));
+            //Add Block Energy VAh - Lag.
+            capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
+            capture->attributeIndex = 2;
+            capture->dataIndex = 0;
+            arr_push(&loadProfile.captureObjects, key_init(&blockEnergyKVAhLag, capture));
+            //Add Block Energy VAh - Lead.
+            capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
+            capture->attributeIndex = 2;
+            capture->dataIndex = 0;
+            arr_push(&loadProfile.captureObjects, key_init(&blockEnergyKVAhLead, capture));
+            //Add Block Energy VAh - Import.
+            capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
+            capture->attributeIndex = 2;
+            capture->dataIndex = 0;
+            arr_push(&loadProfile.captureObjects, key_init(&blockEnergyKVAhImport, capture));
+        }
+        else
+        {
+            ret = -1;
+            GXTRACE_INT("Unknown meter type", (int)m_type);
+        }
         ///////////////////////////////////////////////////////////////////
         //Update amount of capture objects.
         //Set clock to sort object.
-        loadProfile.sortObject = BASE(clock1);
-        loadProfile.sortObjectAttributeIndex = 2;
-        loadProfile.profileEntries = getProfileGenericBufferMaxRowCount(&loadProfile);
-        loadProfile.entriesInUse = getProfileGenericBufferEntriesInUse(&loadProfile);
+        if(0 == ret)
+        {
+            loadProfile.sortObject = BASE(clock1);
+            loadProfile.sortObjectAttributeIndex = 2;
+            loadProfile.profileEntries = getProfileGenericBufferMaxRowCount(&loadProfile);
+            loadProfile.entriesInUse = getProfileGenericBufferEntriesInUse(&loadProfile);
+        }
     }
-    return 0;
+    return ret;
 }
 
 ///////////////////////////////////////////////////////////////////////
@@ -1973,7 +1996,7 @@ int createObjects()
                 (ret = addAssociationHighGMac()) != 0 ||
                 (ret = addSecuritySetupHigh()) != 0 ||
                 (ret = addSecuritySetupHighGMac()) != 0 ||
-                (ret = addLoadProfileProfileGeneric()) != 0 ||
+                (ret = addLoadProfileProfileGeneric(SINGLE_PHASE_METER)) != 0 ||
                 (ret = addDailyLoadProfileProfileGeneric()) != 0 ||
                 (ret = addNameplateProfileProfileGeneric()) != 0 ||
                 (ret = addBillingProfileProfileGeneric()) != 0 ||
@@ -2044,7 +2067,7 @@ int createObjects()
                 (ret = addscriptTableDisconnectControl()) != 0 ||
                 (ret = addscriptTableActivateTestMode()) != 0 ||
                 (ret = addscriptTableActivateNormalMode()) != 0 ||
-                (ret = addLoadProfileProfileGeneric()) != 0 ||
+                (ret = addLoadProfileProfileGeneric(THREE_PHASE_METER)) != 0 ||
                 (ret = addDailyLoadProfileProfileGeneric()) != 0 ||
                 (ret = addNameplateProfileProfileGeneric()) != 0 ||
                 (ret = addBillingProfileProfileGeneric()) != 0 ||
@@ -3212,6 +3235,7 @@ unsigned char svr_isTarget(
         {
             if (oa_getByIndex(&objects, pos, (gxObject**)&a) == 0)
             {
+                GXTRACE_INT("SAP addr", a->clientSAP);
                 if (a->clientSAP == clientAddress)
                 {
                     ret = 1;
@@ -3264,6 +3288,10 @@ unsigned char svr_isTarget(
                 }
             }
         }
+    }
+    else
+    {
+        GXTRACE("Unable to find logical object", NULL);
     }
     if (ret == 0)
     {
