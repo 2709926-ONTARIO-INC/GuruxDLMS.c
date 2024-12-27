@@ -1,0 +1,44 @@
+{
+    "voltage_limits": {
+        "lower_limit": 108000,
+        "upper_limit": 112000
+    },
+    "current_limits": {
+        "phase_current": {
+            "lower_limit": 0,
+            "upper_limit": 1000000
+        },
+        "neutral_current": {
+            "lower_limit": 0,
+            "upper_limit": 1000000
+        }
+    },
+    "frequency_limits": {
+        "lower_limit": 49800,
+        "upper_limit": 50200
+    },
+    "signed_power_factor_limits": {
+        "lower_limit": 100,
+        "upper_limit": 990
+    },
+    "block_energy_limits": {
+        "kWh_import": {
+            "lower_limit": 0,
+            "upper_limit": 10000
+        },
+        "kWh_export": {
+            "lower_limit": 0,
+            "upper_limit": 10000
+        }
+    },
+    "power_limits": {
+        "active_power": {
+            "lower_limit": 0,
+            "upper_limit": 1000000
+        },
+        "apparent_power": { 
+            "lower_limit": 0,
+            "upper_limit": 1000000
+        }
+    }
+}

@@ -2023,23 +2023,35 @@ bool setRegisterLimits(const char* filePath)
     cJSON* voltageLimits = cJSON_GetObjectItem(json, "voltage_limits");
     if (voltageLimits)
     {
+#ifdef SINGLE_PHASE
+        voltageL1ValueMin = cJSON_GetObjectItem(voltageLimits, "lower_limit")->valueint;
+        voltageL1ValueMax = cJSON_GetObjectItem(voltageLimits, "upper_limit")->valueint;
+#elif defined(THREE_PHASE)
         voltageL1ValueMin = cJSON_GetObjectItem(cJSON_GetObjectItem(voltageLimits, "L1"), "lower_limit")->valueint;
         voltageL1ValueMax = cJSON_GetObjectItem(cJSON_GetObjectItem(voltageLimits, "L1"), "upper_limit")->valueint;
         voltageL2ValueMin = cJSON_GetObjectItem(cJSON_GetObjectItem(voltageLimits, "L2"), "lower_limit")->valueint;
         voltageL2ValueMax = cJSON_GetObjectItem(cJSON_GetObjectItem(voltageLimits, "L2"), "upper_limit")->valueint;
         voltageL3ValueMin = cJSON_GetObjectItem(cJSON_GetObjectItem(voltageLimits, "L3"), "lower_limit")->valueint;
         voltageL3ValueMax = cJSON_GetObjectItem(cJSON_GetObjectItem(voltageLimits, "L3"), "upper_limit")->valueint;
+#endif
     }
 
     cJSON* currentLimits = cJSON_GetObjectItem(json, "current_limits");
     if (currentLimits)
     {
+#ifdef SINGLE_PHASE
+        currentL1ValueMin = cJSON_GetObjectItem(cJSON_GetObjectItem(currentLimits, "phase_current"), "lower_limit")->valueint;
+        currentL1ValueMax = cJSON_GetObjectItem(cJSON_GetObjectItem(currentLimits, "phase_current"), "upper_limit")->valueint;
+        neutralCurrentValueMin = cJSON_GetObjectItem(cJSON_GetObjectItem(currentLimits, "neutral_current"), "lower_limit")->valueint;
+        neutralCurrentValueMax = cJSON_GetObjectItem(cJSON_GetObjectItem(currentLimits, "neutral_current"), "upper_limit")->valueint;
+#elif defined(THREE_PHASE)
         currentL1ValueMin = cJSON_GetObjectItem(cJSON_GetObjectItem(currentLimits, "L1"), "lower_limit")->valueint;
         currentL1ValueMax = cJSON_GetObjectItem(cJSON_GetObjectItem(currentLimits, "L1"), "upper_limit")->valueint;
         currentL2ValueMin = cJSON_GetObjectItem(cJSON_GetObjectItem(currentLimits, "L2"), "lower_limit")->valueint;
         currentL2ValueMax = cJSON_GetObjectItem(cJSON_GetObjectItem(currentLimits, "L2"), "upper_limit")->valueint;
         currentL3ValueMin = cJSON_GetObjectItem(cJSON_GetObjectItem(currentLimits, "L3"), "lower_limit")->valueint;
         currentL3ValueMax = cJSON_GetObjectItem(cJSON_GetObjectItem(currentLimits, "L3"), "upper_limit")->valueint;
+#endif
     }
 
     cJSON* frequencyLimits = cJSON_GetObjectItem(json, "frequency_limits");
@@ -2049,6 +2061,7 @@ bool setRegisterLimits(const char* filePath)
         frequencyValueMax = cJSON_GetObjectItem(frequencyLimits, "upper_limit")->valueint; // Convert to integer
     }
 
+#ifdef THREE_PHASE
     cJSON* powerFactorLimits = cJSON_GetObjectItem(json, "power_factor_limits");
     if (powerFactorLimits)
     {
@@ -2059,19 +2072,44 @@ bool setRegisterLimits(const char* filePath)
         powerFactorL3ValueMin = cJSON_GetObjectItem(cJSON_GetObjectItem(powerFactorLimits, "L3"), "lower_limit")->valuedouble;
         powerFactorL3ValueMax = cJSON_GetObjectItem(cJSON_GetObjectItem(powerFactorLimits, "L3"), "upper_limit")->valuedouble;
     }
+#endif
 
     cJSON* blockEnergyLimits = cJSON_GetObjectItem(json, "block_energy_limits");
     if (blockEnergyLimits)
     {
         blockEnergyKWhImportValueMin = cJSON_GetObjectItem(cJSON_GetObjectItem(blockEnergyLimits, "kWh_import"), "lower_limit")->valueint;
         blockEnergyKWhImportValueMax = cJSON_GetObjectItem(cJSON_GetObjectItem(blockEnergyLimits, "kWh_import"), "upper_limit")->valueint;
+
+#ifdef SINGLE_PHASE
+        blockEnergyKWhExportValueMin = cJSON_GetObjectItem(cJSON_GetObjectItem(blockEnergyLimits, "kWh_export"), "lower_limit")->valueint;
+        blockEnergyKWhExportValueMax = cJSON_GetObjectItem(cJSON_GetObjectItem(blockEnergyLimits, "kWh_export"), "upper_limit")->valueint;
+#elif defined(THREE_PHASE)
         blockEnergyKVAhLagValueMin = cJSON_GetObjectItem(cJSON_GetObjectItem(blockEnergyLimits, "kVAh_lag"), "lower_limit")->valueint;
         blockEnergyKVAhLagValueMax = cJSON_GetObjectItem(cJSON_GetObjectItem(blockEnergyLimits, "kVAh_lag"), "upper_limit")->valueint;
         blockEnergyKVAhLeadValueMin = cJSON_GetObjectItem(cJSON_GetObjectItem(blockEnergyLimits, "kVAh_lead"), "lower_limit")->valueint;
         blockEnergyKVAhLeadValueMax = cJSON_GetObjectItem(cJSON_GetObjectItem(blockEnergyLimits, "kVAh_lead"), "upper_limit")->valueint;
         blockEnergyKVAhImportValueMin = cJSON_GetObjectItem(cJSON_GetObjectItem(blockEnergyLimits, "kVAh_import"), "lower_limit")->valueint;
         blockEnergyKVAhImportValueMax = cJSON_GetObjectItem(cJSON_GetObjectItem(blockEnergyLimits, "kVAh_import"), "upper_limit")->valueint;
+#endif
     }
+
+#ifdef SINGLE_PHASE
+    cJSON* signedPowerFactorLimits = cJSON_GetObjectItem(json, "signed_power_factor_limits");
+    if (signedPowerFactorLimits)
+    {
+        signedPowerFactorValueMin = cJSON_GetObjectItem(signedPowerFactorLimits, "lower_limit")->valueint; // Convert to integer
+        signedPowerFactorValueMax = cJSON_GetObjectItem(signedPowerFactorLimits, "upper_limit")->valueint; // Convert to integer
+    }
+
+    cJSON* powerLimits = cJSON_GetObjectItem(json, "power_limits");
+    if (powerLimits)
+    {
+        activePowerValueMin = cJSON_GetObjectItem(cJSON_GetObjectItem(powerLimits, "active_power"), "lower_limit")->valueint; // Convert to integer
+        activePowerValueMax = cJSON_GetObjectItem(cJSON_GetObjectItem(powerLimits, "active_power"), "upper_limit")->valueint; // Convert to integer
+        apparentPowerValueMin = cJSON_GetObjectItem(cJSON_GetObjectItem(powerLimits, "apparent_power"), "lower_limit")->valueint; // Convert to integer
+        apparentPowerValueMax = cJSON_GetObjectItem(cJSON_GetObjectItem(powerLimits, "apparent_power"), "upper_limit")->valueint; // Convert to integer
+    }
+#endif
 
     // cJSON* cumulativeEnergyLimits = cJSON_GetObjectItem(json, "cumulative_energy_limits");
     // if (cumulativeEnergyLimits)
