@@ -45,11 +45,11 @@ static uint32_t activePowerValue = 0, apparentPowerValue = 0;
 static uint32_t signedPowerFactorValue = 0;
 
 // Define variables for upper and lower limits of single phase meter registers
-static uint32_t blockEnergyKWhExportValueMin = 0, blockEnergyKWhExportValueMax = 10000;
-static uint32_t neutralCurrentValueMin = 0, neutralCurrentValueMax = 1000000;
-static uint32_t activePowerValueMin = 0, activePowerValueMax = 1000000;
-static uint32_t apparentPowerValueMin = 0, apparentPowerValueMax = 1000000;
-static uint32_t signedPowerFactorValueMin = 100, signedPowerFactorValueMax = 990;
+static uint32_t blockEnergyKWhExportValueMin = 0, blockEnergyKWhExportValueMax = 100 * 100;
+static uint32_t neutralCurrentValueMin = 0, neutralCurrentValueMax = 10 * 1000;
+static uint32_t activePowerValueMin = 0, activePowerValueMax = 100 * 10;
+static uint32_t apparentPowerValueMin = 0, apparentPowerValueMax = 100 * 10;
+static uint32_t signedPowerFactorValueMin = 1 * 1000, signedPowerFactorValueMax = 9.9 * 1000;
 
 // Garbage counters for each variable of single phase meter
 static int neutralCurrentCounter = 0;
@@ -108,16 +108,16 @@ uint32_t voltageL2AverageValue = 0, voltageL3AverageValue = 0;
 uint32_t currentL2AverageValue = 0, currentL3AverageValue = 0;
 
 // Define variables for upper and lower limits
-static uint32_t voltageL2ValueMin = 108000, voltageL2ValueMax = 112000;
-static uint32_t voltageL3ValueMin = 108000, voltageL3ValueMax = 112000;
-static uint32_t currentL2ValueMin = 0, currentL2ValueMax = 1000000;
-static uint32_t currentL3ValueMin = 0, currentL3ValueMax = 1000000;
-static uint32_t powerFactorL1ValueMin = 100, powerFactorL1ValueMax = 990;
-static uint32_t powerFactorL2ValueMin = 100, powerFactorL2ValueMax = 990;
-static uint32_t powerFactorL3ValueMin = 100, powerFactorL3ValueMax = 990;
-static uint32_t blockEnergyKVAhLagValueMin = 0, blockEnergyKVAhLagValueMax = 10000;
-static uint32_t blockEnergyKVAhLeadValueMin = 0, blockEnergyKVAhLeadValueMax = 10000;
-static uint32_t blockEnergyKVAhImportValueMin = 0, blockEnergyKVAhImportValueMax = 10000;
+static uint32_t voltageL2ValueMin = 108 * 1000, voltageL2ValueMax = 112 * 1000;
+static uint32_t voltageL3ValueMin = 108 * 1000, voltageL3ValueMax = 112* 1000;
+static uint32_t currentL2ValueMin = 0, currentL2ValueMax = 10 * 100000;
+static uint32_t currentL3ValueMin = 0, currentL3ValueMax = 10 * 100000;
+static uint32_t powerFactorL1ValueMin = 1 * 1000, powerFactorL1ValueMax = 9.9 * 1000;
+static uint32_t powerFactorL2ValueMin = 1 * 1000, powerFactorL2ValueMax = 9.9 * 1000;
+static uint32_t powerFactorL3ValueMin = 1* 1000, powerFactorL3ValueMax = 9.9 * 1000;
+static uint32_t blockEnergyKVAhLagValueMin = 0, blockEnergyKVAhLagValueMax = 100 * 100;
+static uint32_t blockEnergyKVAhLeadValueMin = 0, blockEnergyKVAhLeadValueMax = 100 * 100;
+static uint32_t blockEnergyKVAhImportValueMin = 0, blockEnergyKVAhImportValueMax = 100 * 100;
 
 // Garbage counters for each variable
 static int voltageL2Counter = 0, voltageL3Counter = 0;
@@ -185,10 +185,10 @@ uint32_t currentL1AverageValue = 0;
 
 
 // Define variables for upper and lower limits
-static uint32_t voltageL1ValueMin = 108000, voltageL1ValueMax = 112000;
-static uint32_t currentL1ValueMin = 0, currentL1ValueMax = 1000000;
-static uint32_t frequencyValueMin = 49800, frequencyValueMax = 50200;
-static uint32_t blockEnergyKWhImportValueMin = 0, blockEnergyKWhImportValueMax = 10000;
+static uint32_t voltageL1ValueMin = 108 * 1000, voltageL1ValueMax = 112* 1000;
+static uint32_t currentL1ValueMin = 0, currentL1ValueMax = 10 * 100000;
+static uint32_t frequencyValueMin = 498 * 1000, frequencyValueMax = 502 * 1000;
+static uint32_t blockEnergyKWhImportValueMin = 0, blockEnergyKWhImportValueMax = 100 * 100;
 
 
 static char meterSerialNumberValue[64U] = "X0000000";
@@ -492,14 +492,22 @@ uint32_t readCurrentL1Value()
             currentL1Value = currentL1ValueMin + rand() % (currentL1ValueMax - currentL1ValueMin + 1); // Normal value
             currentL1Counter--;
             currentL1AverageCounter++; // Increment the average counter to calculate new average
+#ifdef SINGLE_PHASE
+            currentL1AverageValue = calculateAverageUint32(currentL1AverageValue * 1000, currentL1Value, currentL1AverageCounter) / 1000;
+#elif defined(THREE_PHASE)
             currentL1AverageValue = calculateAverageUint32(currentL1AverageValue * 100000, currentL1Value, currentL1AverageCounter) / 100000;
+#endif
         }
     }
     else
     {
         currentL1Value = currentL1ValueMin + rand() % (currentL1ValueMax - currentL1ValueMin + 1); // Normal value
         currentL1AverageCounter++; // Increment the average counter to calculate new average
-        currentL1AverageValue = calculateAverageUint32(currentL1AverageValue * 100000, currentL1Value, currentL1AverageCounter) / 100000;
+#ifdef SINGLE_PHASE
+            currentL1AverageValue = calculateAverageUint32(currentL1AverageValue * 1000, currentL1Value, currentL1AverageCounter) / 1000;
+#elif defined(THREE_PHASE)
+            currentL1AverageValue = calculateAverageUint32(currentL1AverageValue * 100000, currentL1Value, currentL1AverageCounter) / 100000;
+#endif
     }
     return currentL1Value;
 }
