@@ -1492,7 +1492,11 @@ uint32_t readCumulativeEnergyKVAhImportValue()
 int addVoltageL1Average()
 {
     int ret;
+#ifdef SINGLE_PHASE
+    const unsigned char ln[6] = { 1, 0, 12, 27, 0, 255 };
+#elif defined(THREE_PHASE)
     const unsigned char ln[6] = { 1, 0, 32, 27, 0, 255 };  // Example LN for voltageL1 average
+#endif
 
     // Initialize the voltageL1 average register object
     if ((ret = INIT_OBJECT(voltageL1Average, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
@@ -1569,7 +1573,11 @@ uint32_t readVoltageL3AverageValue()
 int addCurrentL1Average()
 {
     int ret;
+#ifdef SINGLE_PHASE
+    const unsigned char ln[6] = { 1, 0, 11, 27, 0, 255 };  
+#elif defined(THREE_PHASE)
     const unsigned char ln[6] = { 1, 0, 31, 27, 0, 255 };  // Example LN for currentL1 average
+#endif
 
     // Initialize the currentL1 average register object
     if ((ret = INIT_OBJECT(currentL1Average, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
