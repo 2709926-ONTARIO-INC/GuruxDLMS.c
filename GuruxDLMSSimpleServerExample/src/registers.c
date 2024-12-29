@@ -21,140 +21,206 @@ extern bool isGarbageValuesEnabled();
 #define MAX_GARBAGE_COUNT   7
 #define SIZE                50
 
-
-// Garbage value arrays for each variable
-uint32_t voltageL1GarbageValues[] = {500000, 999000, 1100000};
-uint32_t voltageL2GarbageValues[] = {600000, 888000, 1200000};
-uint32_t voltageL3GarbageValues[] = {5500000, 6000000, 70000000};
-uint32_t currentL1GarbageValues[] = {5000000, 9900000, 11000000};
-uint32_t currentL2GarbageValues[] = {6000000, 9800000, 12000000};
-uint32_t currentL3GarbageValues[] = {5500000, 1000000, 13000000};
-uint32_t frequencyGarbageValues[] = {555000, 999000, 1100000};
-uint32_t powerFactorL1GarbageValues[] = {800000, 210000, 200000};
-uint32_t powerFactorL2GarbageValues[] = {900000, 210000, 210000};
-uint32_t powerFactorL3GarbageValues[] = {800000, 210000, 220000};
-uint32_t blockEnergyKWhImportGarbageValues[] = {99999, 12345, 214745};
-uint32_t blockEnergyKWhExportGarbageValues[] = {99999, 12345, 214745};
-uint32_t blockEnergyKVAhLagGarbageValues[] = {99995, 23455, 198765};
-uint32_t blockEnergyKVAhLeadGarbageValues[] = {88885, 34565, 109875};
-uint32_t blockEnergyKVAhImportGarbageValues[] = {77775, 45675, 987655};
-uint32_t cumulativeEnergyKWhImportGarbageValues[] = {90, 98, 76};
-uint32_t cumulativeEnergyKWhExportGarbageValues[] = {90, 98, 76};
-uint32_t cumulativeEnergyKVAhLagGarbageValues[] = {88, 87, 65};
-uint32_t cumulativeEnergyKVAhLeadGarbageValues[] = {88, 87, 65};
-uint32_t cumulativeEnergyKVAhImportGarbageValues[] = {88, 87, 65};
-
+#ifdef SINGLE_PHASE
 // Garbage value arrays for each variable of single phase meter
 uint32_t neutralCurrentGarbageValues[] = {5000000, 9900000, 11000000};
 uint32_t activePowerGarbageValues[] = {5000000, 9900000, 11000000};
 uint32_t apparentPowerGarbageValues[] = {5000000, 9900000, 11000000};
 uint32_t signedPowerFactorGarbageValues[] = {5000000, 9900000, 11000000};
-
-
-// Define the KIGG register objects globally.
-gxRegister voltageL1, voltageL2, voltageL3;
-gxRegister currentL1, currentL2, currentL3;
-gxRegister frequency;
-gxRegister powerFactorL1, powerFactorL2, powerFactorL3;
-gxRegister blockEnergyKWhImport, blockEnergyKWhExport, blockEnergyKVAhLag, blockEnergyKVAhLead, blockEnergyKVAhImport;
-gxRegister cumulativeEnergyKWhImport, cumulativeEnergyKVAhLag, cumulativeEnergyKVAhLead, cumulativeEnergyKVAhImport, cumulativeEnergyKWhExport;
-
-// Define the objects to store KIGG register's averages
-gxRegister voltageL1Average, voltageL2Average, voltageL3Average;
-gxRegister currentL1Average, currentL2Average, currentL3Average;
-
-
-// Define individual objects for nameplate profile
-gxData meterSerialNumber, manufacturerName, firmwareVersion, meterType, meterCategory;
-gxData currentRating, ctr, ptr, yearOfManufacture;
-
+uint32_t blockEnergyKWhExportGarbageValues[] = {99999, 12345, 214745};
+uint32_t cumulativeEnergyKWhExportGarbageValues[] = {90, 98, 76};
 
 // Define the KIGG register objects for single phase meter globally.
+gxRegister blockEnergyKWhExport;
+gxRegister cumulativeEnergyKWhExport;
 gxRegister neutralCurrent;
 gxRegister activePower, apparentPower;
 gxRegister signedPowerFactor;
 
-
-// Define variables to store the KIGG registers' values
-static uint32_t voltageL1Value = 0, voltageL2Value = 0, voltageL3Value = 0;
-static uint32_t currentL1Value = 0, currentL2Value = 0, currentL3Value = 0;
-static uint32_t frequencyValue = 0;
-static uint32_t powerFactorL1Value = 0, powerFactorL2Value = 0, powerFactorL3Value = 0;
-static uint32_t blockEnergyKWhImportValue = 0, blockEnergyKWhExportValue = 0, blockEnergyKVAhLagValue = 0, blockEnergyKVAhLeadValue = 0, blockEnergyKVAhImportValue = 0;
-static uint32_t cumulativeEnergyKWhImportValue = 0, cumulativeEnergyKVAhLagValue = 0, cumulativeEnergyKVAhLeadValue = 0, cumulativeEnergyKVAhImportValue = 0, cumulativeEnergyKWhExportValue = 0;
-
-// Define variables to store the KIGG registers' averages
-uint32_t voltageL1AverageValue = 0, voltageL2AverageValue = 0, voltageL3AverageValue = 0;
-uint32_t currentL1AverageValue = 0, currentL2AverageValue = 0, currentL3AverageValue = 0;
-
-
 // Define variables to store the KIGG registers' values for single phase meter
+static uint32_t blockEnergyKWhExportValue = 0;
+static uint32_t cumulativeEnergyKWhExportValue = 0;
 static uint32_t neutralCurrentValue = 0;
 static uint32_t activePowerValue = 0, apparentPowerValue = 0;
 static uint32_t signedPowerFactorValue = 0;
 
-
-// Define variables for upper and lower limits
-static uint32_t voltageL1ValueMin = 108000, voltageL1ValueMax = 112000;
-static uint32_t voltageL2ValueMin = 108000, voltageL2ValueMax = 112000;
-static uint32_t voltageL3ValueMin = 108000, voltageL3ValueMax = 112000;
-
-static uint32_t currentL1ValueMin = 0, currentL1ValueMax = 1000000;
-static uint32_t currentL2ValueMin = 0, currentL2ValueMax = 1000000;
-static uint32_t currentL3ValueMin = 0, currentL3ValueMax = 1000000;
-
-static uint32_t frequencyValueMin = 49800, frequencyValueMax = 50200;
-
-static uint32_t powerFactorL1ValueMin = 100, powerFactorL1ValueMax = 990;
-static uint32_t powerFactorL2ValueMin = 100, powerFactorL2ValueMax = 990;
-static uint32_t powerFactorL3ValueMin = 100, powerFactorL3ValueMax = 990;
-
-static uint32_t blockEnergyKWhImportValueMin = 0, blockEnergyKWhImportValueMax = 10000;
-static uint32_t blockEnergyKWhExportValueMin = 0, blockEnergyKWhExportValueMax = 10000;
-static uint32_t blockEnergyKVAhLagValueMin = 0, blockEnergyKVAhLagValueMax = 10000;
-static uint32_t blockEnergyKVAhLeadValueMin = 0, blockEnergyKVAhLeadValueMax = 10000;
-static uint32_t blockEnergyKVAhImportValueMin = 0, blockEnergyKVAhImportValueMax = 10000;
-
-// static uint32_t cumulativeEnergyKWhImportValueMin = 450, cumulativeEnergyKWhImportValueMax = 500;
-// static uint32_t cumulativeEnergyKVAhImportValueMin = 500, cumulativeEnergyKVAhImportValueMax = 600;
-
-
 // Define variables for upper and lower limits of single phase meter registers
+static uint32_t blockEnergyKWhExportValueMin = 0, blockEnergyKWhExportValueMax = 10000;
 static uint32_t neutralCurrentValueMin = 0, neutralCurrentValueMax = 1000000;
 static uint32_t activePowerValueMin = 0, activePowerValueMax = 1000000;
 static uint32_t apparentPowerValueMin = 0, apparentPowerValueMax = 1000000;
 static uint32_t signedPowerFactorValueMin = 100, signedPowerFactorValueMax = 990;
 
+// Garbage counters for each variable of single phase meter
+static int neutralCurrentCounter = 0;
+static int activePowerCounter = 0, apparentPowerCounter = 0;
+static int signedPowerFactorCounter = 0;
+static int blockEnergyKWhExportCounter = 0;
+static int cumulativeEnergyKWhExportCounter = 0;
+
+// Variables to keep track of if the cumulative energy values are read once
+static bool isCumulativeEnergyKWhExportReadOnce = false;
+
+// Variable to track if garbage values were read once 
+static bool isCumulativeEnergyKWhExportGarbageValueSent = false;
+
+// Variable to store the last cumulative energy values when garbage injection is enabled
+static uint32_t lastCumulativeEnergyKWhExportValue = 0;
+#elif defined(THREE_PHASE)
+// Garbage value arrays for each variable
+uint32_t voltageL2GarbageValues[] = {600000, 888000, 1200000};
+uint32_t voltageL3GarbageValues[] = {5500000, 6000000, 70000000};
+uint32_t currentL2GarbageValues[] = {6000000, 9800000, 12000000};
+uint32_t currentL3GarbageValues[] = {5500000, 1000000, 13000000};
+uint32_t powerFactorL1GarbageValues[] = {800000, 210000, 200000};
+uint32_t powerFactorL2GarbageValues[] = {900000, 210000, 210000};
+uint32_t powerFactorL3GarbageValues[] = {800000, 210000, 220000};
+uint32_t blockEnergyKVAhLagGarbageValues[] = {99995, 23455, 198765};
+uint32_t blockEnergyKVAhLeadGarbageValues[] = {88885, 34565, 109875};
+uint32_t blockEnergyKVAhImportGarbageValues[] = {77775, 45675, 987655};
+uint32_t cumulativeEnergyKVAhLagGarbageValues[] = {88, 87, 65};
+uint32_t cumulativeEnergyKVAhLeadGarbageValues[] = {88, 87, 65};
+uint32_t cumulativeEnergyKVAhImportGarbageValues[] = {88, 87, 65};
+
+// Define the KIGG register objects globally.
+gxRegister voltageL2, voltageL3;
+gxRegister currentL2, currentL3;
+gxRegister powerFactorL1, powerFactorL2, powerFactorL3;
+gxRegister blockEnergyKVAhLag, blockEnergyKVAhLead, blockEnergyKVAhImport;
+gxRegister cumulativeEnergyKVAhLag, cumulativeEnergyKVAhLead, cumulativeEnergyKVAhImport;
+
+// Define the objects to store KIGG register's averages
+gxRegister voltageL2Average, voltageL3Average;
+gxRegister currentL2Average, currentL3Average;
+
+// Define individual objects for nameplate profile
+gxData ctr, ptr;
+
+// Define variables to store the KIGG registers' values
+static uint32_t voltageL2Value = 0, voltageL3Value = 0;
+static uint32_t currentL2Value = 0, currentL3Value = 0;
+static uint32_t powerFactorL1Value = 0, powerFactorL2Value = 0, powerFactorL3Value = 0;
+static uint32_t blockEnergyKVAhLagValue = 0, blockEnergyKVAhLeadValue = 0, blockEnergyKVAhImportValue = 0;
+static uint32_t cumulativeEnergyKVAhLagValue = 0, cumulativeEnergyKVAhLeadValue = 0, cumulativeEnergyKVAhImportValue = 0;
+
+// Define variables to store the KIGG registers' averages
+uint32_t voltageL2AverageValue = 0, voltageL3AverageValue = 0;
+uint32_t currentL2AverageValue = 0, currentL3AverageValue = 0;
+
+// Define variables for upper and lower limits
+static uint32_t voltageL2ValueMin = 108000, voltageL2ValueMax = 112000;
+static uint32_t voltageL3ValueMin = 108000, voltageL3ValueMax = 112000;
+static uint32_t currentL2ValueMin = 0, currentL2ValueMax = 1000000;
+static uint32_t currentL3ValueMin = 0, currentL3ValueMax = 1000000;
+static uint32_t powerFactorL1ValueMin = 100, powerFactorL1ValueMax = 990;
+static uint32_t powerFactorL2ValueMin = 100, powerFactorL2ValueMax = 990;
+static uint32_t powerFactorL3ValueMin = 100, powerFactorL3ValueMax = 990;
+static uint32_t blockEnergyKVAhLagValueMin = 0, blockEnergyKVAhLagValueMax = 10000;
+static uint32_t blockEnergyKVAhLeadValueMin = 0, blockEnergyKVAhLeadValueMax = 10000;
+static uint32_t blockEnergyKVAhImportValueMin = 0, blockEnergyKVAhImportValueMax = 10000;
+
+// Garbage counters for each variable
+static int voltageL2Counter = 0, voltageL3Counter = 0;
+static int currentL2Counter = 0, currentL3Counter = 0;
+static int powerFactorL1Counter = 0, powerFactorL2Counter = 0, powerFactorL3Counter = 0;
+static int blockEnergyKVAhLagCounter = 0, blockEnergyKVAhLeadCounter = 0, blockEnergyKVAhImportCounter = 0;
+static int cumulativeEnergyKVAhLagCounter = 0, cumulativeEnergyKVAhLeadCounter = 0, cumulativeEnergyKVAhImportCounter = 0;
+
+// Average value counters for each variable
+static int voltageL2AverageCounter = 0, voltageL3AverageCounter = 0;
+static int currentL2AverageCounter = 0, currentL3AverageCounter = 0;
+
+// Variables to keep track of if the cumulative energy values are read once
+static bool isCumulativeEnergyKVAhLagReadOnce = false;
+static bool isCumulativeEnergyKVAhLeadReadOnce = false;
+static bool isCumulativeEnergyKVAhImportReadOnce = false;
+
+// Variable to track if garbage values were read once 
+static bool isCumulativeEnergyKVAhLagGarbageValueSent = false;
+static bool isCumulativeEnergyKVAhLeadGarbageValueSent = false;
+static bool isCumulativeEnergyKVAhImportGarbageValueSent = false;
+
+// Variable to store the last cumulative energy values when garbage injection is enabled
+static uint32_t lastCumulativeEnergyKVAhLagValue = 0;
+static uint32_t lastCumulativeEnergyKVAhLeadValue = 0;
+static uint32_t lastCumulativeEnergyKVAhImportValue = 0;
+#endif
+
+// Garbage value arrays for each variable
+uint32_t voltageL1GarbageValues[] = {500000, 999000, 1100000};
+uint32_t currentL1GarbageValues[] = {5000000, 9900000, 11000000};
+uint32_t frequencyGarbageValues[] = {555000, 999000, 1100000};
+uint32_t blockEnergyKWhImportGarbageValues[] = {99999, 12345, 214745};
+uint32_t cumulativeEnergyKWhImportGarbageValues[] = {90, 98, 76};
+
+
+// Define the KIGG register objects globally.
+gxRegister voltageL1;
+gxRegister currentL1;
+gxRegister frequency;
+
+gxRegister blockEnergyKWhImport;
+gxRegister cumulativeEnergyKWhImport;
+
+// Define the objects to store KIGG register's averages
+gxRegister voltageL1Average;
+gxRegister currentL1Average;
+
+
+// Define individual objects for nameplate profile
+gxData meterSerialNumber, manufacturerName, firmwareVersion, meterType, meterCategory;
+gxData currentRating, yearOfManufacture;
+
+
+// Define variables to store the KIGG registers' values
+static uint32_t voltageL1Value = 0;
+static uint32_t currentL1Value = 0;
+static uint32_t frequencyValue = 0;
+static uint32_t blockEnergyKWhImportValue = 0;
+static uint32_t cumulativeEnergyKWhImportValue = 0;
+
+// Define variables to store the KIGG registers' averages
+uint32_t voltageL1AverageValue = 0;
+uint32_t currentL1AverageValue = 0;
+
+
+// Define variables for upper and lower limits
+static uint32_t voltageL1ValueMin = 108000, voltageL1ValueMax = 112000;
+static uint32_t currentL1ValueMin = 0, currentL1ValueMax = 1000000;
+static uint32_t frequencyValueMin = 49800, frequencyValueMax = 50200;
+static uint32_t blockEnergyKWhImportValueMin = 0, blockEnergyKWhImportValueMax = 10000;
+
 
 static char meterSerialNumberValue[64U] = "X0000000";
 static const char* manufacturerNameValue = "SECURE METERS LTD.";
+#ifdef SINGLE_PHASE
+static const char* firmwareVersionValue = "A1XX02";
+static uint8_t meterTypeValue = 5;
+static const char* meterCategoryValue = "C3";
+static const char* currentRatingValue = "010 - 060 A";
+static uint16_t yearOfManufactureValue = 2021;
+#elif THREE_PHASE
 static const char* firmwareVersionValue = "M1XXG04";
 static uint8_t meterTypeValue = 2;
 static const char* meterCategoryValue = "C1";
 static const char* currentRatingValue = "5 - 10 A";
 static uint8_t ctrValue = 12;
 static uint8_t ptrValue = 100;
-static uint16_t yearOfManufactureValue = 2019;              // Fixed value for the register
+static uint16_t yearOfManufactureValue = 2019;
+#endif              // Fixed value for the register
 
 
 // Garbage counters for each variable
-static int voltageL1Counter = 0, voltageL2Counter = 0, voltageL3Counter = 0;
-static int currentL1Counter = 0, currentL2Counter = 0, currentL3Counter = 0;
+static int voltageL1Counter = 0;
+static int currentL1Counter = 0;
 static int frequencyCounter = 0;
-static int powerFactorL1Counter = 0, powerFactorL2Counter = 0, powerFactorL3Counter = 0;
-static int blockEnergyKWhImportCounter = 0, blockEnergyKWhExportCounter = 0, blockEnergyKVAhLagCounter = 0, blockEnergyKVAhLeadCounter = 0, blockEnergyKVAhImportCounter = 0;
-static int cumulativeEnergyKWhImportCounter = 0, cumulativeEnergyKVAhLagCounter = 0, cumulativeEnergyKVAhLeadCounter = 0, cumulativeEnergyKVAhImportCounter = 0, cumulativeEnergyKWhExportCounter = 0;
-
-
-// Garbage counters for each variable of single phase meter
-static int neutralCurrentCounter = 0;
-static int activePowerCounter = 0, apparentPowerCounter = 0;
-static int signedPowerFactorCounter = 0;
+static int blockEnergyKWhImportCounter = 0;
+static int cumulativeEnergyKWhImportCounter = 0;
 
 
 // Average value counters for each variable
-static int voltageL1AverageCounter = 0, voltageL2AverageCounter = 0, voltageL3AverageCounter = 0;
-static int currentL1AverageCounter = 0, currentL2AverageCounter = 0, currentL3AverageCounter = 0;
+static int voltageL1AverageCounter = 0;
+static int currentL1AverageCounter = 0;
 
 
 static char* current_timestamp = NULL;
@@ -162,26 +228,14 @@ static char* current_timestamp = NULL;
 
 // Variables to keep track of if the cumulative energy values are read once
 static bool isCumulativeEnergyKWhImportReadOnce = false;
-static bool isCumulativeEnergyKWhExportReadOnce = false;
-static bool isCumulativeEnergyKVAhLagReadOnce = false;
-static bool isCumulativeEnergyKVAhLeadReadOnce = false;
-static bool isCumulativeEnergyKVAhImportReadOnce = false;
 
 
 // Variable to track if garbage values were read once 
 static bool isCumulativeEnergyKWhImportGarbageValueSent = false;
-static bool isCumulativeEnergyKWhExportGarbageValueSent = false;
-static bool isCumulativeEnergyKVAhLagGarbageValueSent = false;
-static bool isCumulativeEnergyKVAhLeadGarbageValueSent = false;
-static bool isCumulativeEnergyKVAhImportGarbageValueSent = false;
 
 
 // Variable to store the last cumulative energy values when garbage injection is enabled
 static uint32_t lastCumulativeEnergyKWhImportValue = 0;
-static uint32_t lastCumulativeEnergyKWhExportValue = 0;
-static uint32_t lastCumulativeEnergyKVAhLagValue = 0;
-static uint32_t lastCumulativeEnergyKVAhLeadValue = 0;
-static uint32_t lastCumulativeEnergyKVAhImportValue = 0;
 
 // Helper to reset a counter
 int resetCounter()
@@ -276,6 +330,7 @@ uint32_t readVoltageL1Value()
     return voltageL1Value;
 }
 
+#ifdef THREE_PHASE
 // Function to add the voltageL2 register to the DLMS server
 int addVoltageL2()
 {
@@ -383,6 +438,7 @@ uint32_t readVoltageL3Value()
     }
     return voltageL3Value;
 }
+#endif 
 
 // Function to add the currentL1 register to the DLMS server
 int addCurrentL1()
@@ -448,6 +504,7 @@ uint32_t readCurrentL1Value()
     return currentL1Value;
 }
 
+#ifdef THREE_PHASE
 // Function to add the currentL2 register to the DLMS server
 int addCurrentL2()
 {
@@ -555,6 +612,7 @@ uint32_t readCurrentL3Value()
     }
     return currentL3Value;
 }
+#endif
 
 // Function to add the frequency register to the DLMS server
 int addFrequency()
@@ -606,6 +664,7 @@ uint32_t readFrequencyValue()
     return frequencyValue;
 }
 
+#ifdef THREE_PHASE
 // Function to add the powerFactorL1 register to the DLMS server
 int addPowerFactorL1()
 {
@@ -755,6 +814,7 @@ uint32_t readPowerFactorL3Value()
     }
     return powerFactorL3Value;
 }
+#endif
 
 // Function to add Block Energy (kWh Import) register to the DLMS server
 int addBlockEnergyKWhImport()
@@ -806,6 +866,7 @@ uint32_t readBlockEnergyKWhImportValue()
     return blockEnergyKWhImportValue;
 }
 
+#ifdef SINGLE_PHASE
 // Function to add Block Energy (kWh Export) register to the DLMS server
 int addBlockEnergyKWhExport()
 {
@@ -855,8 +916,9 @@ uint32_t readBlockEnergyKWhExportValue()
     }
     return blockEnergyKWhExportValue;
 }
+#endif
 
-
+#ifdef THREE_PHASE
 // Function to add Block Energy (kVAh Lag) register to the DLMS server
 int addBlockEnergyKVAhLag()
 {
@@ -1006,6 +1068,7 @@ uint32_t readBlockEnergyKVAhImportValue()
     }
     return blockEnergyKVAhImportValue;
 }
+#endif
 
 // Function to add Cumulative Energy (kWh Import) register to the DLMS server
 int addCumulativeEnergyKWhImport()
@@ -1098,6 +1161,7 @@ uint32_t readCumulativeEnergyKWhImportValue()
     return cumulativeEnergyKWhImportValue;
 }
 
+#ifdef SINGLE_PHASE
 // Function to add Cumulative Energy (kWh Export) register to the DLMS server
 int addCumulativeEnergyKWhExport()
 {
@@ -1178,7 +1242,9 @@ uint32_t readCumulativeEnergyKWhExportValue()
     }
     return cumulativeEnergyKWhExportValue;
 }
+#endif
 
+#ifdef THREE_PHASE
 // Function to add Cumulative Energy (kVAh Lag) register to the DLMS server
 int addCumulativeEnergyKVAhLag()
 {
@@ -1420,6 +1486,7 @@ uint32_t readCumulativeEnergyKVAhImportValue()
     }
     return cumulativeEnergyKVAhImportValue;
 }
+#endif
 
 // Function to add the voltageL1Average register to the DLMS server
 int addVoltageL1Average()
@@ -1446,6 +1513,7 @@ uint32_t readVoltageL1AverageValue()
     return voltageL1AverageValue;
 }
 
+#ifdef THREE_PHASE
 // Function to add the voltageL1Average register to the DLMS server
 int addVoltageL2Average()
 {
@@ -1495,6 +1563,7 @@ uint32_t readVoltageL3AverageValue()
 {
     return voltageL3AverageValue;
 }
+#endif
 
 // Function to add the currentL1Average register to the DLMS server
 int addCurrentL1Average()
@@ -1521,6 +1590,7 @@ uint32_t readCurrentL1AverageValue()
     return currentL1AverageValue;
 }
 
+#ifdef THREE_PHASE
 // Function to add the currentL2Average register to the DLMS server
 int addCurrentL2Average()
 {
@@ -1570,6 +1640,7 @@ uint32_t readCurrentL3AverageValue()
 {
     return currentL3AverageValue;
 }
+#endif
 
 int addMeterSerialNumber()
 {
@@ -1679,6 +1750,7 @@ const char* readCurrentRating()
     return currentRatingValue;
 }
 
+#ifdef THREE_PHASE
 int addCTR()
 {
     int ret;
@@ -1714,6 +1786,7 @@ uint8_t readPTR()
 {
     return ptrValue;
 }
+#endif
 
 int addYearOfManufacture()
 {
@@ -1742,7 +1815,7 @@ void updateMeterSerialNumber(int value)
     snprintf(numberPart, sizeof(meterSerialNumberValue) - 1, "%07d", number); // Update the numeric part.
 }
 
-
+#ifdef SINGLE_PHASE
 // Adding single phase meter registers
 // Function to add the neutral current register to the DLMS server
 int addNeutralCurrent()
@@ -1943,34 +2016,39 @@ uint32_t readSignedPowerFactorValue()
     }
     return signedPowerFactorValue;
 }
+#endif
 
 // Initialize counters
 void initializeCounters(void)
 {
     srand(time(NULL));
     voltageL1Counter = resetCounter();
-    voltageL2Counter = resetCounter();
-    voltageL3Counter = resetCounter();
     currentL1Counter = resetCounter();
-    currentL2Counter = resetCounter();
-    currentL3Counter = resetCounter();
     frequencyCounter = resetCounter();
-    powerFactorL1Counter = resetCounter();
-    powerFactorL2Counter = resetCounter();
-    powerFactorL3Counter = resetCounter();
     blockEnergyKWhImportCounter = resetCounter();
-    blockEnergyKVAhLagCounter = resetCounter();
-    blockEnergyKVAhLeadCounter = resetCounter();
-    blockEnergyKVAhImportCounter = resetCounter();
     cumulativeEnergyKWhImportCounter = resetCounter();
-    cumulativeEnergyKWhExportCounter = resetCounter();
-    cumulativeEnergyKVAhLagCounter = resetCounter();
-    cumulativeEnergyKVAhLeadCounter = resetCounter();
-    cumulativeEnergyKVAhImportCounter = resetCounter();
+#ifdef SINGLE_PHASE
     neutralCurrentCounter = resetCounter();
     activePowerCounter = resetCounter();
     apparentPowerCounter = resetCounter();
     signedPowerFactorCounter = resetCounter();
+    blockEnergyKWhExportCounter = resetCounter();
+    cumulativeEnergyKWhExportCounter = resetCounter();
+#elif THREE_PHASE
+    voltageL2Counter = resetCounter();
+    voltageL3Counter = resetCounter();
+    currentL2Counter = resetCounter();
+    currentL3Counter = resetCounter();
+    powerFactorL1Counter = resetCounter();
+    powerFactorL2Counter = resetCounter();
+    powerFactorL3Counter = resetCounter();
+    blockEnergyKVAhLagCounter = resetCounter();
+    blockEnergyKVAhLeadCounter = resetCounter();
+    blockEnergyKVAhImportCounter = resetCounter();
+    cumulativeEnergyKVAhLagCounter = resetCounter();
+    cumulativeEnergyKVAhLeadCounter = resetCounter();
+    cumulativeEnergyKVAhImportCounter = resetCounter();
+#endif
 }
 
 // Set upper and lower limits for all registers' values

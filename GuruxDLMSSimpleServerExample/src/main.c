@@ -135,25 +135,41 @@ static gxSecuritySetup securitySetupHigh;
 static gxSecuritySetup securitySetupHighGMac;
 
 // Define external KIGG registers
-extern gxRegister voltageL1, voltageL2, voltageL3;
-extern gxRegister currentL1, currentL2, currentL3;
-extern gxRegister frequency;
-extern gxRegister powerFactorL1, powerFactorL2, powerFactorL3;
-extern gxRegister blockEnergyKWhImport, blockEnergyKWhExport, blockEnergyKVAhLag, blockEnergyKVAhLead, blockEnergyKVAhImport;
-extern gxRegister cumulativeEnergyKWhImport, cumulativeEnergyKVAhLag, cumulativeEnergyKVAhLead, cumulativeEnergyKVAhImport, cumulativeEnergyKWhExport;
-
-// Define external KIGG Average registers
-extern gxRegister voltageL1Average, voltageL2Average, voltageL3Average;
-extern gxRegister currentL1Average, currentL2Average, currentL3Average;
-
-// Define external KIGG nameplate profile data
-extern gxData meterSerialNumber, manufacturerName, firmwareVersion, meterType, meterCategory;
-extern gxData currentRating, ctr, ptr, yearOfManufacture;
-
+#ifdef SINGLE_PHASE
 // Define external KIGG registers for single phase meter
 extern gxRegister neutralCurrent;
 extern gxRegister activePower, apparentPower;
 extern gxRegister signedPowerFactor;
+extern gxRegister blockEnergyKWhExport;
+extern gxRegister cumulativeEnergyKWhExport;
+#elif defined(THREE_PHASE)
+extern gxRegister voltageL2, voltageL3;
+extern gxRegister currentL2, currentL3;
+extern gxRegister powerFactorL1, powerFactorL2, powerFactorL3;
+extern gxRegister blockEnergyKVAhLag, blockEnergyKVAhLead, blockEnergyKVAhImport;
+extern gxRegister cumulativeEnergyKVAhLag, cumulativeEnergyKVAhLead, cumulativeEnergyKVAhImport;
+
+// Define external KIGG Average registers
+extern gxRegister voltageL2Average, voltageL3Average;
+extern gxRegister currentL2Average, currentL3Average;
+
+// Define external KIGG nameplate profile data
+extern gxData ctr, ptr;
+#endif
+
+extern gxRegister voltageL1;
+extern gxRegister currentL1;
+extern gxRegister frequency;
+extern gxRegister blockEnergyKWhImport;
+extern gxRegister cumulativeEnergyKWhImport;
+
+// Define external KIGG Average registers
+extern gxRegister voltageL1Average;
+extern gxRegister currentL1Average;
+
+// Define external KIGG nameplate profile data
+extern gxData meterSerialNumber, manufacturerName, firmwareVersion, meterType, meterCategory;
+extern gxData currentRating, yearOfManufacture;
 
 static gxObject *NONE_OBJECTS[] = {BASE(associationNone), BASE(ldn), BASE(sapAssignment), BASE(clock1)};
 
@@ -1895,7 +1911,6 @@ int createObjects()
         (ret = addRegisterObject()) != 0 ||
         (ret = addRegisterVoltageL1()) != 0 ||
         (ret = addRegisterCurrentL1()) != 0 ||
-
 #ifdef SINGLE_PHASE
         (ret = addRegisterNeutralCurrent()) != 0 ||
         (ret = addRegisterActivePower()) != 0 ||
@@ -1924,7 +1939,6 @@ int createObjects()
         (ret = addDataCTR()) != 0 ||
         (ret = addDataPTR()) != 0 ||
 #endif
-
         (ret = addRegisterFrequency()) != 0 ||
         (ret = addRegisterBlockEnergyKWhImport()) != 0 ||
         (ret = addRegisterCumulativeEnergyKWhImport()) != 0 ||
@@ -2592,6 +2606,16 @@ void svr_preRead(
         {
             readCurrentL3AverageValue();
         }
+        // Read value every time when user reads register.
+        if (e->target == BASE(ctr) && e->index == 2)
+        {
+            readCTR();
+        }
+        // Read value every time when user reads register.
+        if (e->target == BASE(ptr) && e->index == 2)
+        {
+            readPTR();
+        }
 #endif
         //Update value every time when user reads register.
         if (e->target == BASE(voltageL1) && e->index == 2)
@@ -2647,16 +2671,6 @@ void svr_preRead(
         if (e->target == BASE(currentRating) && e->index == 2)
         {
             readCurrentRating();
-        }
-        // Read value every time when user reads register.
-        if (e->target == BASE(ctr) && e->index == 2)
-        {
-            readCTR();
-        }
-        // Read value every time when user reads register.
-        if (e->target == BASE(ptr) && e->index == 2)
-        {
-            readPTR();
         }
         // Read value every time when user reads register.
         if (e->target == BASE(yearOfManufacture) && e->index == 2)
