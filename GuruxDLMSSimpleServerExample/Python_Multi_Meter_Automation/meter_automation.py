@@ -7,6 +7,7 @@ import atexit
 import psutil
 processes = []
 
+
 def check_port_status_wsl(port):
     """Checks if the specified port is in use within WSL."""
     try:
@@ -31,6 +32,8 @@ def check_port_status_wsl(port):
     except Exception as e:
         print(f"Error checking port {port} in WSL: {e}")
         return False
+
+
 def convert_to_wsl_path(path):
     """Converts a Windows path to a WSL-compatible path."""
     if os.name == "nt":  # Check if the system is Windows
@@ -39,6 +42,7 @@ def convert_to_wsl_path(path):
         wsl_path = f"/mnt/{drive.lower()[0]}{rest}"
         return wsl_path.rstrip('/') 
     return path 
+
 
 def monitor_process(process, server_port):
     """Monitors a process and logs its output."""
@@ -53,7 +57,10 @@ def monitor_process(process, server_port):
     except Exception as e:
         print(f"Error monitoring process {process.pid}: {e}")
 
-def start_servers(binary_path, config_path, num_servers, start_port, start_instance, use_wsl=False):
+
+def start_servers(binary_path, config_path, num_servers, start_port, start_instance, type_of_meter, use_wsl=False):
+    global view_garbage
+
     """Starts servers on consecutive ports."""
     # Convert binary_path to WSL path if WSL is used
     if use_wsl:
@@ -62,12 +69,10 @@ def start_servers(binary_path, config_path, num_servers, start_port, start_insta
 
     ports = range(start_port, start_port + num_servers)
     instances = range(start_instance, start_instance + num_servers)
-    print(f"Starting servers on the following ports: {list(ports)}")
-
-    view_garbage = input("Do you want to enable garbage values? (yes/no): ").strip().lower() == "yes"
+    print(f"\nStarting {type_of_meter} servers on the following ports: {list(ports)}")
 
     for port, instance in zip(ports, instances):
-        print(f"Preparing to start server on port: {port} with instance: {instance}")
+        print(f"\nPreparing to start {type_of_meter} server on port: {port} with instance: {instance}")
         command = [binary_path, "-p", str(port)]
 
         if view_garbage:
@@ -98,11 +103,12 @@ def start_servers(binary_path, config_path, num_servers, start_port, start_insta
         # Verify if the server is running
         time.sleep(5)
         if check_port_status_wsl(port):
-            print(f"Server on port {port} with instance {instance} is running.")
+            print(f"{type_of_meter.capitalize()} server on port {port} with instance {instance} is running.")
         else:
-            print(f"Server on port {port} with instance {instance} failed to start.")
+            print(f"{type_of_meter.capitalize()} server on port {port} with instance {instance} failed to start.")
 
     print(f"Started {len(ports)} server(s). Output is being monitored.")
+
 
 def cleanup():
     """Forcefully terminates all running server processes."""
@@ -132,21 +138,36 @@ def cleanup():
 
 atexit.register(cleanup)
 
-if __name__ == "__main__":
-    binary_path = input("Enter the path to the binary executable: ")
-    config_path = input("Enter the path to the config.json file: ")
-    
-    try:
-        num_servers = int(input("Enter the number of servers to start: "))
-        start_port = int(input("Enter the starting port number: "))
-        start_instance = int(input("Enter the starting instance number: "))
 
+if __name__ == "__main__":
+    three_phase_binary_path = input("Enter the path to the binary executable for three phase meter: ")
+    three_phase_config_path = input("Enter the path to the config file for three phase meter: ")
+    three_phase_num_servers = int(input("Enter the number of servers to start for three phase meter: "))
+    three_phase_start_port = int(input("Enter the starting port number of first three phase meter: "))
+    three_phase_start_instance = int(input("Enter the starting instance number of first three phase meter: "))
+    print()
+
+    single_phase_binary_path = input("Enter the path to the binary executable for single phase meter: ")
+    single_phase_config_path = input("Enter the path to the config file for single phase meter: ")
+    single_phase_num_servers = int(input("Enter the number of servers to start for single phase meter: "))
+    single_phase_start_port = int(input("Enter the starting port number of first single phase meter: "))
+    single_phase_start_instance = int(input("Enter the starting instance number of first single phase meter: "))
+    print()
+
+    view_garbage = input("Do you want to enable garbage values? (yes/no): ").strip().lower() == "yes"
+    print()
+
+    try:
         is_windows = platform.system() == "Windows"
         use_wsl = is_windows
 
-        print(f"Starting {num_servers} servers from port {start_port} with instances starting at {start_instance}.")
-        start_servers(binary_path, config_path, num_servers, start_port, start_instance, use_wsl=use_wsl)
-        print("Servers are running.")
+        print(f"Starting {three_phase_num_servers} three phase meter servers from port {three_phase_start_port} with instances starting at {three_phase_start_instance}.")
+        start_servers(three_phase_binary_path, three_phase_config_path, three_phase_num_servers, three_phase_start_port, three_phase_start_instance, "three_phase_meter", use_wsl=use_wsl)
+        print("Servers for three phase meter are running.\n\n")
+
+        print(f"Starting {single_phase_num_servers} single phase meter servers from port {single_phase_start_port} with instances starting at {single_phase_start_instance}.")
+        start_servers(single_phase_binary_path, single_phase_config_path, single_phase_num_servers, single_phase_start_port, single_phase_start_instance, "single_phase_meter", use_wsl=use_wsl)
+        print("Servers for single phase meter are running.\n\n")
 
         # Keep the script running to allow monitoring
         while True:
