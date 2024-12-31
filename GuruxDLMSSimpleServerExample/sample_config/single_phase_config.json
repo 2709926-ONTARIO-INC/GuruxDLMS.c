@@ -6,11 +6,11 @@
     "current_limits": {
         "phase_current": {
             "lower_limit": 0,
-            "upper_limit": 1000000
+            "upper_limit": 10000
         },
         "neutral_current": {
             "lower_limit": 0,
-            "upper_limit": 1000000
+            "upper_limit": 10000
         }
     },
     "frequency_limits": {
