@@ -58,8 +58,8 @@ def monitor_process(process, server_port):
         print(f"Error monitoring process {process.pid}: {e}")
 
 
-def start_servers(binary_path, config_path, num_servers, start_port, start_instance, type_of_meter, use_wsl=False):
-    global view_garbage
+def start_servers(binary_path, config_path, num_servers, start_port, start_instance, type_of_meter, use_wsl=False, is_garbage_enabled=False):
+    view_garbage = is_garbage_enabled
 
     """Starts servers on consecutive ports."""
     # Convert binary_path to WSL path if WSL is used
@@ -145,6 +145,7 @@ if __name__ == "__main__":
     three_phase_num_servers = int(input("Enter the number of servers to start for three phase meter: "))
     three_phase_start_port = int(input("Enter the starting port number of first three phase meter: "))
     three_phase_start_instance = int(input("Enter the starting instance number of first three phase meter: "))
+    three_phase_view_garbage = input("Do you want to enable garbage values? (yes/no): ").strip().lower() == "yes"
     print()
 
     single_phase_binary_path = input("Enter the path to the binary executable for single phase meter: ")
@@ -154,7 +155,7 @@ if __name__ == "__main__":
     single_phase_start_instance = int(input("Enter the starting instance number of first single phase meter: "))
     print()
 
-    view_garbage = input("Do you want to enable garbage values? (yes/no): ").strip().lower() == "yes"
+    single_phase_view_garbage = input("Do you want to enable garbage values? (yes/no): ").strip().lower() == "yes"
     print()
 
     try:
@@ -162,11 +163,11 @@ if __name__ == "__main__":
         use_wsl = is_windows
 
         print(f"Starting {three_phase_num_servers} three phase meter servers from port {three_phase_start_port} with instances starting at {three_phase_start_instance}.")
-        start_servers(three_phase_binary_path, three_phase_config_path, three_phase_num_servers, three_phase_start_port, three_phase_start_instance, "three_phase_meter", use_wsl=use_wsl)
+        start_servers(three_phase_binary_path, three_phase_config_path, three_phase_num_servers, three_phase_start_port, three_phase_start_instance, "three_phase_meter", use_wsl=use_wsl, is_garbage_enabled=three_phase_view_garbage)
         print("Servers for three phase meter are running.\n\n")
 
         print(f"Starting {single_phase_num_servers} single phase meter servers from port {single_phase_start_port} with instances starting at {single_phase_start_instance}.")
-        start_servers(single_phase_binary_path, single_phase_config_path, single_phase_num_servers, single_phase_start_port, single_phase_start_instance, "single_phase_meter", use_wsl=use_wsl)
+        start_servers(single_phase_binary_path, single_phase_config_path, single_phase_num_servers, single_phase_start_port, single_phase_start_instance, "single_phase_meter", use_wsl=use_wsl, is_garbage_enabled=single_phase_view_garbage)
         print("Servers for single phase meter are running.\n\n")
 
         # Keep the script running to allow monitoring
