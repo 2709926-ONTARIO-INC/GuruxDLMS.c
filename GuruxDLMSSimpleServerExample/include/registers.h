@@ -15,13 +15,21 @@ int addPowerFactorL1(void);
 int addPowerFactorL2(void);
 int addPowerFactorL3(void);
 int addBlockEnergyKWhImport(void);
+int addBlockEnergyKWhExport(void);
 int addBlockEnergyKVAhLag(void);
 int addBlockEnergyKVAhLead(void);
 int addBlockEnergyKVAhImport(void);
 int addCumulativeEnergyKWhImport(void);
+int addCumulativeEnergyKWhExport(void);
 int addCumulativeEnergyKVAhLag(void);
 int addCumulativeEnergyKVAhLead(void);
 int addCumulativeEnergyKVAhImport(void);
+
+// Functions to add the KIGG single phase meter registers
+int addNeutralCurrent(void);
+int addActivePower(void);
+int addApparentPower(void);
+int addSignedPowerFactor(void);
 
 // Functions to get the KIGG registers' values
 uint32_t readVoltageL1Value(void);
@@ -35,13 +43,21 @@ uint32_t readPowerFactorL1Value(void);
 uint32_t readPowerFactorL2Value(void);
 uint32_t readPowerFactorL3Value(void);
 uint32_t readBlockEnergyKWhImportValue(void);
+uint32_t readBlockEnergyKWhExportValue(void);
 uint32_t readBlockEnergyKVAhLagValue(void);
 uint32_t readBlockEnergyKVAhLeadValue(void);
 uint32_t readBlockEnergyKVAhImportValue(void);
 uint32_t readCumulativeEnergyKWhImportValue(void);
+uint32_t readCumulativeEnergyKWhExportValue(void);
 uint32_t readCumulativeEnergyKVAhLagValue(void);
 uint32_t readCumulativeEnergyKVAhLeadValue(void);
 uint32_t readCumulativeEnergyKVAhImportValue(void);
+
+// Functions to get the KIGG single phase meter registers' values
+uint32_t readNeutralCurrentValue(void);
+uint32_t readActivePowerValue(void);
+uint32_t readApparentPowerValue(void);
+uint32_t readSignedPowerFactorValue(void);
 
 // Functions to set the KIGG registers' values
 void writeVoltageL1Value(uint32_t value);
@@ -55,13 +71,21 @@ void writePowerFactorL1Value(uint32_t value);
 void writePowerFactorL2Value(uint32_t value);
 void writePowerFactorL3Value(uint32_t value);
 void writeBlockEnergyKWhImportValue(uint32_t value);
+void writeBlockEnergyKWhExportValue(uint32_t value);
 void writeBlockEnergyKVAhLagValue(uint32_t value);
 void writeBlockEnergyKVAhLeadValue(uint32_t value);
 void writeBlockEnergyKVAhImportValue(uint32_t value);
 void writeCumulativeEnergyKWhImportValue(uint32_t value);
+void writeCumulativeEnergyKWhExportValue(uint32_t value);
 void writeCumulativeEnergyKVAhLagValue(uint32_t value);
 void writeCumulativeEnergyKVAhLeadValue(uint32_t value);
 void writeCumulativeEnergyKVAhImportValue(uint32_t value);
+
+// Functions to set the KIGG single phase meter registers' values
+void writeNeutralCurrentValue(uint32_t value);
+void writeActivePowerValue(uint32_t value);
+void writeApparentPowerValue(uint32_t value);
+void writeSignedPowerFactorValue(uint32_t value);
 
 // Functions to add the KIGG average registers to the DLMS server
 int addVoltageL1Average(void);

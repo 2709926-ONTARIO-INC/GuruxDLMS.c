@@ -95,8 +95,6 @@ static unsigned char replyFrame[HDLC_BUFFER_SIZE + HDLC_HEADER_SIZE];
 static unsigned char SERVER_SYSTEM_TITLE[8] = { 0 };
 static gxByteBuffer reply;
 
-static MeterType_t selectedMeterType = SINGLE_PHASE_METER;
-
 uint32_t time_current(void)
 {
     //Get current time somewhere.
@@ -137,20 +135,41 @@ static gxSecuritySetup securitySetupHigh;
 static gxSecuritySetup securitySetupHighGMac;
 
 // Define external KIGG registers
-extern gxRegister voltageL1, voltageL2, voltageL3;
-extern gxRegister currentL1, currentL2, currentL3;
-extern gxRegister frequency;
+#ifdef SINGLE_PHASE
+// Define external KIGG registers for single phase meter
+extern gxRegister neutralCurrent;
+extern gxRegister activePower, apparentPower;
+extern gxRegister signedPowerFactor;
+extern gxRegister blockEnergyKWhExport;
+extern gxRegister cumulativeEnergyKWhExport;
+#elif defined(THREE_PHASE)
+extern gxRegister voltageL2, voltageL3;
+extern gxRegister currentL2, currentL3;
 extern gxRegister powerFactorL1, powerFactorL2, powerFactorL3;
-extern gxRegister blockEnergyKWhImport, blockEnergyKVAhLag, blockEnergyKVAhLead, blockEnergyKVAhImport;
-extern gxRegister cumulativeEnergyKWhImport, cumulativeEnergyKVAhLag, cumulativeEnergyKVAhLead, cumulativeEnergyKVAhImport;
+extern gxRegister blockEnergyKVAhLag, blockEnergyKVAhLead, blockEnergyKVAhImport;
+extern gxRegister cumulativeEnergyKVAhLag, cumulativeEnergyKVAhLead, cumulativeEnergyKVAhImport;
 
 // Define external KIGG Average registers
-extern gxRegister voltageL1Average, voltageL2Average, voltageL3Average;
-extern gxRegister currentL1Average, currentL2Average, currentL3Average;
+extern gxRegister voltageL2Average, voltageL3Average;
+extern gxRegister currentL2Average, currentL3Average;
+
+// Define external KIGG nameplate profile data
+extern gxData ctr, ptr;
+#endif
+
+extern gxRegister voltageL1;
+extern gxRegister currentL1;
+extern gxRegister frequency;
+extern gxRegister blockEnergyKWhImport;
+extern gxRegister cumulativeEnergyKWhImport;
+
+// Define external KIGG Average registers
+extern gxRegister voltageL1Average;
+extern gxRegister currentL1Average;
 
 // Define external KIGG nameplate profile data
 extern gxData meterSerialNumber, manufacturerName, firmwareVersion, meterType, meterCategory;
-extern gxData currentRating, ctr, ptr, yearOfManufacture;
+extern gxData currentRating, yearOfManufacture;
 
 static gxObject *NONE_OBJECTS[] = {BASE(associationNone), BASE(ldn), BASE(sapAssignment), BASE(clock1)};
 
@@ -165,13 +184,17 @@ static gxObject *ALL_OBJECTS[] = {
     BASE(sapAssignment),
     BASE(eventCode),
     BASE(clock1),
-    BASE(activePowerL1), 
     
-    // Add KIGG registers 
-    BASE(voltageL1), 
+    // Add KIGG registers using conditional compilation
+#ifdef SINGLE_PHASE
+    BASE(neutralCurrent),
+    BASE(activePower),
+    BASE(apparentPower),
+    BASE(signedPowerFactor),
+    BASE(cumulativeEnergyKWhExport),
+#elif defined(THREE_PHASE)
     BASE(voltageL2), 
     BASE(voltageL3),
-    BASE(currentL1),
     BASE(currentL2),
     BASE(currentL3),
     BASE(voltageL1Average),
@@ -180,7 +203,6 @@ static gxObject *ALL_OBJECTS[] = {
     BASE(currentL1Average),
     BASE(currentL2Average),
     BASE(currentL3Average),
-    BASE(frequency),
     BASE(powerFactorL1),
     BASE(powerFactorL2),
     BASE(powerFactorL3),
@@ -188,11 +210,16 @@ static gxObject *ALL_OBJECTS[] = {
     BASE(blockEnergyKVAhLag),
     BASE(blockEnergyKVAhLead),
     BASE(blockEnergyKVAhImport),
-    BASE(cumulativeEnergyKWhImport),
     BASE(cumulativeEnergyKVAhLag),
     BASE(cumulativeEnergyKVAhLead),
     BASE(cumulativeEnergyKVAhImport),
-    
+    BASE(activePowerL1), 
+#endif
+    BASE(voltageL1),
+    BASE(currentL1), 
+    BASE(frequency),
+    BASE(cumulativeEnergyKWhImport),
+
     BASE(pushSetup),
     BASE(scriptTableGlobalMeterReset),
     BASE(scriptTableDisconnectControl),
@@ -1070,17 +1097,49 @@ int addRegisterObject()
     return ret;
 }
 
-uint16_t readActivePowerValue()
+uint16_t readActivePowerL1Value()
 {
     return ++activePowerL1Value;
 }
 
-int addRegisterVoltageL1() 
+#ifdef SINGLE_PHASE
+int addRegisterNeutralCurrent()
 {
-    int ret = addVoltageL1();
+    int ret = addNeutralCurrent();
     return ret;
 }
 
+int addRegisterActivePower()
+{
+    int ret = addActivePower();
+    return ret;
+}
+
+int addRegisterApparentPower()
+{
+    int ret = addApparentPower();
+    return ret;
+}
+
+int addRegisterSignedPowerFactor()
+{
+    int ret = addSignedPowerFactor();
+    return ret;
+}
+
+int addRegisterBlockEnergyKWhExport()
+{
+    int ret = addBlockEnergyKWhExport();
+    return ret;
+}
+
+int addRegisterCumulativeEnergyKWhExport()
+{
+    int ret = addCumulativeEnergyKWhExport();
+    return ret;
+}
+
+#elif defined(THREE_PHASE)
 int addRegisterVoltageL2() 
 {
     int ret = addVoltageL2();
@@ -1093,12 +1152,6 @@ int addRegisterVoltageL3()
     return ret;
 }
 
-int addRegisterCurrentL1() 
-{
-    int ret = addCurrentL1();
-    return ret;
-}
-
 int addRegisterCurrentL2() 
 {
     int ret = addCurrentL2();
@@ -1108,12 +1161,6 @@ int addRegisterCurrentL2()
 int addRegisterCurrentL3() 
 {
     int ret = addCurrentL3();
-    return ret;
-}
-
-int addRegisterFrequency() 
-{
-    int ret = addFrequency();
     return ret;
 }
 
@@ -1135,12 +1182,6 @@ int addRegisterPowerFactorL3()
     return ret;
 }
 
-int addRegisterBlockEnergyKWhImport()
-{
-    int ret = addBlockEnergyKWhImport();
-    return ret;
-}
-
 int addRegisterBlockEnergyKVAhLag()
 {
     int ret = addBlockEnergyKVAhLag();
@@ -1156,12 +1197,6 @@ int addRegisterBlockEnergyKVAhLead()
 int addRegisterBlockEnergyKVAhImport()
 {
     int ret = addBlockEnergyKVAhImport();
-    return ret;
-}
-
-int addRegisterCumulativeEnergyKWhImport()
-{
-    int ret = addCumulativeEnergyKWhImport();
     return ret;
 }
 
@@ -1183,12 +1218,6 @@ int addRegisterCumulativeEnergyKVAhImport()
     return ret;
 }
 
-int addRegisterVoltageL1Average()
-{
-    int ret = addVoltageL1Average();
-    return ret;
-}
-
 int addRegisterVoltageL2Average()
 {
     int ret = addVoltageL2Average();
@@ -1201,12 +1230,6 @@ int addRegisterVoltageL3Average()
     return ret;
 }
 
-int addRegisterCurrentL1Average()
-{
-    int ret = addCurrentL1Average();
-    return ret;
-}
-
 int addRegisterCurrentL2Average()
 {
     int ret = addCurrentL2Average();
@@ -1216,6 +1239,61 @@ int addRegisterCurrentL2Average()
 int addRegisterCurrentL3Average()
 {
     int ret = addCurrentL3Average();
+    return ret;
+}
+
+int addDataCTR()
+{
+    int ret = addCTR();
+    return ret;
+}
+
+int addDataPTR()
+{
+    int ret = addPTR();
+    return ret;
+}
+#endif
+
+int addRegisterVoltageL1() 
+{
+    int ret = addVoltageL1();
+    return ret;
+}
+
+int addRegisterCurrentL1() 
+{
+    int ret = addCurrentL1();
+    return ret;
+}
+
+int addRegisterFrequency() 
+{
+    int ret = addFrequency();
+    return ret;
+}
+
+int addRegisterBlockEnergyKWhImport()
+{
+    int ret = addBlockEnergyKWhImport();
+    return ret;
+}
+
+int addRegisterCumulativeEnergyKWhImport()
+{
+    int ret = addCumulativeEnergyKWhImport();
+    return ret;
+}
+
+int addRegisterVoltageL1Average()
+{
+    int ret = addVoltageL1Average();
+    return ret;
+}
+
+int addRegisterCurrentL1Average()
+{
+    int ret = addCurrentL1Average();
     return ret;
 }
 
@@ -1252,18 +1330,6 @@ int addDataMeterCategory()
 int addDataCurrentRating()
 {
     int ret = addCurrentRating();
-    return ret;
-}
-
-int addDataCTR()
-{
-    int ret = addCTR();
-    return ret;
-}
-
-int addDataPTR()
-{
-    int ret = addPTR();
     return ret;
 }
 
@@ -1398,6 +1464,8 @@ int addLoadProfileProfileGeneric()
         capture->attributeIndex = 2;
         capture->dataIndex = 0;
         arr_push(&loadProfile.captureObjects, key_init(&voltageL1Average, capture));
+
+#ifdef THREE_PHASE
         //Add L2 voltage Average.
         capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
         capture->attributeIndex = 2;
@@ -1408,11 +1476,15 @@ int addLoadProfileProfileGeneric()
         capture->attributeIndex = 2;
         capture->dataIndex = 0;
         arr_push(&loadProfile.captureObjects, key_init(&voltageL3Average, capture));
+#endif
+
         //Add L1 current Average.
         capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
         capture->attributeIndex = 2;
         capture->dataIndex = 0;
         arr_push(&loadProfile.captureObjects, key_init(&currentL1Average, capture));
+
+#ifdef THREE_PHASE
         //Add L2 current Average.
         capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
         capture->attributeIndex = 2;
@@ -1423,11 +1495,21 @@ int addLoadProfileProfileGeneric()
         capture->attributeIndex = 2;
         capture->dataIndex = 0;
         arr_push(&loadProfile.captureObjects, key_init(&currentL3Average, capture));
+#endif
+
         //Add Block Energy Wh - Import.
         capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
         capture->attributeIndex = 2;
         capture->dataIndex = 0;
         arr_push(&loadProfile.captureObjects, key_init(&blockEnergyKWhImport, capture));
+
+#ifdef SINGLE_PHASE
+        //Add Block Energy Wh - Export.
+        capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&loadProfile.captureObjects, key_init(&blockEnergyKWhExport, capture));
+#elif defined(THREE_PHASE)
         //Add Block Energy VAh - Lag.
         capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
         capture->attributeIndex = 2;
@@ -1443,6 +1525,8 @@ int addLoadProfileProfileGeneric()
         capture->attributeIndex = 2;
         capture->dataIndex = 0;
         arr_push(&loadProfile.captureObjects, key_init(&blockEnergyKVAhImport, capture));
+#endif
+
         ///////////////////////////////////////////////////////////////////
         //Update amount of capture objects.
         //Set clock to sort object.
@@ -1478,6 +1562,14 @@ int addDailyLoadProfileProfileGeneric()
         capture->attributeIndex = 2;
         capture->dataIndex = 0;
         arr_push(&dailyLoadProfile.captureObjects, key_init(&cumulativeEnergyKWhImport, capture));
+
+#ifdef SINGLE_PHASE
+        // Add Cumulative Energy Wh - Export
+        capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&dailyLoadProfile.captureObjects, key_init(&cumulativeEnergyKWhExport, capture));
+#elif defined(THREE_PHASE)
         //Add Cumulative Energy VAh - Lag.
         capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
         capture->attributeIndex = 2;
@@ -1488,6 +1580,8 @@ int addDailyLoadProfileProfileGeneric()
         capture->attributeIndex = 2;
         capture->dataIndex = 0;
         arr_push(&dailyLoadProfile.captureObjects, key_init(&cumulativeEnergyKVAhImport, capture));
+#endif
+
         ///////////////////////////////////////////////////////////////////
         //Update amount of capture objects.
         //Set clock to sort object.
@@ -1543,6 +1637,7 @@ int addNameplateProfileProfileGeneric()
         capture->attributeIndex = 2;
         capture->dataIndex = 0;
         arr_push(&nameplateProfile.captureObjects, key_init(&currentRating, capture));
+#ifdef THREE_PHASE
         //Add ctr object
         capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
         capture->attributeIndex = 2;
@@ -1553,6 +1648,7 @@ int addNameplateProfileProfileGeneric()
         capture->attributeIndex = 2;
         capture->dataIndex = 0;
         arr_push(&nameplateProfile.captureObjects, key_init(&ptr, capture));
+#endif
         //Add year of manufacture object.
         capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
         capture->attributeIndex = 2;
@@ -1585,6 +1681,14 @@ int addBillingProfileProfileGeneric()
         capture->attributeIndex = 2;
         capture->dataIndex = 0;
         arr_push(&billingProfile.captureObjects, key_init(&cumulativeEnergyKWhImport, capture));
+
+#ifdef SINGLE_PHASE
+        //Add Cumulative Energy Wh - Export.
+        capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&billingProfile.captureObjects, key_init(&cumulativeEnergyKWhExport, capture));
+#elif defined(THREE_PHASE)
         //Add Cumulative Energy VAh - Lag.
         capture = (gxTarget*)gxmalloc(sizeof(gxTarget));
         capture->attributeIndex = 2;
@@ -1600,6 +1704,8 @@ int addBillingProfileProfileGeneric()
         capture->attributeIndex = 2;
         capture->dataIndex = 0;
         arr_push(&billingProfile.captureObjects, key_init(&cumulativeEnergyKVAhImport, capture));
+#endif
+
         ///////////////////////////////////////////////////////////////////
         //Update amount of capture objects.
         billingProfile.profileEntries = getProfileGenericBufferMaxRowCount(&billingProfile);
@@ -1804,37 +1910,46 @@ int createObjects()
         (ret = addClockObject()) != 0 ||
         (ret = addRegisterObject()) != 0 ||
         (ret = addRegisterVoltageL1()) != 0 ||
+        (ret = addRegisterCurrentL1()) != 0 ||
+#ifdef SINGLE_PHASE
+        (ret = addRegisterNeutralCurrent()) != 0 ||
+        (ret = addRegisterActivePower()) != 0 ||
+        (ret = addRegisterApparentPower()) != 0 ||
+        (ret = addRegisterSignedPowerFactor()) != 0 ||
+        (ret = addRegisterBlockEnergyKWhExport()) != 0 ||
+        (ret = addRegisterCumulativeEnergyKWhExport()) != 0 ||
+#elif defined(THREE_PHASE)
         (ret = addRegisterVoltageL2()) != 0 ||
         (ret = addRegisterVoltageL3()) != 0 ||
-        (ret = addRegisterCurrentL1()) != 0 ||
         (ret = addRegisterCurrentL2()) != 0 ||
         (ret = addRegisterCurrentL3()) != 0 ||
-        (ret = addRegisterFrequency()) != 0 ||
         (ret = addRegisterPowerFactorL1()) != 0 ||
         (ret = addRegisterPowerFactorL2()) != 0 ||
         (ret = addRegisterPowerFactorL3()) != 0 ||
-        (ret = addRegisterBlockEnergyKWhImport()) != 0 ||
         (ret = addRegisterBlockEnergyKVAhLag()) != 0 ||
         (ret = addRegisterBlockEnergyKVAhLead()) != 0 ||
         (ret = addRegisterBlockEnergyKVAhImport()) != 0 ||
-        (ret = addRegisterCumulativeEnergyKWhImport()) != 0 ||
         (ret = addRegisterCumulativeEnergyKVAhLag()) != 0 ||
         (ret = addRegisterCumulativeEnergyKVAhLead()) != 0 ||
         (ret = addRegisterCumulativeEnergyKVAhImport()) != 0 ||
-        (ret = addRegisterVoltageL1Average()) != 0 ||
         (ret = addRegisterVoltageL2Average()) != 0 ||
         (ret = addRegisterVoltageL3Average()) != 0 ||
-        (ret = addRegisterCurrentL1Average()) != 0 ||
         (ret = addRegisterCurrentL2Average()) != 0 ||
         (ret = addRegisterCurrentL3Average()) != 0 ||
+        (ret = addDataCTR()) != 0 ||
+        (ret = addDataPTR()) != 0 ||
+#endif
+        (ret = addRegisterFrequency()) != 0 ||
+        (ret = addRegisterBlockEnergyKWhImport()) != 0 ||
+        (ret = addRegisterCumulativeEnergyKWhImport()) != 0 ||
+        (ret = addRegisterVoltageL1Average()) != 0 ||
+        (ret = addRegisterCurrentL1Average()) != 0 ||
         (ret = addDataMeterSerialNumber()) != 0 ||
         (ret = addDataManufacturerName()) != 0 ||
         (ret = addDataFirmwareVersion()) != 0 ||
         (ret = addDataMeterType()) != 0 ||
         (ret = addDataMeterCategory()) != 0 ||
         (ret = addDataCurrentRating()) != 0 ||
-        (ret = addDataCTR()) != 0 ||
-        (ret = addDataPTR()) != 0 ||
         (ret = addDataYearOfManufacture()) != 0 ||
         (ret = addAssociationNone()) != 0 ||
         (ret = addAssociationLow()) != 0 ||
@@ -2362,13 +2477,40 @@ void svr_preRead(
         //Update value by one every time when user reads register.
         if (e->target == BASE(activePowerL1) && e->index == 2)
         {
+            readActivePowerL1Value();
+        }
+#ifdef SINGLE_PHASE
+        //Update value every time when user reads register.
+        if (e->target == BASE(neutralCurrent) && e->index == 2)
+        {
+            readNeutralCurrentValue();
+        }
+        //Update value every time when user reads register.
+        if (e->target == BASE(activePower) && e->index == 2)
+        {
             readActivePowerValue();
         }
         //Update value every time when user reads register.
-        if (e->target == BASE(voltageL1) && e->index == 2)
+        if (e->target == BASE(apparentPower) && e->index == 2)
         {
-            readVoltageL1Value();
+            readApparentPowerValue();
         }
+        //Update value every time when user reads register.
+        if (e->target == BASE(signedPowerFactor) && e->index == 2)
+        {
+            readSignedPowerFactorValue();
+        }
+        //Update value every time when user reads register.
+        if (e->target == BASE(blockEnergyKWhImport) && e->index == 2)
+        {
+            readBlockEnergyKWhExportValue();
+        }
+        //Update value every time when user reads register.
+        if (e->target == BASE(cumulativeEnergyKWhExport) && e->index == 2)
+        {
+            readCumulativeEnergyKWhExportValue();
+        }
+#elif defined(THREE_PHASE)
         //Update value every time when user reads register.
         if (e->target == BASE(voltageL2) && e->index == 2)
         {
@@ -2380,11 +2522,6 @@ void svr_preRead(
             readVoltageL3Value();
         }
         //Update value every time when user reads register.
-        if (e->target == BASE(currentL1) && e->index == 2)
-        {
-            readCurrentL1Value();
-        }
-        //Update value every time when user reads register.
         if (e->target == BASE(currentL2) && e->index == 2)
         {
             readCurrentL2Value();
@@ -2393,11 +2530,6 @@ void svr_preRead(
         if (e->target == BASE(currentL3) && e->index == 2)
         {
             readCurrentL3Value();
-        }
-        //Update value every time when user reads register.
-        if (e->target == BASE(frequency) && e->index == 2)
-        {
-            readFrequencyValue();
         }
         //Update value every time when user reads register.
         if (e->target == BASE(powerFactorL1) && e->index == 2)
@@ -2415,11 +2547,6 @@ void svr_preRead(
             readPowerFactorL3Value();
         }
         //Update value every time when user reads register.
-        if (e->target == BASE(blockEnergyKWhImport) && e->index == 2)
-        {
-            readBlockEnergyKWhImportValue();
-        }
-        //Update value every time when user reads register.
         if (e->target == BASE(blockEnergyKVAhLag) && e->index == 2)
         {
             readBlockEnergyKVAhLagValue();
@@ -2433,11 +2560,6 @@ void svr_preRead(
         if (e->target == BASE(blockEnergyKVAhImport) && e->index == 2)
         {
             readBlockEnergyKVAhImportValue();
-        }
-        // Update value every time when user reads register.
-        if (e->target == BASE(cumulativeEnergyKWhImport) && e->index == 2)
-        {
-            readCumulativeEnergyKWhImportValue();
         }
         // Update value every time when user reads register.
         if (e->target == BASE(cumulativeEnergyKVAhLag) && e->index == 2)
@@ -2485,6 +2607,42 @@ void svr_preRead(
             readCurrentL3AverageValue();
         }
         // Read value every time when user reads register.
+        if (e->target == BASE(ctr) && e->index == 2)
+        {
+            readCTR();
+        }
+        // Read value every time when user reads register.
+        if (e->target == BASE(ptr) && e->index == 2)
+        {
+            readPTR();
+        }
+#endif
+        //Update value every time when user reads register.
+        if (e->target == BASE(voltageL1) && e->index == 2)
+        {
+            readVoltageL1Value();
+        }
+        //Update value every time when user reads register.
+        if (e->target == BASE(currentL1) && e->index == 2)
+        {
+            readCurrentL1Value();
+        }
+        //Update value every time when user reads register.
+        if (e->target == BASE(frequency) && e->index == 2)
+        {
+            readFrequencyValue();
+        }
+        //Update value every time when user reads register.
+        if (e->target == BASE(blockEnergyKWhImport) && e->index == 2)
+        {
+            readBlockEnergyKWhImportValue();
+        }
+        // Update value every time when user reads register.
+        if (e->target == BASE(cumulativeEnergyKWhImport) && e->index == 2)
+        {
+            readCumulativeEnergyKWhImportValue();
+        }
+        // Read value every time when user reads register.
         if (e->target == BASE(meterSerialNumber) && e->index == 2)
         {
             readMeterSerialNumber();
@@ -2513,16 +2671,6 @@ void svr_preRead(
         if (e->target == BASE(currentRating) && e->index == 2)
         {
             readCurrentRating();
-        }
-        // Read value every time when user reads register.
-        if (e->target == BASE(ctr) && e->index == 2)
-        {
-            readCTR();
-        }
-        // Read value every time when user reads register.
-        if (e->target == BASE(ptr) && e->index == 2)
-        {
-            readPTR();
         }
         // Read value every time when user reads register.
         if (e->target == BASE(yearOfManufacture) && e->index == 2)
@@ -2752,7 +2900,7 @@ void handleProfileGenericActions(
         #if 0
         if (it->target == BASE(loadProfile))
         {
-            readActivePowerValue();
+            readActivePowerL1Value();
         }
         captureProfileGeneric(((gxProfileGeneric*)it->target));
         #endif
@@ -3760,7 +3908,6 @@ void showHelp()
     printf(" -c <json file>\t\t Provide a configuration file with register limits.\n");
     printf(" -g\t\t\t Enable meter to send garbage values at random counts.\n");
     printf(" -I <number>\t\t Use the specified instance number (e.g., 0, 1, 2, etc.) to modify the meter serial number.\n");
-    printf(" -m <meter type>\t Specify meter type [single, three]. Default is single.\n");
     printf(" -h, -help\t\t Show this help.\n");
 }
 
@@ -4016,23 +4163,6 @@ int main(int argc, char* argv[])
                 instanceNumber = atoi(optarg);
                 updateMeterSerialNumber(instanceNumber);
             }
-            break;
-        case 'm':
-            if (strncmp("single", optarg, 6) == 0)
-            {
-                selectedMeterType = SINGLE_PHASE_METER;
-            }
-            else if (strncmp("three", optarg, 5) == 0)
-            {
-                selectedMeterType = THREE_PHASE_METER;
-            }
-            else
-            {
-                printf("Invalid meter type '%s'. Valid options are 'single' or 'three'.\n", optarg);
-                showHelp();
-                return 1;
-            }
-            printf("Selected meter type: %s\n", selectedMeterType == SINGLE_PHASE_METER ? "Single Phase" : "Three Phase");
             break;
         case '?':
         {

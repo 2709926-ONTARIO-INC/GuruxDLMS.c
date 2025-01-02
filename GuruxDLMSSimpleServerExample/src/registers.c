@@ -21,105 +21,211 @@ extern bool isGarbageValuesEnabled();
 #define MAX_GARBAGE_COUNT   7
 #define SIZE                50
 
+#ifdef SINGLE_PHASE
+// Garbage value arrays for each variable of single phase meter
+uint32_t neutralCurrentGarbageValues[] = {5000000, 9900000, 11000000};
+uint32_t activePowerGarbageValues[] = {5000000, 9900000, 11000000};
+uint32_t apparentPowerGarbageValues[] = {5000000, 9900000, 11000000};
+uint32_t signedPowerFactorGarbageValues[] = {5000000, 9900000, 11000000};
+uint32_t blockEnergyKWhExportGarbageValues[] = {99999, 12345, 214745};
+uint32_t cumulativeEnergyKWhExportGarbageValues[] = {90, 98, 76};
 
+// Define the KIGG register objects for single phase meter globally.
+gxRegister blockEnergyKWhExport;
+gxRegister cumulativeEnergyKWhExport;
+gxRegister neutralCurrent;
+gxRegister activePower, apparentPower;
+gxRegister signedPowerFactor;
+
+// Define variables to store the KIGG registers' values for single phase meter
+static uint32_t blockEnergyKWhExportValue = 0;
+static uint32_t cumulativeEnergyKWhExportValue = 0;
+static uint32_t neutralCurrentValue = 0;
+static uint32_t activePowerValue = 0, apparentPowerValue = 0;
+static uint32_t signedPowerFactorValue = 0;
+
+// Define variables for upper and lower limits of single phase meter registers
+static uint32_t blockEnergyKWhExportValueMin = 0, blockEnergyKWhExportValueMax = 100 * 100;
+static uint32_t neutralCurrentValueMin = 0, neutralCurrentValueMax = 10 * 1000;
+static uint32_t activePowerValueMin = 0, activePowerValueMax = 100 * 10;
+static uint32_t apparentPowerValueMin = 0, apparentPowerValueMax = 100 * 10;
+static uint32_t signedPowerFactorValueMin = 0.1 * 1000, signedPowerFactorValueMax = 0.99 * 1000;
+
+// Garbage counters for each variable of single phase meter
+static int neutralCurrentCounter = 0;
+static int activePowerCounter = 0, apparentPowerCounter = 0;
+static int signedPowerFactorCounter = 0;
+static int blockEnergyKWhExportCounter = 0;
+static int cumulativeEnergyKWhExportCounter = 0;
+
+// Variables to keep track of if the cumulative energy values are read once
+static bool isCumulativeEnergyKWhExportReadOnce = false;
+
+// Variable to track if garbage values were read once 
+static bool isCumulativeEnergyKWhExportGarbageValueSent = false;
+
+// Variable to store the last cumulative energy values when garbage injection is enabled
+static uint32_t lastCumulativeEnergyKWhExportValue = 0;
+#elif defined(THREE_PHASE)
 // Garbage value arrays for each variable
-uint32_t voltageL1GarbageValues[] = {500000, 999000, 1100000};
 uint32_t voltageL2GarbageValues[] = {600000, 888000, 1200000};
 uint32_t voltageL3GarbageValues[] = {5500000, 6000000, 70000000};
-uint32_t currentL1GarbageValues[] = {5000000, 9900000, 11000000};
 uint32_t currentL2GarbageValues[] = {6000000, 9800000, 12000000};
 uint32_t currentL3GarbageValues[] = {5500000, 1000000, 13000000};
-uint32_t frequencyGarbageValues[] = {555000, 999000, 1100000};
 uint32_t powerFactorL1GarbageValues[] = {800000, 210000, 200000};
 uint32_t powerFactorL2GarbageValues[] = {900000, 210000, 210000};
 uint32_t powerFactorL3GarbageValues[] = {800000, 210000, 220000};
-uint32_t blockEnergyKWhImportGarbageValues[] = {99999, 12345, 214745};
 uint32_t blockEnergyKVAhLagGarbageValues[] = {99995, 23455, 198765};
 uint32_t blockEnergyKVAhLeadGarbageValues[] = {88885, 34565, 109875};
 uint32_t blockEnergyKVAhImportGarbageValues[] = {77775, 45675, 987655};
-uint32_t cumulativeEnergyKWhImportGarbageValues[] = {90, 98, 76};
 uint32_t cumulativeEnergyKVAhLagGarbageValues[] = {88, 87, 65};
 uint32_t cumulativeEnergyKVAhLeadGarbageValues[] = {88, 87, 65};
 uint32_t cumulativeEnergyKVAhImportGarbageValues[] = {88, 87, 65};
 
-
 // Define the KIGG register objects globally.
-gxRegister voltageL1, voltageL2, voltageL3;
-gxRegister currentL1, currentL2, currentL3;
-gxRegister frequency;
+gxRegister voltageL2, voltageL3;
+gxRegister currentL2, currentL3;
 gxRegister powerFactorL1, powerFactorL2, powerFactorL3;
-gxRegister blockEnergyKWhImport, blockEnergyKVAhLag, blockEnergyKVAhLead, blockEnergyKVAhImport;
-gxRegister cumulativeEnergyKWhImport, cumulativeEnergyKVAhLag, cumulativeEnergyKVAhLead, cumulativeEnergyKVAhImport;
+gxRegister blockEnergyKVAhLag, blockEnergyKVAhLead, blockEnergyKVAhImport;
+gxRegister cumulativeEnergyKVAhLag, cumulativeEnergyKVAhLead, cumulativeEnergyKVAhImport;
 
 // Define the objects to store KIGG register's averages
-gxRegister voltageL1Average, voltageL2Average, voltageL3Average;
-gxRegister currentL1Average, currentL2Average, currentL3Average;
+gxRegister voltageL2Average, voltageL3Average;
+gxRegister currentL2Average, currentL3Average;
+
+// Define individual objects for nameplate profile
+gxData ctr, ptr;
+
+// Define variables to store the KIGG registers' values
+static uint32_t voltageL2Value = 0, voltageL3Value = 0;
+static uint32_t currentL2Value = 0, currentL3Value = 0;
+static uint32_t powerFactorL1Value = 0, powerFactorL2Value = 0, powerFactorL3Value = 0;
+static uint32_t blockEnergyKVAhLagValue = 0, blockEnergyKVAhLeadValue = 0, blockEnergyKVAhImportValue = 0;
+static uint32_t cumulativeEnergyKVAhLagValue = 0, cumulativeEnergyKVAhLeadValue = 0, cumulativeEnergyKVAhImportValue = 0;
+
+// Define variables to store the KIGG registers' averages
+uint32_t voltageL2AverageValue = 0, voltageL3AverageValue = 0;
+uint32_t currentL2AverageValue = 0, currentL3AverageValue = 0;
+
+// Define variables for upper and lower limits
+static uint32_t voltageL2ValueMin = 108 * 1000, voltageL2ValueMax = 112 * 1000;
+static uint32_t voltageL3ValueMin = 108 * 1000, voltageL3ValueMax = 112* 1000;
+static uint32_t currentL2ValueMin = 0, currentL2ValueMax = 10 * 100000;
+static uint32_t currentL3ValueMin = 0, currentL3ValueMax = 10 * 100000;
+static uint32_t powerFactorL1ValueMin = 0.1 * 1000, powerFactorL1ValueMax = 0.99 * 1000;
+static uint32_t powerFactorL2ValueMin = 0.1 * 1000, powerFactorL2ValueMax = 0.99 * 1000;
+static uint32_t powerFactorL3ValueMin = 0.1* 1000, powerFactorL3ValueMax = 0.99 * 1000;
+static uint32_t blockEnergyKVAhLagValueMin = 0, blockEnergyKVAhLagValueMax = 100 * 100;
+static uint32_t blockEnergyKVAhLeadValueMin = 0, blockEnergyKVAhLeadValueMax = 100 * 100;
+static uint32_t blockEnergyKVAhImportValueMin = 0, blockEnergyKVAhImportValueMax = 100 * 100;
+
+// Garbage counters for each variable
+static int voltageL2Counter = 0, voltageL3Counter = 0;
+static int currentL2Counter = 0, currentL3Counter = 0;
+static int powerFactorL1Counter = 0, powerFactorL2Counter = 0, powerFactorL3Counter = 0;
+static int blockEnergyKVAhLagCounter = 0, blockEnergyKVAhLeadCounter = 0, blockEnergyKVAhImportCounter = 0;
+static int cumulativeEnergyKVAhLagCounter = 0, cumulativeEnergyKVAhLeadCounter = 0, cumulativeEnergyKVAhImportCounter = 0;
+
+// Average value counters for each variable
+static int voltageL2AverageCounter = 0, voltageL3AverageCounter = 0;
+static int currentL2AverageCounter = 0, currentL3AverageCounter = 0;
+
+// Variables to keep track of if the cumulative energy values are read once
+static bool isCumulativeEnergyKVAhLagReadOnce = false;
+static bool isCumulativeEnergyKVAhLeadReadOnce = false;
+static bool isCumulativeEnergyKVAhImportReadOnce = false;
+
+// Variable to track if garbage values were read once 
+static bool isCumulativeEnergyKVAhLagGarbageValueSent = false;
+static bool isCumulativeEnergyKVAhLeadGarbageValueSent = false;
+static bool isCumulativeEnergyKVAhImportGarbageValueSent = false;
+
+// Variable to store the last cumulative energy values when garbage injection is enabled
+static uint32_t lastCumulativeEnergyKVAhLagValue = 0;
+static uint32_t lastCumulativeEnergyKVAhLeadValue = 0;
+static uint32_t lastCumulativeEnergyKVAhImportValue = 0;
+#endif
+
+// Garbage value arrays for each variable
+uint32_t voltageL1GarbageValues[] = {500000, 999000, 1100000};
+uint32_t currentL1GarbageValues[] = {5000000, 9900000, 11000000};
+uint32_t frequencyGarbageValues[] = {555000, 999000, 1100000};
+uint32_t blockEnergyKWhImportGarbageValues[] = {99999, 12345, 214745};
+uint32_t cumulativeEnergyKWhImportGarbageValues[] = {90, 98, 76};
+
+
+// Define the KIGG register objects globally.
+gxRegister voltageL1;
+gxRegister currentL1;
+gxRegister frequency;
+
+gxRegister blockEnergyKWhImport;
+gxRegister cumulativeEnergyKWhImport;
+
+// Define the objects to store KIGG register's averages
+gxRegister voltageL1Average;
+gxRegister currentL1Average;
 
 
 // Define individual objects for nameplate profile
 gxData meterSerialNumber, manufacturerName, firmwareVersion, meterType, meterCategory;
-gxData currentRating, ctr, ptr, yearOfManufacture;
+gxData currentRating, yearOfManufacture;
 
 
 // Define variables to store the KIGG registers' values
-static uint32_t voltageL1Value = 0, voltageL2Value = 0, voltageL3Value = 0;
-static uint32_t currentL1Value = 0, currentL2Value = 0, currentL3Value = 0;
+static uint32_t voltageL1Value = 0;
+static uint32_t currentL1Value = 0;
 static uint32_t frequencyValue = 0;
-static uint32_t powerFactorL1Value = 0, powerFactorL2Value = 0, powerFactorL3Value = 0;
-static uint32_t blockEnergyKWhImportValue = 0, blockEnergyKVAhLagValue = 0, blockEnergyKVAhLeadValue = 0, blockEnergyKVAhImportValue = 0;
-static uint32_t cumulativeEnergyKWhImportValue = 0, cumulativeEnergyKVAhLagValue = 0, cumulativeEnergyKVAhLeadValue = 0, cumulativeEnergyKVAhImportValue = 0;
+static uint32_t blockEnergyKWhImportValue = 0;
+static uint32_t cumulativeEnergyKWhImportValue = 0;
 
 // Define variables to store the KIGG registers' averages
-uint32_t voltageL1AverageValue = 0, voltageL2AverageValue = 0, voltageL3AverageValue = 0;
-uint32_t currentL1AverageValue = 0, currentL2AverageValue = 0, currentL3AverageValue = 0;
+uint32_t voltageL1AverageValue = 0;
+uint32_t currentL1AverageValue = 0;
 
 
 // Define variables for upper and lower limits
-static uint32_t voltageL1ValueMin = 108000, voltageL1ValueMax = 112000;
-static uint32_t voltageL2ValueMin = 108000, voltageL2ValueMax = 112000;
-static uint32_t voltageL3ValueMin = 108000, voltageL3ValueMax = 112000;
-
-static uint32_t currentL1ValueMin = 0, currentL1ValueMax = 1000000;
-static uint32_t currentL2ValueMin = 0, currentL2ValueMax = 1000000;
-static uint32_t currentL3ValueMin = 0, currentL3ValueMax = 1000000;
-
-static uint32_t frequencyValueMin = 49800, frequencyValueMax = 50200;
-
-static uint32_t powerFactorL1ValueMin = 100, powerFactorL1ValueMax = 990;
-static uint32_t powerFactorL2ValueMin = 100, powerFactorL2ValueMax = 990;
-static uint32_t powerFactorL3ValueMin = 100, powerFactorL3ValueMax = 990;
-
-static uint32_t blockEnergyKWhImportValueMin = 0, blockEnergyKWhImportValueMax = 10000;
-static uint32_t blockEnergyKVAhLagValueMin = 0, blockEnergyKVAhLagValueMax = 10000;
-static uint32_t blockEnergyKVAhLeadValueMin = 0, blockEnergyKVAhLeadValueMax = 10000;
-static uint32_t blockEnergyKVAhImportValueMin = 0, blockEnergyKVAhImportValueMax = 10000;
-
-// static uint32_t cumulativeEnergyKWhImportValueMin = 450, cumulativeEnergyKWhImportValueMax = 500;
-// static uint32_t cumulativeEnergyKVAhImportValueMin = 500, cumulativeEnergyKVAhImportValueMax = 600;
+#ifdef SINGLE_PHASE
+static uint32_t voltageL1ValueMin = 228 * 1000, voltageL1ValueMax = 232 * 1000;
+static uint32_t currentL1ValueMin = 0, currentL1ValueMax = 10 * 1000;
+#elif defined(THREE_PHASE)
+static uint32_t voltageL1ValueMin = 108 * 1000, voltageL1ValueMax = 112 * 1000;
+static uint32_t currentL1ValueMin = 0, currentL1ValueMax = 10 * 100000;
+#endif
+static uint32_t frequencyValueMin = 498 * 1000, frequencyValueMax = 502 * 1000;
+static uint32_t blockEnergyKWhImportValueMin = 0, blockEnergyKWhImportValueMax = 100 * 100;
 
 
 static char meterSerialNumberValue[64U] = "X0000000";
 static const char* manufacturerNameValue = "SECURE METERS LTD.";
+#ifdef SINGLE_PHASE
+static const char* firmwareVersionValue = "A1XX02";
+static uint8_t meterTypeValue = 5;
+static const char* meterCategoryValue = "C3";
+static const char* currentRatingValue = "010 - 060 A";
+static uint16_t yearOfManufactureValue = 2021;
+#elif THREE_PHASE
 static const char* firmwareVersionValue = "M1XXG04";
 static uint8_t meterTypeValue = 2;
 static const char* meterCategoryValue = "C1";
 static const char* currentRatingValue = "5 - 10 A";
 static uint8_t ctrValue = 12;
 static uint8_t ptrValue = 100;
-static uint16_t yearOfManufactureValue = 2019;              // Fixed value for the register
+static uint16_t yearOfManufactureValue = 2019;
+#endif              // Fixed value for the register
 
 
 // Garbage counters for each variable
-static int voltageL1Counter = 0, voltageL2Counter = 0, voltageL3Counter = 0;
-static int currentL1Counter = 0, currentL2Counter = 0, currentL3Counter = 0;
+static int voltageL1Counter = 0;
+static int currentL1Counter = 0;
 static int frequencyCounter = 0;
-static int powerFactorL1Counter = 0, powerFactorL2Counter = 0, powerFactorL3Counter = 0;
-static int blockEnergyKWhImportCounter = 0, blockEnergyKVAhLagCounter = 0, blockEnergyKVAhLeadCounter = 0, blockEnergyKVAhImportCounter = 0;
-static int cumulativeEnergyKWhImportCounter = 0, cumulativeEnergyKVAhLagCounter = 0, cumulativeEnergyKVAhLeadCounter = 0, cumulativeEnergyKVAhImportCounter = 0;
+static int blockEnergyKWhImportCounter = 0;
+static int cumulativeEnergyKWhImportCounter = 0;
+
 
 // Average value counters for each variable
-static int voltageL1AverageCounter = 0, voltageL2AverageCounter = 0, voltageL3AverageCounter = 0;
-static int currentL1AverageCounter = 0, currentL2AverageCounter = 0, currentL3AverageCounter = 0;
+static int voltageL1AverageCounter = 0;
+static int currentL1AverageCounter = 0;
 
 
 static char* current_timestamp = NULL;
@@ -127,23 +233,14 @@ static char* current_timestamp = NULL;
 
 // Variables to keep track of if the cumulative energy values are read once
 static bool isCumulativeEnergyKWhImportReadOnce = false;
-static bool isCumulativeEnergyKVAhLagReadOnce = false;
-static bool isCumulativeEnergyKVAhLeadReadOnce = false;
-static bool isCumulativeEnergyKVAhImportReadOnce = false;
 
 
 // Variable to track if garbage values were read once 
 static bool isCumulativeEnergyKWhImportGarbageValueSent = false;
-static bool isCumulativeEnergyKVAhLagGarbageValueSent = false;
-static bool isCumulativeEnergyKVAhLeadGarbageValueSent = false;
-static bool isCumulativeEnergyKVAhImportGarbageValueSent = false;
 
 
 // Variable to store the last cumulative energy values when garbage injection is enabled
 static uint32_t lastCumulativeEnergyKWhImportValue = 0;
-static uint32_t lastCumulativeEnergyKVAhLagValue = 0;
-static uint32_t lastCumulativeEnergyKVAhLeadValue = 0;
-static uint32_t lastCumulativeEnergyKVAhImportValue = 0;
 
 // Helper to reset a counter
 int resetCounter()
@@ -181,7 +278,12 @@ uint32_t calculateAverageUint32(uint32_t average, uint32_t value, int count)
 int addVoltageL1()
 {
     int ret;
+
+#ifdef SINGLE_PHASE
+    const unsigned char ln[6] = { 1, 0, 12, 7, 0, 255 };  // Example LN for voltageL1
+#elif defined(THREE_PHASE)
     const unsigned char ln[6] = { 1, 0, 32, 7, 0, 255 };  // Example LN for voltageL1
+#endif
 
     // Initialize the voltageL1 register object
     if ((ret = INIT_OBJECT(voltageL1, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
@@ -233,6 +335,7 @@ uint32_t readVoltageL1Value()
     return voltageL1Value;
 }
 
+#ifdef THREE_PHASE
 // Function to add the voltageL2 register to the DLMS server
 int addVoltageL2()
 {
@@ -340,18 +443,29 @@ uint32_t readVoltageL3Value()
     }
     return voltageL3Value;
 }
+#endif 
 
 // Function to add the currentL1 register to the DLMS server
 int addCurrentL1()
 {
     int ret;
+
+#ifdef SINGLE_PHASE
+    const unsigned char ln[6] = { 1, 0, 11, 7, 0, 255 };  // LN for currentL1
+#elif defined(THREE_PHASE)  
     const unsigned char ln[6] = { 1, 0, 31, 7, 0, 255 };  // LN for currentL1
+#endif
 
     if ((ret = INIT_OBJECT(currentL1, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
     {
         currentL1Value = 10;
         GX_UINT32_BYREF(currentL1.value, currentL1Value);
+
+#ifdef SINGLE_PHASE
+        currentL1.scaler = -3;
+#elif defined(THREE_PHASE)
         currentL1.scaler = -5;
+#endif
         currentL1.unit = 33;
     }
 
@@ -383,18 +497,27 @@ uint32_t readCurrentL1Value()
             currentL1Value = currentL1ValueMin + rand() % (currentL1ValueMax - currentL1ValueMin + 1); // Normal value
             currentL1Counter--;
             currentL1AverageCounter++; // Increment the average counter to calculate new average
+#ifdef SINGLE_PHASE
+            currentL1AverageValue = calculateAverageUint32(currentL1AverageValue * 1000, currentL1Value, currentL1AverageCounter) / 1000;
+#elif defined(THREE_PHASE)
             currentL1AverageValue = calculateAverageUint32(currentL1AverageValue * 100000, currentL1Value, currentL1AverageCounter) / 100000;
+#endif
         }
     }
     else
     {
         currentL1Value = currentL1ValueMin + rand() % (currentL1ValueMax - currentL1ValueMin + 1); // Normal value
         currentL1AverageCounter++; // Increment the average counter to calculate new average
-        currentL1AverageValue = calculateAverageUint32(currentL1AverageValue * 100000, currentL1Value, currentL1AverageCounter) / 100000;
+#ifdef SINGLE_PHASE
+            currentL1AverageValue = calculateAverageUint32(currentL1AverageValue * 1000, currentL1Value, currentL1AverageCounter) / 1000;
+#elif defined(THREE_PHASE)
+            currentL1AverageValue = calculateAverageUint32(currentL1AverageValue * 100000, currentL1Value, currentL1AverageCounter) / 100000;
+#endif
     }
     return currentL1Value;
 }
 
+#ifdef THREE_PHASE
 // Function to add the currentL2 register to the DLMS server
 int addCurrentL2()
 {
@@ -502,6 +625,7 @@ uint32_t readCurrentL3Value()
     }
     return currentL3Value;
 }
+#endif
 
 // Function to add the frequency register to the DLMS server
 int addFrequency()
@@ -553,6 +677,7 @@ uint32_t readFrequencyValue()
     return frequencyValue;
 }
 
+#ifdef THREE_PHASE
 // Function to add the powerFactorL1 register to the DLMS server
 int addPowerFactorL1()
 {
@@ -702,6 +827,7 @@ uint32_t readPowerFactorL3Value()
     }
     return powerFactorL3Value;
 }
+#endif
 
 // Function to add Block Energy (kWh Import) register to the DLMS server
 int addBlockEnergyKWhImport()
@@ -753,6 +879,59 @@ uint32_t readBlockEnergyKWhImportValue()
     return blockEnergyKWhImportValue;
 }
 
+#ifdef SINGLE_PHASE
+// Function to add Block Energy (kWh Export) register to the DLMS server
+int addBlockEnergyKWhExport()
+{
+    int ret;
+    const unsigned char ln[6] = { 1, 0, 2, 29, 0, 255 };  // LN for Block Energy KWh Export
+
+    if ((ret = INIT_OBJECT(blockEnergyKWhExport, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
+    {
+        blockEnergyKWhExportValue = 1000; 
+        GX_UINT32_BYREF(blockEnergyKWhExport.value, blockEnergyKWhExportValue);
+        blockEnergyKWhExport.scaler = 2;
+        blockEnergyKWhExport.unit = 32;  
+    }
+
+    return ret;
+}
+
+// Function to set Block Energy (kWh Export) register's value
+void writeBlockEnergyKWhExportValue(uint32_t value)
+{
+    blockEnergyKWhExportValue = value;
+}
+
+// Function to get Block Energy (kWh Export) register's value with garbage value injection
+uint32_t readBlockEnergyKWhExportValue()
+{
+    if (isGarbageValuesEnabled())
+    {
+        if (blockEnergyKWhExportCounter == 0)
+        {
+            // Select a random garbage value
+            blockEnergyKWhExportValue = blockEnergyKWhExportGarbageValues[rand() % (sizeof(blockEnergyKWhExportGarbageValues) / sizeof(blockEnergyKWhExportGarbageValues[0]))];
+            current_timestamp = getFormattedTimestamp();
+            printf("%s -> Meter sending garbage value %u for block energy kWh export.\n", current_timestamp, blockEnergyKWhExportValue);
+            // Reset the counter
+            blockEnergyKWhExportCounter = resetCounter();
+        }
+        else
+        {
+            blockEnergyKWhExportValue = blockEnergyKWhExportValueMin + rand() % (blockEnergyKWhExportValueMax - blockEnergyKWhExportValueMin + 1); // Normal value
+            blockEnergyKWhExportCounter--;
+        }
+    }
+    else
+    {
+        blockEnergyKWhExportValue = blockEnergyKWhExportValueMin + rand() % (blockEnergyKWhExportValueMax - blockEnergyKWhExportValueMin + 1); // Normal value
+    }
+    return blockEnergyKWhExportValue;
+}
+#endif
+
+#ifdef THREE_PHASE
 // Function to add Block Energy (kVAh Lag) register to the DLMS server
 int addBlockEnergyKVAhLag()
 {
@@ -902,6 +1081,7 @@ uint32_t readBlockEnergyKVAhImportValue()
     }
     return blockEnergyKVAhImportValue;
 }
+#endif
 
 // Function to add Cumulative Energy (kWh Import) register to the DLMS server
 int addCumulativeEnergyKWhImport()
@@ -911,10 +1091,20 @@ int addCumulativeEnergyKWhImport()
 
     if ((ret = INIT_OBJECT(cumulativeEnergyKWhImport, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
     {
+
+#ifdef SINGLE_PHASE
+        cumulativeEnergyKWhImportValue = (uint32_t)(
+                                        (voltageL1Value * currentL1Value * cos(signedPowerFactorValue)));
+        printf("Voltage value: %u, Current value: %u, Power Factor value: %u\n", voltageL1Value, currentL1Value, signedPowerFactorValue);
+        printf("Cumulative Energy (kWh Import) value: %u\n", cumulativeEnergyKWhImportValue);
+#elif defined(THREE_PHASE)
         cumulativeEnergyKWhImportValue = (uint32_t)(
                                         (voltageL1Value * currentL1Value * cos(powerFactorL1Value)) +
                                         (voltageL2Value * currentL2Value * cos(powerFactorL2Value)) +
                                         (voltageL3Value * currentL3Value * cos(powerFactorL3Value)));
+        printf("From three_phase Cumulative Energy (kWh Import) value: %u\n", cumulativeEnergyKWhImportValue);
+#endif
+        
         GX_UINT32_BYREF(cumulativeEnergyKWhImport.value, cumulativeEnergyKWhImportValue);
         cumulativeEnergyKWhImport.scaler = 2;
         cumulativeEnergyKWhImport.unit = 30;  
@@ -984,6 +1174,90 @@ uint32_t readCumulativeEnergyKWhImportValue()
     return cumulativeEnergyKWhImportValue;
 }
 
+#ifdef SINGLE_PHASE
+// Function to add Cumulative Energy (kWh Export) register to the DLMS server
+int addCumulativeEnergyKWhExport()
+{
+    int ret;
+    const unsigned char ln[6] = { 1, 0, 2, 8, 0, 255 };  // LN for Cumulative Energy KWh Export
+
+    if ((ret = INIT_OBJECT(cumulativeEnergyKWhExport, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
+    {
+        cumulativeEnergyKWhExportValue = (uint32_t)(
+                                        (voltageL1Value * currentL1Value * cos(signedPowerFactorValue)));
+        printf("Voltage value: %u, Current value: %u, Power Factor value: %u\n", voltageL1Value, currentL1Value, signedPowerFactorValue);
+        printf("Cumulative Energy (kWh Export) value: %u\n", cumulativeEnergyKWhExportValue);
+        GX_UINT32_BYREF(cumulativeEnergyKWhExport.value, cumulativeEnergyKWhExportValue);
+        cumulativeEnergyKWhExport.scaler = 2;
+        cumulativeEnergyKWhExport.unit = 30;  
+    }
+
+    return ret;
+}
+
+// Function to set Cumulative Energy (kWh Export) register's value
+void writeCumulativeEnergyKWhExportValue(uint32_t value)
+{
+    cumulativeEnergyKWhExportValue = value;
+}
+
+// Function to get Cumulative Energy (kWh Export) register's value with garbage value injection
+uint32_t readCumulativeEnergyKWhExportValue()
+{
+    if (isGarbageValuesEnabled())
+    {
+        if (cumulativeEnergyKWhExportCounter == 0)
+        {
+            // Select a random garbage value
+            lastCumulativeEnergyKWhExportValue = cumulativeEnergyKWhExportValue;
+            cumulativeEnergyKWhExportValue = cumulativeEnergyKWhExportGarbageValues[rand() % (sizeof(cumulativeEnergyKWhExportGarbageValues) / sizeof(cumulativeEnergyKWhExportGarbageValues[0]))];
+            current_timestamp = getFormattedTimestamp();
+            printf("%s -> Meter sending garbage value %u for cumulative energy kWh export.\n", current_timestamp, cumulativeEnergyKWhExportValue);
+            // Reset the counter
+            cumulativeEnergyKWhExportCounter = resetCounter();
+            isCumulativeEnergyKWhExportGarbageValueSent = true;
+            return cumulativeEnergyKWhExportValue;
+        }
+        else
+        {
+            // Check if garbage value was sent, then restore the previous value
+            if (isCumulativeEnergyKWhExportGarbageValueSent)
+            {
+                isCumulativeEnergyKWhExportGarbageValueSent = false;
+                cumulativeEnergyKWhExportValue = lastCumulativeEnergyKWhExportValue;
+            }
+
+            if (!isCumulativeEnergyKWhExportReadOnce) 
+            {
+                isCumulativeEnergyKWhExportReadOnce = true;
+            }
+            else
+            {
+                // Increment the value randomly by 1, 2, or 3
+                cumulativeEnergyKWhExportValue += (rand() % 3) + 1;
+            }
+            // cumulativeEnergyKWhExportValue = cumulativeEnergyKWhExportValueMin + rand() % (cumulativeEnergyKWhExportValueMax - cumulativeEnergyKWhExportValueMin + 1); // Normal value
+            cumulativeEnergyKWhExportCounter--;
+        }
+    }
+    else
+    {
+        if (!isCumulativeEnergyKWhExportReadOnce) 
+        {
+            isCumulativeEnergyKWhExportReadOnce = true;
+        }
+        else
+        {
+            // Increment the value randomly by 1, 2, or 3
+            cumulativeEnergyKWhExportValue += (rand() % 3) + 1;
+        }
+        // cumulativeEnergyKWhExportValue = cumulativeEnergyKWhExportValueMin + rand() % (cumulativeEnergyKWhExportValueMax - cumulativeEnergyKWhExportValueMin + 1); // Normal value
+    }
+    return cumulativeEnergyKWhExportValue;
+}
+#endif
+
+#ifdef THREE_PHASE
 // Function to add Cumulative Energy (kVAh Lag) register to the DLMS server
 int addCumulativeEnergyKVAhLag()
 {
@@ -1225,12 +1499,17 @@ uint32_t readCumulativeEnergyKVAhImportValue()
     }
     return cumulativeEnergyKVAhImportValue;
 }
+#endif
 
 // Function to add the voltageL1Average register to the DLMS server
 int addVoltageL1Average()
 {
     int ret;
+#ifdef SINGLE_PHASE
+    const unsigned char ln[6] = { 1, 0, 12, 27, 0, 255 };
+#elif defined(THREE_PHASE)
     const unsigned char ln[6] = { 1, 0, 32, 27, 0, 255 };  // Example LN for voltageL1 average
+#endif
 
     // Initialize the voltageL1 average register object
     if ((ret = INIT_OBJECT(voltageL1Average, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
@@ -1251,6 +1530,7 @@ uint32_t readVoltageL1AverageValue()
     return voltageL1AverageValue;
 }
 
+#ifdef THREE_PHASE
 // Function to add the voltageL1Average register to the DLMS server
 int addVoltageL2Average()
 {
@@ -1300,12 +1580,17 @@ uint32_t readVoltageL3AverageValue()
 {
     return voltageL3AverageValue;
 }
+#endif
 
 // Function to add the currentL1Average register to the DLMS server
 int addCurrentL1Average()
 {
     int ret;
+#ifdef SINGLE_PHASE
+    const unsigned char ln[6] = { 1, 0, 11, 27, 0, 255 };  
+#elif defined(THREE_PHASE)
     const unsigned char ln[6] = { 1, 0, 31, 27, 0, 255 };  // Example LN for currentL1 average
+#endif
 
     // Initialize the currentL1 average register object
     if ((ret = INIT_OBJECT(currentL1Average, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
@@ -1326,6 +1611,7 @@ uint32_t readCurrentL1AverageValue()
     return currentL1AverageValue;
 }
 
+#ifdef THREE_PHASE
 // Function to add the currentL2Average register to the DLMS server
 int addCurrentL2Average()
 {
@@ -1375,6 +1661,7 @@ uint32_t readCurrentL3AverageValue()
 {
     return currentL3AverageValue;
 }
+#endif
 
 int addMeterSerialNumber()
 {
@@ -1484,6 +1771,7 @@ const char* readCurrentRating()
     return currentRatingValue;
 }
 
+#ifdef THREE_PHASE
 int addCTR()
 {
     int ret;
@@ -1519,6 +1807,7 @@ uint8_t readPTR()
 {
     return ptrValue;
 }
+#endif
 
 int addYearOfManufacture()
 {
@@ -1547,28 +1836,240 @@ void updateMeterSerialNumber(int value)
     snprintf(numberPart, sizeof(meterSerialNumberValue) - 1, "%07d", number); // Update the numeric part.
 }
 
+#ifdef SINGLE_PHASE
+// Adding single phase meter registers
+// Function to add the neutral current register to the DLMS server
+int addNeutralCurrent()
+{
+    int ret;
+    const unsigned char ln[6] = { 1, 0, 91, 7, 0, 255 };  // LN for neutral current
+
+    if ((ret = INIT_OBJECT(neutralCurrent, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
+    {
+        neutralCurrentValue = 10;  // Initialize with a default value
+        GX_UINT32_BYREF(neutralCurrent.value, neutralCurrentValue);
+        neutralCurrent.scaler = -3;
+        neutralCurrent.unit = 33;
+    }
+
+    return ret;
+}
+
+// Function to set the neutral current register's value
+void writeNeutralCurrentValue(uint32_t value)
+{
+    neutralCurrentValue = value;
+}
+
+// Function to get the neutral current register's value with garbage value injection
+uint32_t readNeutralCurrentValue()
+{
+    if (isGarbageValuesEnabled())
+    {
+        if (neutralCurrentCounter == 0)
+        {
+            // Select a random garbage value
+            neutralCurrentValue = neutralCurrentGarbageValues[rand() % (sizeof(neutralCurrentGarbageValues) / sizeof(neutralCurrentGarbageValues[0]))];
+            current_timestamp = getFormattedTimestamp();
+            printf("%s -> Meter sending garbage value %u for neutral current.\n", current_timestamp, neutralCurrentValue);
+            // Reset the counter
+            neutralCurrentCounter = resetCounter();
+        }
+        else
+        {
+            neutralCurrentValue = neutralCurrentValueMin + rand() % (neutralCurrentValueMax - neutralCurrentValueMin + 1); // Normal value
+            neutralCurrentCounter--;
+        }
+    }
+    else
+    {
+        neutralCurrentValue = neutralCurrentValueMin + rand() % (neutralCurrentValueMax - neutralCurrentValueMin + 1); // Normal value
+    }
+    return neutralCurrentValue;
+}
+
+// Function to add the active power register to the DLMS server
+int addActivePower()
+{
+    int ret;
+    const unsigned char ln[6] = { 1, 0, 1, 7, 0, 255 };  // OBIS code for active power
+
+    if ((ret = INIT_OBJECT(activePower, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
+    {
+        activePowerValue = 1000;  // Initialize with a default value (adjust as needed)
+        GX_UINT32_BYREF(activePower.value, activePowerValue);
+        activePower.scaler = -1;  // Scalar for active power
+        activePower.unit = 27;    // Unit for active power
+    }
+
+    return ret;
+}
+
+// Function to set the active power register's value
+void writeActivePowerValue(uint32_t value)
+{
+    activePowerValue = value;
+}
+
+// Function to get the active power register's value with garbage value injection
+uint32_t readActivePowerValue()
+{
+    if (isGarbageValuesEnabled())
+    {
+        if (activePowerCounter == 0)
+        {
+            // Select a random garbage value
+            activePowerValue = activePowerGarbageValues[rand() % (sizeof(activePowerGarbageValues) / sizeof(activePowerGarbageValues[0]))];
+            current_timestamp = getFormattedTimestamp();
+            printf("%s -> Meter sending garbage value %u for active power.\n", current_timestamp, activePowerValue);
+            // Reset the counter
+            activePowerCounter = resetCounter();
+        }
+        else
+        {
+            activePowerValue = activePowerValueMin + rand() % (activePowerValueMax - activePowerValueMin + 1); // Normal value
+            activePowerCounter--;
+        }
+    }
+    else
+    {
+        activePowerValue = activePowerValueMin + rand() % (activePowerValueMax - activePowerValueMin + 1); // Normal value
+    }
+    return activePowerValue;
+}
+
+// Function to add the apparent power register to the DLMS server
+int addApparentPower()
+{
+    int ret;
+    const unsigned char ln[6] = { 1, 0, 9, 7, 0, 255 };  // OBIS code for apparent power
+
+    if ((ret = INIT_OBJECT(apparentPower, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
+    {
+        apparentPowerValue = 2000;  // Initialize with a default value (adjust as needed)
+        GX_UINT32_BYREF(apparentPower.value, apparentPowerValue);
+        apparentPower.scaler = -1;  // Scalar for apparent power
+        apparentPower.unit = 28;    // Unit for apparent power
+    }
+
+    return ret;
+}
+
+// Function to set the apparent power register's value
+void writeApparentPowerValue(uint32_t value)
+{
+    apparentPowerValue = value;
+}
+
+// Function to get the apparent power register's value with garbage value injection
+uint32_t readApparentPowerValue()
+{
+    if (isGarbageValuesEnabled())
+    {
+        if (apparentPowerCounter == 0)
+        {
+            // Select a random garbage value
+            apparentPowerValue = apparentPowerGarbageValues[rand() % (sizeof(apparentPowerGarbageValues) / sizeof(apparentPowerGarbageValues[0]))];
+            current_timestamp = getFormattedTimestamp();
+            printf("%s -> Meter sending garbage value %u for apparent power.\n", current_timestamp, apparentPowerValue);
+            // Reset the counter
+            apparentPowerCounter = resetCounter();
+        }
+        else
+        {
+            apparentPowerValue = apparentPowerValueMin + rand() % (apparentPowerValueMax - apparentPowerValueMin + 1); // Normal value
+            apparentPowerCounter--;
+        }
+    }
+    else
+    {
+        apparentPowerValue = apparentPowerValueMin + rand() % (apparentPowerValueMax - apparentPowerValueMin + 1); // Normal value
+    }
+    return apparentPowerValue;
+}
+
+// Function to add the signed power factor register to the DLMS server
+int addSignedPowerFactor()
+{
+    int ret;
+    const unsigned char ln[6] = { 1, 0, 13, 7, 0, 255 };  // OBIS code for signed power factor
+
+    if ((ret = INIT_OBJECT(signedPowerFactor, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
+    {
+        signedPowerFactorValue = 1;  // Initialize with a default value (adjust as needed)
+        GX_UINT32_BYREF(signedPowerFactor.value, signedPowerFactorValue);
+        signedPowerFactor.scaler = -3;  // Scalar for signed power factor
+        signedPowerFactor.unit = 0;     // Unit for signed power factor
+    }
+
+    return ret;
+}
+
+// Function to set the signed power factor register's value
+void writeSignedPowerFactorValue(uint32_t value)
+{
+    signedPowerFactorValue = value;
+}
+
+// Function to get the signed power factor register's value with garbage value injection
+uint32_t readSignedPowerFactorValue()
+{
+    if (isGarbageValuesEnabled())
+    {
+        if (signedPowerFactorCounter == 0)
+        {
+            // Select a random garbage value
+            signedPowerFactorValue = signedPowerFactorGarbageValues[rand() % (sizeof(signedPowerFactorGarbageValues) / sizeof(signedPowerFactorGarbageValues[0]))];
+            current_timestamp = getFormattedTimestamp();
+            printf("%s -> Meter sending garbage value %u for signed power factor.\n", current_timestamp, signedPowerFactorValue);
+            // Reset the counter
+            signedPowerFactorCounter = resetCounter();
+        }
+        else
+        {
+            signedPowerFactorValue = signedPowerFactorValueMin + rand() % (signedPowerFactorValueMax - signedPowerFactorValueMin + 1); // Normal value
+            signedPowerFactorCounter--;
+        }
+    }
+    else
+    {
+        signedPowerFactorValue = signedPowerFactorValueMin + rand() % (signedPowerFactorValueMax - signedPowerFactorValueMin + 1); // Normal value
+    }
+    return signedPowerFactorValue;
+}
+#endif
+
 // Initialize counters
 void initializeCounters(void)
 {
     srand(time(NULL));
     voltageL1Counter = resetCounter();
+    currentL1Counter = resetCounter();
+    frequencyCounter = resetCounter();
+    blockEnergyKWhImportCounter = resetCounter();
+    cumulativeEnergyKWhImportCounter = resetCounter();
+#ifdef SINGLE_PHASE
+    neutralCurrentCounter = resetCounter();
+    activePowerCounter = resetCounter();
+    apparentPowerCounter = resetCounter();
+    signedPowerFactorCounter = resetCounter();
+    blockEnergyKWhExportCounter = resetCounter();
+    cumulativeEnergyKWhExportCounter = resetCounter();
+#elif THREE_PHASE
     voltageL2Counter = resetCounter();
     voltageL3Counter = resetCounter();
-    currentL1Counter = resetCounter();
     currentL2Counter = resetCounter();
     currentL3Counter = resetCounter();
-    frequencyCounter = resetCounter();
     powerFactorL1Counter = resetCounter();
     powerFactorL2Counter = resetCounter();
     powerFactorL3Counter = resetCounter();
-    blockEnergyKWhImportCounter = resetCounter();
     blockEnergyKVAhLagCounter = resetCounter();
     blockEnergyKVAhLeadCounter = resetCounter();
     blockEnergyKVAhImportCounter = resetCounter();
-    cumulativeEnergyKWhImportCounter = resetCounter();
     cumulativeEnergyKVAhLagCounter = resetCounter();
     cumulativeEnergyKVAhLeadCounter = resetCounter();
     cumulativeEnergyKVAhImportCounter = resetCounter();
+#endif
 }
 
 // Set upper and lower limits for all registers' values
@@ -1621,23 +2122,35 @@ bool setRegisterLimits(const char* filePath)
     cJSON* voltageLimits = cJSON_GetObjectItem(json, "voltage_limits");
     if (voltageLimits)
     {
+#ifdef SINGLE_PHASE
+        voltageL1ValueMin = cJSON_GetObjectItem(voltageLimits, "lower_limit")->valueint;
+        voltageL1ValueMax = cJSON_GetObjectItem(voltageLimits, "upper_limit")->valueint;
+#elif defined(THREE_PHASE)
         voltageL1ValueMin = cJSON_GetObjectItem(cJSON_GetObjectItem(voltageLimits, "L1"), "lower_limit")->valueint;
         voltageL1ValueMax = cJSON_GetObjectItem(cJSON_GetObjectItem(voltageLimits, "L1"), "upper_limit")->valueint;
         voltageL2ValueMin = cJSON_GetObjectItem(cJSON_GetObjectItem(voltageLimits, "L2"), "lower_limit")->valueint;
         voltageL2ValueMax = cJSON_GetObjectItem(cJSON_GetObjectItem(voltageLimits, "L2"), "upper_limit")->valueint;
         voltageL3ValueMin = cJSON_GetObjectItem(cJSON_GetObjectItem(voltageLimits, "L3"), "lower_limit")->valueint;
         voltageL3ValueMax = cJSON_GetObjectItem(cJSON_GetObjectItem(voltageLimits, "L3"), "upper_limit")->valueint;
+#endif
     }
 
     cJSON* currentLimits = cJSON_GetObjectItem(json, "current_limits");
     if (currentLimits)
     {
+#ifdef SINGLE_PHASE
+        currentL1ValueMin = cJSON_GetObjectItem(cJSON_GetObjectItem(currentLimits, "phase_current"), "lower_limit")->valueint;
+        currentL1ValueMax = cJSON_GetObjectItem(cJSON_GetObjectItem(currentLimits, "phase_current"), "upper_limit")->valueint;
+        neutralCurrentValueMin = cJSON_GetObjectItem(cJSON_GetObjectItem(currentLimits, "neutral_current"), "lower_limit")->valueint;
+        neutralCurrentValueMax = cJSON_GetObjectItem(cJSON_GetObjectItem(currentLimits, "neutral_current"), "upper_limit")->valueint;
+#elif defined(THREE_PHASE)
         currentL1ValueMin = cJSON_GetObjectItem(cJSON_GetObjectItem(currentLimits, "L1"), "lower_limit")->valueint;
         currentL1ValueMax = cJSON_GetObjectItem(cJSON_GetObjectItem(currentLimits, "L1"), "upper_limit")->valueint;
         currentL2ValueMin = cJSON_GetObjectItem(cJSON_GetObjectItem(currentLimits, "L2"), "lower_limit")->valueint;
         currentL2ValueMax = cJSON_GetObjectItem(cJSON_GetObjectItem(currentLimits, "L2"), "upper_limit")->valueint;
         currentL3ValueMin = cJSON_GetObjectItem(cJSON_GetObjectItem(currentLimits, "L3"), "lower_limit")->valueint;
         currentL3ValueMax = cJSON_GetObjectItem(cJSON_GetObjectItem(currentLimits, "L3"), "upper_limit")->valueint;
+#endif
     }
 
     cJSON* frequencyLimits = cJSON_GetObjectItem(json, "frequency_limits");
@@ -1647,6 +2160,7 @@ bool setRegisterLimits(const char* filePath)
         frequencyValueMax = cJSON_GetObjectItem(frequencyLimits, "upper_limit")->valueint; // Convert to integer
     }
 
+#ifdef THREE_PHASE
     cJSON* powerFactorLimits = cJSON_GetObjectItem(json, "power_factor_limits");
     if (powerFactorLimits)
     {
@@ -1657,19 +2171,44 @@ bool setRegisterLimits(const char* filePath)
         powerFactorL3ValueMin = cJSON_GetObjectItem(cJSON_GetObjectItem(powerFactorLimits, "L3"), "lower_limit")->valuedouble;
         powerFactorL3ValueMax = cJSON_GetObjectItem(cJSON_GetObjectItem(powerFactorLimits, "L3"), "upper_limit")->valuedouble;
     }
+#endif
 
     cJSON* blockEnergyLimits = cJSON_GetObjectItem(json, "block_energy_limits");
     if (blockEnergyLimits)
     {
         blockEnergyKWhImportValueMin = cJSON_GetObjectItem(cJSON_GetObjectItem(blockEnergyLimits, "kWh_import"), "lower_limit")->valueint;
         blockEnergyKWhImportValueMax = cJSON_GetObjectItem(cJSON_GetObjectItem(blockEnergyLimits, "kWh_import"), "upper_limit")->valueint;
+
+#ifdef SINGLE_PHASE
+        blockEnergyKWhExportValueMin = cJSON_GetObjectItem(cJSON_GetObjectItem(blockEnergyLimits, "kWh_export"), "lower_limit")->valueint;
+        blockEnergyKWhExportValueMax = cJSON_GetObjectItem(cJSON_GetObjectItem(blockEnergyLimits, "kWh_export"), "upper_limit")->valueint;
+#elif defined(THREE_PHASE)
         blockEnergyKVAhLagValueMin = cJSON_GetObjectItem(cJSON_GetObjectItem(blockEnergyLimits, "kVAh_lag"), "lower_limit")->valueint;
         blockEnergyKVAhLagValueMax = cJSON_GetObjectItem(cJSON_GetObjectItem(blockEnergyLimits, "kVAh_lag"), "upper_limit")->valueint;
         blockEnergyKVAhLeadValueMin = cJSON_GetObjectItem(cJSON_GetObjectItem(blockEnergyLimits, "kVAh_lead"), "lower_limit")->valueint;
         blockEnergyKVAhLeadValueMax = cJSON_GetObjectItem(cJSON_GetObjectItem(blockEnergyLimits, "kVAh_lead"), "upper_limit")->valueint;
         blockEnergyKVAhImportValueMin = cJSON_GetObjectItem(cJSON_GetObjectItem(blockEnergyLimits, "kVAh_import"), "lower_limit")->valueint;
         blockEnergyKVAhImportValueMax = cJSON_GetObjectItem(cJSON_GetObjectItem(blockEnergyLimits, "kVAh_import"), "upper_limit")->valueint;
+#endif
     }
+
+#ifdef SINGLE_PHASE
+    cJSON* signedPowerFactorLimits = cJSON_GetObjectItem(json, "signed_power_factor_limits");
+    if (signedPowerFactorLimits)
+    {
+        signedPowerFactorValueMin = cJSON_GetObjectItem(signedPowerFactorLimits, "lower_limit")->valueint; // Convert to integer
+        signedPowerFactorValueMax = cJSON_GetObjectItem(signedPowerFactorLimits, "upper_limit")->valueint; // Convert to integer
+    }
+
+    cJSON* powerLimits = cJSON_GetObjectItem(json, "power_limits");
+    if (powerLimits)
+    {
+        activePowerValueMin = cJSON_GetObjectItem(cJSON_GetObjectItem(powerLimits, "active_power"), "lower_limit")->valueint; // Convert to integer
+        activePowerValueMax = cJSON_GetObjectItem(cJSON_GetObjectItem(powerLimits, "active_power"), "upper_limit")->valueint; // Convert to integer
+        apparentPowerValueMin = cJSON_GetObjectItem(cJSON_GetObjectItem(powerLimits, "apparent_power"), "lower_limit")->valueint; // Convert to integer
+        apparentPowerValueMax = cJSON_GetObjectItem(cJSON_GetObjectItem(powerLimits, "apparent_power"), "upper_limit")->valueint; // Convert to integer
+    }
+#endif
 
     // cJSON* cumulativeEnergyLimits = cJSON_GetObjectItem(json, "cumulative_energy_limits");
     // if (cumulativeEnergyLimits)
