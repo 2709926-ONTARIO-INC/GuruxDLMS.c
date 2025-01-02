@@ -49,7 +49,7 @@ static uint32_t blockEnergyKWhExportValueMin = 0, blockEnergyKWhExportValueMax =
 static uint32_t neutralCurrentValueMin = 0, neutralCurrentValueMax = 10 * 1000;
 static uint32_t activePowerValueMin = 0, activePowerValueMax = 100 * 10;
 static uint32_t apparentPowerValueMin = 0, apparentPowerValueMax = 100 * 10;
-static uint32_t signedPowerFactorValueMin = 1 * 1000, signedPowerFactorValueMax = 9.9 * 1000;
+static uint32_t signedPowerFactorValueMin = 0.1 * 1000, signedPowerFactorValueMax = 0.99 * 1000;
 
 // Garbage counters for each variable of single phase meter
 static int neutralCurrentCounter = 0;
@@ -112,9 +112,9 @@ static uint32_t voltageL2ValueMin = 108 * 1000, voltageL2ValueMax = 112 * 1000;
 static uint32_t voltageL3ValueMin = 108 * 1000, voltageL3ValueMax = 112* 1000;
 static uint32_t currentL2ValueMin = 0, currentL2ValueMax = 10 * 100000;
 static uint32_t currentL3ValueMin = 0, currentL3ValueMax = 10 * 100000;
-static uint32_t powerFactorL1ValueMin = 1 * 1000, powerFactorL1ValueMax = 9.9 * 1000;
-static uint32_t powerFactorL2ValueMin = 1 * 1000, powerFactorL2ValueMax = 9.9 * 1000;
-static uint32_t powerFactorL3ValueMin = 1* 1000, powerFactorL3ValueMax = 9.9 * 1000;
+static uint32_t powerFactorL1ValueMin = 0.1 * 1000, powerFactorL1ValueMax = 0.99 * 1000;
+static uint32_t powerFactorL2ValueMin = 0.1 * 1000, powerFactorL2ValueMax = 0.99 * 1000;
+static uint32_t powerFactorL3ValueMin = 0.1* 1000, powerFactorL3ValueMax = 0.99 * 1000;
 static uint32_t blockEnergyKVAhLagValueMin = 0, blockEnergyKVAhLagValueMax = 100 * 100;
 static uint32_t blockEnergyKVAhLeadValueMin = 0, blockEnergyKVAhLeadValueMax = 100 * 100;
 static uint32_t blockEnergyKVAhImportValueMin = 0, blockEnergyKVAhImportValueMax = 100 * 100;
@@ -185,8 +185,13 @@ uint32_t currentL1AverageValue = 0;
 
 
 // Define variables for upper and lower limits
-static uint32_t voltageL1ValueMin = 108 * 1000, voltageL1ValueMax = 112* 1000;
+#ifdef SINGLE_PHASE
+static uint32_t voltageL1ValueMin = 228 * 1000, voltageL1ValueMax = 232 * 1000;
+static uint32_t currentL1ValueMin = 0, currentL1ValueMax = 10 * 1000;
+#elif defined(THREE_PHASE)
+static uint32_t voltageL1ValueMin = 108 * 1000, voltageL1ValueMax = 112 * 1000;
 static uint32_t currentL1ValueMin = 0, currentL1ValueMax = 10 * 100000;
+#endif
 static uint32_t frequencyValueMin = 498 * 1000, frequencyValueMax = 502 * 1000;
 static uint32_t blockEnergyKWhImportValueMin = 0, blockEnergyKWhImportValueMax = 100 * 100;
 
