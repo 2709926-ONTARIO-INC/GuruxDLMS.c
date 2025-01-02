@@ -1,0 +1,4 @@
+Pending work:-
+4. Add back buttons
+7. Add a drop down to select specific meter in profile page
+8. Add a table to display data in profile page
