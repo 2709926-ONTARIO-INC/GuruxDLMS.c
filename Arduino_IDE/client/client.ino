@@ -317,6 +317,76 @@ int com_updateInvocationCounter(const char* invocationCounter)
   return ret;
 }
 
+int com_initializeOpticalHead()
+{
+  int baudRate;
+  if (Client.GetInterfaceType() == DLMS_INTERFACE_TYPE_HDLC_WITH_MODE_E)
+  {
+    // Optical probes work with 300 bps 7E1:
+    Serial.begin(300, SERIAL_7E1);
+    static char DATA[6] = "/?!\r\n";
+    //Send data.
+    if (Serial.write(DATA, sizeof(DATA)) != sizeof(DATA))
+    {
+      //If failed to write all bytes.
+      GXTRACE(GET_STR_FROM_EEPROM("Failed to write all data to the serial port.\n"), NULL);
+    }
+    String data = Serial.readStringUntil('\n');
+    if (data[0] != '/')
+    {
+      GXTRACE(GET_STR_FROM_EEPROM("Failed to to receive IEC reply from serial port.\n"), NULL);
+      return DLMS_ERROR_CODE_SEND_FAILED;
+    }
+    //Get used baud rate.
+    switch (data[4])
+    {
+      case '0':
+        baudRate = 300;
+        break;
+      case '1':
+        baudRate = 600;
+        break;
+      case '2':
+        baudRate = 1200;
+        break;
+      case '3':
+        baudRate = 2400;
+        break;
+      case '4':
+        baudRate = 4800;
+        break;
+      case '5':
+        baudRate = 9600;
+        break;
+      case '6':
+        baudRate = 19200;
+        break;
+      default:
+        return DLMS_ERROR_CODE_INVALID_PARAMETER;
+    }
+    //Send ACK
+    unsigned char buff[6];
+    buff[0] = 0x06;
+    //Send Protocol control character
+    buff[1] = '2';// "2" HDLC protocol procedure (Mode E)
+    buff[2] = (unsigned char)data[4];
+    buff[3] = '2';
+    buff[4] = (char)0x0D;
+    buff[5] = 0x0A;
+    if (Serial.write(buff, sizeof(buff)) != sizeof(buff))
+    {
+      //If failed to write all bytes.
+      GXTRACE(GET_STR_FROM_EEPROM("Failed to write all data to the serial port.\n"), NULL);
+    }
+    Serial.flush();
+    Serial.readBytes(buff, sizeof(buff));
+    Serial.begin(baudRate, SERIAL_8N1);
+    //Some meters need this sleep. Do not remove.
+    delay(800);
+  }
+  return 0;
+}
+
 //Initialize connection to the meter.
 int com_initializeConnection()
 {
@@ -329,7 +399,8 @@ int com_initializeConnection()
 
 #ifndef DLMS_IGNORE_HDLC
   //Get meter's send and receive buffers size.
-  if ((ret = Client.SnrmRequest(&messages)) != 0 ||
+  if ((ret = com_initializeOpticalHead()) != 0 ||
+      (ret = Client.SnrmRequest(&messages)) != 0 ||
       (ret = com_readDataBlock(&messages, &reply)) != 0 ||
       (ret = Client.ParseUAResponse(&reply.data)) != 0)
   {
@@ -757,7 +828,6 @@ int com_readValues()
 {
   gxByteBuffer attributes;
   unsigned char ch;
-  char* data = NULL;
   gxObject* object;
   unsigned long index;
   int ret, pos;
@@ -987,8 +1057,16 @@ void setup() {
   Serial1.begin(115200);
 
   // start serial port at 9600 bps:
-  Serial.begin(9600);
-  while (!Serial) {
+ if (Client.GetInterfaceType() == DLMS_INTERFACE_TYPE_HDLC_WITH_MODE_E)
+  {
+    // Optical probes work with 300 bps 7E1:
+    Serial.begin(300, SERIAL_7E1);
+  }
+  else
+  {
+    Serial.begin(9600, SERIAL_8N1);    
+  }
+  while (!Serial1) {
     ; // wait for serial port to connect. Needed for native USB port only
   }
 }
