@@ -86,24 +86,24 @@ class ParameterPopup(QWidget):
                 config_data = json.loads(f.read())
 
             # Extract values from the table and update the JSON structure
-            config_data["voltage_limits"]["lower_limit"] = int(input_table.item(0, 1).text())
-            config_data["voltage_limits"]["upper_limit"] = int(input_table.item(0, 2).text())
+            config_data["voltage_limits"]["lower_limit"] = int(input_table.item(0, 1).text()) * 1000
+            config_data["voltage_limits"]["upper_limit"] = int(input_table.item(0, 2).text()) * 1000
 
-            config_data["current_limits"]["phase_current"]["lower_limit"] = int(input_table.item(1, 1).text())
-            config_data["current_limits"]["phase_current"]["upper_limit"] = int(input_table.item(1, 2).text())
-            config_data["current_limits"]["neutral_current"]["lower_limit"] = int(input_table.item(1, 1).text())
-            config_data["current_limits"]["neutral_current"]["upper_limit"] = int(input_table.item(1, 2).text())
+            config_data["current_limits"]["phase_current"]["lower_limit"] = int(input_table.item(1, 1).text()) * 1000
+            config_data["current_limits"]["phase_current"]["upper_limit"] = int(input_table.item(1, 2).text()) * 1000
+            config_data["current_limits"]["neutral_current"]["lower_limit"] = int(input_table.item(1, 1).text()) * 1000
+            config_data["current_limits"]["neutral_current"]["upper_limit"] = int(input_table.item(1, 2).text()) * 1000
             
-            config_data["signed_power_factor_limits"]["lower_limit"] = int(input_table.item(2, 1).text())
-            config_data["signed_power_factor_limits"]["upper_limit"] = int(input_table.item(2, 2).text())
+            config_data["signed_power_factor_limits"]["lower_limit"] = int(input_table.item(2, 1).text()) * 1000
+            config_data["signed_power_factor_limits"]["upper_limit"] = int(input_table.item(2, 2).text()) * 1000
             
-            config_data["frequency_limits"]["lower_limit"] = int(input_table.item(3, 1).text())
-            config_data["frequency_limits"]["upper_limit"] = int(input_table.item(3, 2).text())
+            config_data["frequency_limits"]["lower_limit"] = int(input_table.item(3, 1).text()) * 1000
+            config_data["frequency_limits"]["upper_limit"] = int(input_table.item(3, 2).text()) * 1000
 
-            config_data["block_energy_limits"]["kWh_import"]["lower_limit"] = int(input_table.item(4, 1).text())
-            config_data["block_energy_limits"]["kWh_import"]["upper_limit"] = int(input_table.item(4, 2).text())
-            config_data["block_energy_limits"]["kWh_export"]["lower_limit"] = int(input_table.item(4, 1).text())
-            config_data["block_energy_limits"]["kWh_export"]["upper_limit"] = int(input_table.item(4, 2).text())
+            config_data["block_energy_limits"]["kWh_import"]["lower_limit"] = int(input_table.item(4, 1).text()) * 100
+            config_data["block_energy_limits"]["kWh_import"]["upper_limit"] = int(input_table.item(4, 2).text()) * 100
+            config_data["block_energy_limits"]["kWh_export"]["lower_limit"] = int(input_table.item(4, 1).text()) * 100
+            config_data["block_energy_limits"]["kWh_export"]["upper_limit"] = int(input_table.item(4, 2).text()) * 100
 
             with open("GuruxDLMSSimpleServerExample\Python_GUI\single_phase_config.json", "w") as f:
                 f.write(json.dumps(config_data))
@@ -113,8 +113,8 @@ class ParameterPopup(QWidget):
                 config_data = json.loads(f.read())
 
         # Extract values from the table and update the JSON structure
-        voltage_value_min = int(input_table.item(0, 1).text())
-        voltage_value_max = int(input_table.item(0, 2).text())
+        voltage_value_min = int(input_table.item(0, 1).text()) * 1000
+        voltage_value_max = int(input_table.item(0, 2).text()) * 1000
         config_data["voltage_limits"]["L1"]["lower_limit"] = voltage_value_min
         config_data["voltage_limits"]["L1"]["upper_limit"] = voltage_value_max
         config_data["voltage_limits"]["L2"]["lower_limit"] = voltage_value_min
@@ -122,8 +122,8 @@ class ParameterPopup(QWidget):
         config_data["voltage_limits"]["L3"]["lower_limit"] = voltage_value_min
         config_data["voltage_limits"]["L3"]["upper_limit"] = voltage_value_max
         
-        current_value_min = int(input_table.item(1, 1).text())
-        current_value_max = int(input_table.item(1, 2).text())
+        current_value_min = int(input_table.item(1, 1).text()) * 100000
+        current_value_max = int(input_table.item(1, 2).text()) * 100000
         config_data["current_limits"]["L1"]["lower_limit"] = current_value_min
         config_data["current_limits"]["L1"]["upper_limit"] = current_value_max
         config_data["current_limits"]["L2"]["lower_limit"] = current_value_min
@@ -131,8 +131,8 @@ class ParameterPopup(QWidget):
         config_data["current_limits"]["L3"]["lower_limit"] = current_value_min
         config_data["current_limits"]["L3"]["upper_limit"] = current_value_max
         
-        power_factor_value_min = int(input_table.item(2, 1).text())
-        power_factor_value_max = int(input_table.item(2, 2).text())
+        power_factor_value_min = int(input_table.item(2, 1).text()) * 1000
+        power_factor_value_max = int(input_table.item(2, 2).text()) * 1000
         config_data["power_factor_limits"]["L1"]["lower_limit"] = power_factor_value_min
         config_data["power_factor_limits"]["L1"]["upper_limit"] = power_factor_value_max
         config_data["power_factor_limits"]["L2"]["lower_limit"] = power_factor_value_min
@@ -140,12 +140,12 @@ class ParameterPopup(QWidget):
         config_data["power_factor_limits"]["L3"]["lower_limit"] = power_factor_value_min
         config_data["power_factor_limits"]["L3"]["upper_limit"] = power_factor_value_max
 
-        config_data["frequency_limits"]["lower_limit"] = int(input_table.item(3, 1).text())
-        config_data["frequency_limits"]["upper_limit"] = int(input_table.item(3, 2).text())
+        config_data["frequency_limits"]["lower_limit"] = int(input_table.item(3, 1).text()) * 1000
+        config_data["frequency_limits"]["upper_limit"] = int(input_table.item(3, 2).text()) * 1000
 
         # Extracting energy values for block energy limits
-        block_energy_value_min = int(input_table.item(4, 1).text())
-        block_energy_value_max = int(input_table.item(4, 2).text())
+        block_energy_value_min = int(input_table.item(4, 1).text()) * 100
+        block_energy_value_max = int(input_table.item(4, 2).text()) * 100
         config_data["block_energy_limits"]["kWh_import"]["lower_limit"] = block_energy_value_min
         config_data["block_energy_limits"]["kWh_import"]["upper_limit"] = block_energy_value_max
         config_data["block_energy_limits"]["kVAh_lag"]["lower_limit"] = block_energy_value_min
