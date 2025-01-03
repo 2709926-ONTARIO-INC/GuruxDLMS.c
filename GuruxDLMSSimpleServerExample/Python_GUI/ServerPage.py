@@ -82,7 +82,7 @@ class ParameterPopup(QWidget):
         meter_type = self.parent_table.cellWidget(row_no, 0).currentText()
 
         if meter_type == "Single Phase":
-            with open("GuruxDLMSSimpleServerExample\Python_GUI\single_phase_config.json", "r") as f:
+            with open(r"GuruxDLMSSimpleServerExample\Python_GUI\single_phase_config.json", "r") as f:
                 config_data = json.loads(f.read())
 
             # Extract values from the table and update the JSON structure
@@ -105,7 +105,7 @@ class ParameterPopup(QWidget):
             config_data["block_energy_limits"]["kWh_export"]["lower_limit"] = int(input_table.item(4, 1).text()) * 100
             config_data["block_energy_limits"]["kWh_export"]["upper_limit"] = int(input_table.item(4, 2).text()) * 100
 
-            with open("GuruxDLMSSimpleServerExample\Python_GUI\single_phase_config.json", "w") as f:
+            with open(r"GuruxDLMSSimpleServerExample\Python_GUI\single_phase_config.json", "w") as f:
                 f.write(json.dumps(config_data))
 
         else:
@@ -168,7 +168,7 @@ class ServerPage(QMainWindow):
         self.setStyleSheet("background-color: #F1F1F1;")
 
         # Main layout
-        main_layout = QVBoxLayout(self)
+        main_layout = QVBoxLayout()
         main_layout.setAlignment(Qt.AlignCenter)
 
         title_label = createLabel("Please enter the server details", 20, "darkblue")
