@@ -13,10 +13,8 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
-from meterConfig import MeterConfig
-from utils import createLabel, open_next_page
+from utils import createLabel, open_next_page, open_previous_page
 import sys
-
 
 class ServerPage(QMainWindow):
     def __init__(self):
@@ -36,19 +34,21 @@ class ServerPage(QMainWindow):
         main_layout.addWidget(title_label)
 
         self.table = QTableWidget(self)
-        self.table.setColumnCount(7)  # Updated column count
+        self.table.setColumnCount(7) 
+
         self.table.setHorizontalHeaderLabels(
             [
                 "Type of Meter",
                 "No. of Meters",
-                "Path to Binary file",
-                "Path to Config file",
+                "Manufacturer",
                 "Starting Port No.",
                 "Starting Instance no.",
                 "Garbage Values",
+                "Parameters"
             ]
         )
-        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+
+        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch) 
         self.table.setStyleSheet(
             "QTableWidget {font-size: 16px; gridline-color: #dcdcdc; background-color: white;}"
             "QHeaderView::section { background-color: #f0f0f0; font-weight: bold; padding: 6px;}"
@@ -58,6 +58,15 @@ class ServerPage(QMainWindow):
 
         button_layout = QHBoxLayout()
         button_layout.setAlignment(Qt.AlignCenter)
+
+        back_btn = QPushButton("Back", self)
+        back_btn.clicked.connect(lambda: self.openPrevPage())
+        back_btn.setFont(QFont("Arial", 12))
+        back_btn.setMinimumWidth(100)
+        back_btn.setStyleSheet(
+            "background-color: white; border: 1px solid black; border-radius: 5px;padding:8px"
+        )
+        button_layout.addWidget(back_btn)
 
         add_btn = QPushButton("Add Row", self)
         add_btn.clicked.connect(lambda: self.addRow())
@@ -96,21 +105,20 @@ class ServerPage(QMainWindow):
                 combobox.addItems(meter_types)
                 combobox.setStyleSheet("QComboBox { text-align: center; }")  # Center align text
                 self.table.setCellWidget(row_index, column, combobox)
-            elif column == 6:  # Garbage Values (Checkbox)
+            elif column == 5: 
                 # Create a custom widget for the checkbox
                 checkbox_widget = QWidget()
                 checkbox = QCheckBox()
-                checkbox_layout = QHBoxLayout(checkbox_widget)
+                checkbox_layout = QHBoxLayout()
                 checkbox_layout.addWidget(checkbox)
                 checkbox_layout.setAlignment(Qt.AlignCenter)  # Center align the checkbox
                 checkbox_layout.setContentsMargins(0, 0, 0, 0)  # Remove extra padding
+                checkbox_widget.setLayout(checkbox_layout)
                 self.table.setCellWidget(row_index, column, checkbox_widget)
             else:
                 item = QTableWidgetItem("")
                 item.setTextAlignment(Qt.AlignCenter)  # Center align text
-                item.setToolTip(
-                    "Enter text"
-                )  # Tooltip for better UX when text is truncated
+                item.setToolTip("Enter text")  # Tooltip for better UX when text is truncated
                 self.table.setItem(row_index, column, item)
 
     def printTableData(self):
@@ -123,8 +131,8 @@ class ServerPage(QMainWindow):
                 if column == 0:  # Type of Meter (Dropdown)
                     combobox = self.table.cellWidget(row, column)
                     if combobox is not None:
-                        row_data.append(combobox.currentText())
-                elif column == 6:  # Garbage Values (Checkbox)
+                        row_data.append(str(combobox.currentText()))
+                elif column == 5:  # Garbage Values (Checkbox)
                     checkbox_widget = self.table.cellWidget(row, column)
                     checkbox = checkbox_widget.layout().itemAt(0).widget()
                     row_data.append("Checked" if checkbox.isChecked() else "Unchecked")
@@ -133,6 +141,17 @@ class ServerPage(QMainWindow):
                     row_data.append(item.text() if item else "")
             print(f"Row {row + 1}: {row_data}")
 
+        self.openNextPage()
+
+    def openNextPage(self):
+        from meterConfig import MeterConfig
+        next_page = MeterConfig()
+        open_next_page(self, next_page)
+
+    def openPrevPage(self):
+        from loginPage import LoginPage
+        prev_page = LoginPage()
+        open_previous_page(self, prev_page)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

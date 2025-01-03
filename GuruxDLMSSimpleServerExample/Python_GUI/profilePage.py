@@ -1,8 +1,9 @@
-from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QVBoxLayout, QHBoxLayout, QTableWidget, QHeaderView, QPushButton
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QVBoxLayout, QHBoxLayout, QTableWidget, QHeaderView, QPushButton, QComboBox
+from PyQt5.QtGui import QPixmap, QFont
 from PyQt5.QtCore import Qt
-from utils import createLabel
+from utils import createLabel, open_previous_page
 import os
+import json
 
 class ProfileTable(QWidget):
     def __init__(self):
@@ -12,9 +13,10 @@ class ProfileTable(QWidget):
     def createTable(self):
         table_layout = QVBoxLayout()
         table_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        table = QTableWidget(0,3)
-        table.setHorizontalHeaderLabels(["Column 1", "Column 2", "Column 3"])
+        table = QTableWidget()
+        table.setHorizontalHeaderLabels([])
         table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        table.setEditTriggers(QTableWidget.NoEditTriggers)
         table_layout.addWidget(table)
         self.setLayout(table_layout)
 
@@ -55,7 +57,40 @@ class ProfilePage(QWidget):
             container = self.createClickableContainer(image_path, label_text)
             container_layout.addWidget(container)
 
+        selection = ["Subtest", "Meter Type", "Meter No."]
+        f =  open("simulation.json")
+        meter_data = json.load(f)
+        for item in selection:
+            input_container = QWidget()
+            input_container.setMaximumSize(200, 100)
+            select_layout = QVBoxLayout()
+            label = createLabel(item, 12)
+            input = QComboBox()
+            input.setStyleSheet("background-color: white;")
+            if item == "Meter Type":
+                input.addItems(["Single Phase", "Three Phase"])
+            elif item == "Subtest":
+                for i in meter_data:
+                    input.addItem(i[0])
+            select_layout.addWidget(label)
+            select_layout.addWidget(input)
+            input_container.setLayout(select_layout)
+            container_layout.addWidget(input_container)
+
         self.main_layout.addLayout(container_layout)
+
+        back_btn = QPushButton("Back", self)
+        back_btn.clicked.connect(lambda: self.openPrevPage())
+        back_btn.setFont(QFont("Arial", 12))
+        back_btn.setMinimumWidth(100)
+        back_btn.setStyleSheet(
+            "background-color: white; border: 1px solid black; border-radius: 5px;padding:8px"
+        )
+
+        button_layout = QHBoxLayout()
+        button_layout.setAlignment(Qt.AlignCenter)
+        button_layout.addWidget(back_btn)
+        self.main_layout.addLayout(button_layout)
 
     def createClickableContainer(self, image_path, label_text):
         # Container widget
@@ -86,11 +121,17 @@ class ProfilePage(QWidget):
     
     def addTable(self):
         table = ProfileTable()
+        header_labels = ["Nameplate", ["Meter Serial Number", "Manufacturer Name", "Firmware Version For Meter", ]]
         if (self.table):
             self.main_layout.replaceWidget(self.table, table)
         else:
             self.table = table
             self.main_layout.addWidget(table)
+
+    def openPrevPage(self):
+        from eventsSimulation import EventSimulationApp
+        prev_page = EventSimulationApp()
+        open_previous_page(self, prev_page)
 
 if __name__ == '__main__':
     import sys

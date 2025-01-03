@@ -12,7 +12,12 @@ def createLabel(text, fontsize=16, color="black",alignment = True):
     return label
 
 def open_next_page(self, page):
-       """Open the next page and close the current window."""
-       self.next_page = page  # Create an instance of the next page
-       self.next_page.show()  # Show the next page
-       self.close()
+    """Open the next page and close the current window."""
+    self.next_page = page  # Create an instance of the next page
+    self.next_page.show()  # Show the next page
+    self.close()
+
+def open_previous_page(self, page):
+    self.prev_page = page
+    self.prev_page.show()
+    self.close() 
