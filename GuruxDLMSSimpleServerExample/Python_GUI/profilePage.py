@@ -5,9 +5,51 @@ from utils import createLabel, open_previous_page
 import os
 import json
 
+class ClickableContainer(QPushButton):
+    def __init__(self, image_path, label_text, parent_page):
+        super().__init__()
+        self.parent_page = parent_page
+        self.table = parent_page.table
+        self.createClickableContainer(image_path, label_text)
+
+    def createClickableContainer(self, image_path, label_text):
+        # Container widget
+        container_layout = QVBoxLayout(self)
+        container_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        # Image
+        image_label = QLabel()
+        pixmap = QPixmap(image_path)
+        pixmap = pixmap.scaled(150, 150, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        
+        image_label.setPixmap(pixmap)
+        image_label.setFixedSize(150, 150)
+        image_label.setAlignment(Qt.AlignCenter)
+
+        # Label
+        text_label = createLabel(label_text, 12)
+
+        container_layout.addWidget(image_label)
+        container_layout.addWidget(text_label)
+
+        self.setMinimumSize(175,210)
+        self.clicked.connect(lambda: self.addTable())
+        self.setStyleSheet(".QWidget{ border: 1px solid black; }")
+
+    def addTable(self):
+        table = ProfileTable()
+        header_labels = ["Nameplate", ["Meter Serial Number", "Manufacturer Name", "Firmware Version For Meter", ]]
+        if (self.parent_page.table):
+            self.parent_page.main_layout.replaceWidget(self.table, table)
+        else:
+            self.parent_page.table = table
+            self.table = table
+            self.parent_page.main_layout.addWidget(table)
+
 class ProfileTable(QWidget):
     def __init__(self):
         super().__init__()
+        self.table = None
         self.createTable()
 
     def createTable(self):
@@ -23,8 +65,8 @@ class ProfileTable(QWidget):
 class ProfilePage(QWidget):
     def __init__(self):
         super().__init__()
-        self.initUI()
         self.table = None
+        self.initUI()
 
     def initUI(self):
         self.setWindowTitle('Load Profile Page')
@@ -54,7 +96,7 @@ class ProfilePage(QWidget):
 
         # Create containers with unique images and labels
         for image_path, label_text in images_and_labels:
-            container = self.createClickableContainer(image_path, label_text)
+            container = ClickableContainer(image_path, label_text, self)
             container_layout.addWidget(container)
 
         selection = ["Subtest", "Meter Type", "Meter No."]
@@ -90,43 +132,7 @@ class ProfilePage(QWidget):
         button_layout = QHBoxLayout()
         button_layout.setAlignment(Qt.AlignCenter)
         button_layout.addWidget(back_btn)
-        self.main_layout.addLayout(button_layout)
-
-    def createClickableContainer(self, image_path, label_text):
-        # Container widget
-        container = QPushButton()
-        container_layout = QVBoxLayout(container)
-        container_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        # Image
-        image_label = QLabel()
-        pixmap = QPixmap(image_path)
-        pixmap = pixmap.scaled(150, 150, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-        
-        image_label.setPixmap(pixmap)
-        image_label.setFixedSize(150, 150)
-        image_label.setAlignment(Qt.AlignCenter)
-
-        # Label
-        text_label = createLabel(label_text, 12)
-
-        container_layout.addWidget(image_label)
-        container_layout.addWidget(text_label)
-
-        container.setMinimumSize(175,210)
-        container.clicked.connect(lambda: self.addTable())
-        container.setStyleSheet(".QWidget{ border: 1px solid black; }")
-
-        return container
-    
-    def addTable(self):
-        table = ProfileTable()
-        header_labels = ["Nameplate", ["Meter Serial Number", "Manufacturer Name", "Firmware Version For Meter", ]]
-        if (self.table):
-            self.main_layout.replaceWidget(self.table, table)
-        else:
-            self.table = table
-            self.main_layout.addWidget(table)
+        self.main_layout.addLayout(button_layout) 
 
     def openPrevPage(self):
         from eventsSimulation import EventSimulationApp
