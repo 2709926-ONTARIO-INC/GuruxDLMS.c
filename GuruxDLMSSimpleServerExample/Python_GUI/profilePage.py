@@ -136,7 +136,9 @@ class ProfilePage(QWidget):
             select_layout = QVBoxLayout()
             label = createLabel(item, 12)
             input = QComboBox()
+            input.setFont(QFont("Arial", 12))
             input.setStyleSheet("background-color: white;")
+            input.setMinimumSize
             if item == "Meter Type":
                 input.addItems(["Single Phase", "Three Phase"])
                 input.setObjectName("Metertype")
