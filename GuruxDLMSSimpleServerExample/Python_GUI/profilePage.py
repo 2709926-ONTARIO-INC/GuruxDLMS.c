@@ -27,39 +27,67 @@ class ClickableContainer(QPushButton):
         image_label.setAlignment(Qt.AlignCenter)
 
         # Label
-        text_label = createLabel(label_text, 12)
+        text_label = createLabel(label_text + "\nProfile", 12)
 
         container_layout.addWidget(image_label)
         container_layout.addWidget(text_label)
 
         self.setMinimumSize(175,210)
-        self.clicked.connect(lambda: self.addTable())
+        self.clicked.connect(lambda: self.addTable(label_text))
         self.setStyleSheet(".QWidget{ border: 1px solid black; }")
 
-    def addTable(self):
-        table = ProfileTable()
-        header_labels = ["Nameplate", ["Meter Serial Number", "Manufacturer Name", "Firmware Version For Meter", ]]
+    def addTable(self, label_text):
+        new_table = ProfileTable(label_text, self.parent_page)
+
         if (self.parent_page.table):
-            self.parent_page.main_layout.replaceWidget(self.table, table)
+            self.parent_page.main_layout.replaceWidget(self.parent_page.table, new_table)
+            self.parent_page.table.deleteLater()
         else:
-            self.parent_page.table = table
-            self.table = table
-            self.parent_page.main_layout.addWidget(table)
+            self.parent_page.main_layout.addWidget(new_table)
+        self.parent_page.table = new_table
 
 class ProfileTable(QWidget):
-    def __init__(self):
+    def __init__(self, label_text, parent_page):
         super().__init__()
         self.table = None
-        self.createTable()
+        self.parent_page = parent_page
+        self.createTable(label_text)
 
-    def createTable(self):
+    def createTable(self, label_text):
+        header_labels_single = {"Name Plate": ["Meter Serial Number", "Manufacturer Name", "Firmware Version For Meter", "Meter Type", "Meter Category", "Current Rating", "Year of Manufacture"],
+                                "Block Load": ["Clock", "Average Voltage", "Average Current", "Block Energy-Wh (Imp)", "Block Energy-Wh (Exp)"],
+                                "Daily Load": ["Clock", "Cum. Energy-Wh (Imp)", "Cum. Energy-Wh (Imp)"],
+                                "Billing": ["Cum. Energy-Wh (Imp)", "Cum. Energy-Wh (Exp)"]}
+        
+        header_labels_three = {"Name Plate": ["Meter Serial Number", "Manufacturer Name", "Firmware Version For Meter", "Meter Type", "Meter Category", "Current Rating", "CTR", "PTR", "Year of Manufacture"],
+                               "Block Load": ["Clock", "L1 Voltage Avg", "L2 Voltage Avg", "L3 Voltage Avg", "L1 Current Avg", "L2 Current Avg", "L3 Current Avg", "Block Energy-Wh (Imp)", "Block Energy-VArh, Q1", "Block Energy-VArh, Q4", "Block Energy-VAh (imp)"],
+                               "Daily Load": ["Clock", "Cum. Energy-Wh (Imp)", "Cum. Energy-VArh, Q1", "Cum. Energy-VAh (Imp)"],
+                               "Billing": ["Cum. Energy-Wh (Imp)", "Cum. Energy-VArh, Q1", "Cum. Energy-VArh, Q1",  "Cum. Energy-VArh, Q4", "Cum. Energy-VAh (Imp)"]}
+        
+        meter_type_combobox = self.parent_page.findChild(QComboBox, "Metertype")
+        if (meter_type_combobox and meter_type_combobox.currentText() == "Single Phase"):
+            header_labels = header_labels_single
+        else:
+            header_labels = header_labels_three
+
+        if label_text in header_labels:
+            headers = header_labels[label_text]
+        else:
+            headers = []
+
         table_layout = QVBoxLayout()
         table_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
         table = QTableWidget()
-        table.setHorizontalHeaderLabels([])
+        table.setColumnCount(len(headers))
+        table.setHorizontalHeaderLabels(headers)
         table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         table.setEditTriggers(QTableWidget.NoEditTriggers)
         table_layout.addWidget(table)
+
+        # Set layout for the current widget
+        if self.layout():  # Check if the widget already has a layout
+            QWidget().setLayout(self.layout())
         self.setLayout(table_layout)
 
 class ProfilePage(QWidget):
@@ -88,10 +116,10 @@ class ProfilePage(QWidget):
         # List of images and labels
         script_dir = os.path.dirname(os.path.abspath(__file__))
         images_and_labels = [
-            (os.path.join(script_dir, "assets", "images", "instant.png"), "Name Plate\nProfile"),
-            (os.path.join(script_dir, "assets", "images", "mins15.png"), "Block Load\nProfile"),
-            (os.path.join(script_dir, "assets", "images", "hrs24.png"), "Daily Load\nProfile"),
-            (os.path.join(script_dir, "assets", "images", "days30.png"), "Billing\nProfile"),
+            (os.path.join(script_dir, "assets", "images", "instant.png"), "Name Plate"),
+            (os.path.join(script_dir, "assets", "images", "mins15.png"), "Block Load"),
+            (os.path.join(script_dir, "assets", "images", "hrs24.png"), "Daily Load"),
+            (os.path.join(script_dir, "assets", "images", "days30.png"), "Billing"),
         ]
 
         # Create containers with unique images and labels
@@ -111,6 +139,7 @@ class ProfilePage(QWidget):
             input.setStyleSheet("background-color: white;")
             if item == "Meter Type":
                 input.addItems(["Single Phase", "Three Phase"])
+                input.setObjectName("Metertype")
             elif item == "Subtest":
                 for i in meter_data:
                     input.addItem(i[0])
