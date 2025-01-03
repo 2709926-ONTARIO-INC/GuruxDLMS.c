@@ -1,8 +1,7 @@
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QVBoxLayout, QHBoxLayout, QMainWindow, QLineEdit, QTableWidget, QTableWidgetItem, QPushButton, QComboBox, QScrollArea, QHeaderView
 from PyQt5.QtGui import QFont
 from PyQt5.QtCore import Qt
-from simulationPage import SimulationDetailsApp
-from utils import createLabel, open_next_page
+from utils import createLabel, open_next_page, open_previous_page
 import json
 
 class Meter(QWidget):
@@ -133,17 +132,36 @@ class MeterConfig(QMainWindow):
         scroll.setWidget(container_widget)
         main_layout.addWidget(scroll)
 
+        back_btn = QPushButton("Back", self)
+        back_btn.clicked.connect(lambda: self.openPrevPage())
+        back_btn.setFont(QFont("Arial", 12))
+        back_btn.setMinimumWidth(100)
+        back_btn.setStyleSheet(
+            "background-color: white; border: 1px solid black; border-radius: 5px;padding:8px"
+        )
+
         # Submit button
         submit_button = QPushButton("Submit",self)
-        next_page = SimulationDetailsApp()
-        submit_button.clicked.connect(lambda: open_next_page(self, next_page))
+        submit_button.clicked.connect(lambda: self.openNextPage())
         submit_button.setFont(QFont("Arial", 12))
         submit_button.setMinimumWidth(100)
         submit_button.setStyleSheet("background-color: white; border: 1px solid black; border-radius: 5px;padding:8px")
+
         button_layout = QHBoxLayout()
         button_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        button_layout.addWidget(back_btn)
         button_layout.addWidget(submit_button)
         main_layout.addLayout(button_layout)
+
+    def openNextPage(self):
+        from eventsSimulation import EventSimulationApp
+        next_page = EventSimulationApp()
+        open_next_page(self, next_page)
+
+    def openPrevPage(self):
+        from ServerPage import ServerPage
+        prev_page = ServerPage()
+        open_previous_page(self, prev_page)
 
 if __name__ == '__main__':
     import sys
