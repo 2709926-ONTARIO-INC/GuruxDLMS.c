@@ -106,6 +106,7 @@ class MeterConfig(QMainWindow):
         self.setWindowTitle('Meter Config')
         self.setFixedSize(1550,725)
         self.setStyleSheet("background-color: #F1F1F1;")
+        self.setWindowFlag(Qt.WindowStaysOnTopHint)
 
         # Layouts
         main_widget = QWidget()

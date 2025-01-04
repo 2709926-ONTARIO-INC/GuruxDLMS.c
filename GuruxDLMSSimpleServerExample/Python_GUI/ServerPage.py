@@ -28,6 +28,8 @@ class ParameterPopup(QWidget):
         self.setWindowTitle("Input Parameters")
         self.setMinimumSize(500, 310)
         self.setStyleSheet("background-color: #F1F1F1;")
+        self.setWindowModality(Qt.ApplicationModal)
+        self.setWindowFlag(Qt.WindowStaysOnTopHint)
 
         input_table = QTableWidget()
         # Table Styling and Resizing
@@ -166,6 +168,7 @@ class ServerPage(QMainWindow):
         self.setWindowTitle("Server Page")
         self.setFixedSize(1550, 700)
         self.setStyleSheet("background-color: #F1F1F1;")
+        self.setWindowFlag(Qt.WindowStaysOnTopHint)
 
         # Main layout
         main_layout = QVBoxLayout()

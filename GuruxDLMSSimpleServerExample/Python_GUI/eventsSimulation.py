@@ -31,6 +31,8 @@ class EventSimulationApp(QMainWindow):
         super().__init__()
         self.setWindowTitle("Events to be Simulated")
         self.setFixedSize(1550, 725)
+        self.setStyleSheet("background-color: #F1F1F1;")
+        self.setWindowFlag(Qt.WindowStaysOnTopHint)
 
         # Central Widget
         central_widget = QWidget(self)
@@ -52,7 +54,7 @@ class EventSimulationApp(QMainWindow):
 
         # Table Styling and Resizing
         self.table.setStyleSheet(
-            "QTableWidget { border: none; font-size: 16px; gridline-color: #dcdcdc; }"
+            "QTableWidget { border: none; font-size: 16px; gridline-color: #dcdcdc; background-color: white;}"
             "QHeaderView::section { background-color: #f0f0f0; font-weight: bold; padding: 6px; }"
         )
         self.table.verticalHeader().setVisible(False)
