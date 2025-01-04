@@ -1,4 +1,5 @@
 {
+    "manufacturer": "AEW",
     "voltage_limits": {
         "L1": {
             "lower_limit": 108000,

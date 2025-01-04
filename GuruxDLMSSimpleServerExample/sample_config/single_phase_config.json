@@ -1,4 +1,5 @@
 {
+    "manufacturer": "Indian Standard",
     "voltage_limits": {
         "lower_limit": 228000,
         "upper_limit": 232000
@@ -29,16 +30,6 @@
         "kWh_export": {
             "lower_limit": 0,
             "upper_limit": 10000
-        }
-    },
-    "power_limits": {
-        "active_power": {
-            "lower_limit": 0,
-            "upper_limit": 1000
-        },
-        "apparent_power": { 
-            "lower_limit": 0,
-            "upper_limit": 1000
         }
     }
 }

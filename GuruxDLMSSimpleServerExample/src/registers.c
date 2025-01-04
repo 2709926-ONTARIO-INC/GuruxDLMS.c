@@ -197,7 +197,7 @@ static uint32_t blockEnergyKWhImportValueMin = 0, blockEnergyKWhImportValueMax =
 
 
 static char meterSerialNumberValue[64U] = "X0000000";
-static const char* manufacturerNameValue = "SECURE METERS LTD.";
+static char manufacturerNameValue[64U] = "SECURE METERS LTD.";
 #ifdef SINGLE_PHASE
 static const char* firmwareVersionValue = "A1XX02";
 static uint8_t meterTypeValue = 5;
@@ -2118,6 +2118,14 @@ bool setRegisterLimits(const char* filePath)
         return false;
     }
 
+    // Parse and store manufacturer name
+    cJSON *manufacturer = cJSON_GetObjectItem(json, "manufacturer");
+    if (cJSON_IsString(manufacturer) && (manufacturer->valuestring != NULL)) 
+    {
+        strncpy(manufacturerNameValue, manufacturer->valuestring, sizeof(manufacturerNameValue) - 1);
+        manufacturerNameValue[sizeof(manufacturerNameValue) - 1] = '\0'; // Null-terminate
+    }
+
     // Parse and store limits
     cJSON* voltageLimits = cJSON_GetObjectItem(json, "voltage_limits");
     if (voltageLimits)
@@ -2198,15 +2206,6 @@ bool setRegisterLimits(const char* filePath)
     {
         signedPowerFactorValueMin = cJSON_GetObjectItem(signedPowerFactorLimits, "lower_limit")->valueint; // Convert to integer
         signedPowerFactorValueMax = cJSON_GetObjectItem(signedPowerFactorLimits, "upper_limit")->valueint; // Convert to integer
-    }
-
-    cJSON* powerLimits = cJSON_GetObjectItem(json, "power_limits");
-    if (powerLimits)
-    {
-        activePowerValueMin = cJSON_GetObjectItem(cJSON_GetObjectItem(powerLimits, "active_power"), "lower_limit")->valueint; // Convert to integer
-        activePowerValueMax = cJSON_GetObjectItem(cJSON_GetObjectItem(powerLimits, "active_power"), "upper_limit")->valueint; // Convert to integer
-        apparentPowerValueMin = cJSON_GetObjectItem(cJSON_GetObjectItem(powerLimits, "apparent_power"), "lower_limit")->valueint; // Convert to integer
-        apparentPowerValueMax = cJSON_GetObjectItem(cJSON_GetObjectItem(powerLimits, "apparent_power"), "upper_limit")->valueint; // Convert to integer
     }
 #endif
 
