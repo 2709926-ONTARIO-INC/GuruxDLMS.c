@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QVBoxLayout, QHBoxLayout, QMainWindow, QLineEdit, QTableWidget, QTableWidgetItem, QPushButton, QComboBox, QScrollArea, QHeaderView
 from PyQt5.QtGui import QFont
 from PyQt5.QtCore import Qt
-from utils import createLabel, open_next_page, open_previous_page
+from utils import createLabel, open_next_page, open_previous_page, createButton
 import json
 
 class Meter(QWidget):
@@ -89,6 +89,7 @@ class Meter(QWidget):
         delete_btn = QPushButton("Delete")
         delete_btn.setFont(QFont("Arial", 12))
         delete_btn.setStyleSheet("background-color: lightblue; border: 1px solid black;")
+        delete_btn.clicked.connect(lambda: self.delete_meter())
 
         button_bar.addWidget(save_btn)
         button_bar.addWidget(edit_btn)
@@ -96,6 +97,9 @@ class Meter(QWidget):
         meter_layout.addLayout(button_bar)
             
         self.setLayout(meter_layout)
+
+    def delete_meter():
+        pass
 
 class MeterConfig(QMainWindow):
     def __init__(self):
@@ -133,20 +137,12 @@ class MeterConfig(QMainWindow):
         scroll.setWidget(container_widget)
         main_layout.addWidget(scroll)
 
-        back_btn = QPushButton("Back", self)
+        back_btn = createButton("Back")
         back_btn.clicked.connect(lambda: self.openPrevPage())
-        back_btn.setFont(QFont("Arial", 12))
-        back_btn.setMinimumWidth(100)
-        back_btn.setStyleSheet(
-            "background-color: white; border: 1px solid black; border-radius: 5px;padding:8px"
-        )
 
         # Submit button
-        submit_button = QPushButton("Submit",self)
+        submit_button = createButton("Submit")
         submit_button.clicked.connect(lambda: self.openNextPage())
-        submit_button.setFont(QFont("Arial", 12))
-        submit_button.setMinimumWidth(100)
-        submit_button.setStyleSheet("background-color: white; border: 1px solid black; border-radius: 5px;padding:8px")
 
         button_layout = QHBoxLayout()
         button_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)

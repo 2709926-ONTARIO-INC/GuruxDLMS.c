@@ -5,7 +5,6 @@ from PyQt5.QtWidgets import (
     QTableWidget,
     QApplication,
     QHBoxLayout,
-    QPushButton,
     QHeaderView,
     QTableWidgetItem,
     QCheckBox,
@@ -13,10 +12,10 @@ from PyQt5.QtWidgets import (
     QMessageBox
 )
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QFont
-from utils import createLabel, open_next_page, open_previous_page
+from utils import createLabel, open_next_page, open_previous_page, createButton
 import sys
 import json
+import os
 
 class ParameterPopup(QWidget):
     def __init__(self, parent_table):
@@ -42,123 +41,158 @@ class ParameterPopup(QWidget):
         input_table.setHorizontalHeaderLabels(["Qty.","Min","Max"])
         input_table.verticalHeader().setVisible(False)
         input_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        input_table.setItem(0,0, QTableWidgetItem("V"))
-        input_table.setItem(1,0, QTableWidgetItem("I"))
-        input_table.setItem(2,0, QTableWidgetItem("P.F"))
-        input_table.setItem(3,0, QTableWidgetItem("f"))
-        input_table.setItem(4,0, QTableWidgetItem("Block Load"))
+        for i, label in enumerate(["V", "I", "P.F", "f", "Block Load"]):
+            input_table.setItem(i, 0, QTableWidgetItem(label))
 
         popup_layout = QVBoxLayout(self)
         popup_layout.addWidget(input_table)
 
-        # Submit button
-        submit_button = QPushButton("Save")
-        submit_button.clicked.connect(lambda: self.save_to_json(input_table))
-        submit_button.setFont(QFont("Arial", 12))
-        submit_button.setMinimumWidth(100)
-        submit_button.setStyleSheet("background-color: white; border: 1px solid black; border-radius: 5px; padding:8px")
+        # Save button
+        save_button = createButton("Save")
+        save_button.clicked.connect(lambda: self.save_to_json(input_table))
 
         button_layout = QHBoxLayout()
         button_layout.setAlignment(Qt.AlignCenter)
-        button_layout.addWidget(submit_button)
+        button_layout.addWidget(save_button)
         popup_layout.addLayout(button_layout)
 
     def save_to_json(self, input_table):
         # Function to check if input is a valid integer
-        def is_valid_integer(value):
-            try:
-                int(value)
-                return True
-            except ValueError:
-                return False
+        def is_valid_input(item):
+            return item and item.text().isdigit()
 
         # Check if all fields have valid input
         for row in range(5):
             for col in range(1, 3):
                 item = input_table.item(row, col)
-                if not item or not is_valid_integer(item.text()):
-                    QMessageBox.warning(self, "Input Error", "Please input a valid value.")
-                    return  # Exit the function if any invalid input is found
+                if not is_valid_input(item):
+                    QMessageBox.warning(self, "Input Error", "Please enter valid values.")
+                    return
             
-        row_no = self.parent_table.rowCount() - 1
-        meter_type = self.parent_table.cellWidget(row_no, 0).currentText()
+        current_row = self.parent_table.currentRow()
+        if current_row == -1:
+            QMessageBox.warning(self, "Selection Error", "Please select a row to save the data.")
+            return
+        meter_type = self.parent_table.cellWidget(current_row, 0).currentText()
+        manufacturer = self.parent_table.item(current_row, 2).text()
+        server_no = "SRV00" + str(current_row+1)
+
+        # Construct the filename
+        file_name = f"{manufacturer}_{server_no}_{meter_type}_config.json"
+        file_path = os.path.join("GuruxDLMSSimpleServerExample", "Python_GUI", file_name)
 
         if meter_type == "Single Phase":
-            with open(r"GuruxDLMSSimpleServerExample\Python_GUI\single_phase_config.json", "r") as f:
-                config_data = json.loads(f.read())
-
-            # Extract values from the table and update the JSON structure
-            config_data["voltage_limits"]["lower_limit"] = int(input_table.item(0, 1).text()) * 1000
-            config_data["voltage_limits"]["upper_limit"] = int(input_table.item(0, 2).text()) * 1000
-
-            config_data["current_limits"]["phase_current"]["lower_limit"] = int(input_table.item(1, 1).text()) * 1000
-            config_data["current_limits"]["phase_current"]["upper_limit"] = int(input_table.item(1, 2).text()) * 1000
-            config_data["current_limits"]["neutral_current"]["lower_limit"] = int(input_table.item(1, 1).text()) * 1000
-            config_data["current_limits"]["neutral_current"]["upper_limit"] = int(input_table.item(1, 2).text()) * 1000
-            
-            config_data["signed_power_factor_limits"]["lower_limit"] = int(input_table.item(2, 1).text()) * 1000
-            config_data["signed_power_factor_limits"]["upper_limit"] = int(input_table.item(2, 2).text()) * 1000
-            
-            config_data["frequency_limits"]["lower_limit"] = int(input_table.item(3, 1).text()) * 1000
-            config_data["frequency_limits"]["upper_limit"] = int(input_table.item(3, 2).text()) * 1000
-
-            config_data["block_energy_limits"]["kWh_import"]["lower_limit"] = int(input_table.item(4, 1).text()) * 100
-            config_data["block_energy_limits"]["kWh_import"]["upper_limit"] = int(input_table.item(4, 2).text()) * 100
-            config_data["block_energy_limits"]["kWh_export"]["lower_limit"] = int(input_table.item(4, 1).text()) * 100
-            config_data["block_energy_limits"]["kWh_export"]["upper_limit"] = int(input_table.item(4, 2).text()) * 100
-
-            with open(r"GuruxDLMSSimpleServerExample\Python_GUI\single_phase_config.json", "w") as f:
-                f.write(json.dumps(config_data))
+            config_data = {
+                "manufacturer": manufacturer,
+                "voltage_limits": {
+                    "lower_limit": int(input_table.item(0, 1).text()) * 1000,
+                    "upper_limit": int(input_table.item(0, 2).text()) * 1000
+                },
+                "current_limits": {
+                    "phase_current": {
+                        "lower_limit": int(input_table.item(1, 1).text()) * 1000,
+                        "upper_limit": int(input_table.item(1, 2).text()) * 1000
+                    },
+                    "neutral_current": {
+                        "lower_limit": int(input_table.item(1, 1).text()) * 1000,
+                        "upper_limit": int(input_table.item(1, 2).text()) * 1000
+                    }
+                },
+                "frequency_limits": {
+                    "lower_limit": int(input_table.item(2, 1).text()) * 1000,
+                    "upper_limit": int(input_table.item(2, 2).text()) * 1000
+                },
+                "signed_power_factor_limits": {
+                    "lower_limit": int(input_table.item(3, 1).text()) * 1000,
+                    "upper_limit": int(input_table.item(3, 2).text()) * 1000
+                },
+                "block_energy_limits": {
+                    "kWh_import": {
+                        "lower_limit": int(input_table.item(4, 1).text()) * 1000,
+                        "upper_limit": int(input_table.item(4, 2).text()) * 1000
+                    },
+                    "kWh_export": {
+                        "lower_limit": int(input_table.item(4, 1).text()) * 1000,
+                        "upper_limit": int(input_table.item(4, 2).text()) * 1000
+                    }
+                }
+            }
 
         else:
-            with open(r"GuruxDLMSSimpleServerExample\Python_GUI\three_phase_config.json", "r") as f:
-                config_data = json.loads(f.read())
+            config_data = {
+                "manufacturer": manufacturer,
+                "voltage_limits": {
+                    "L1": {
+                        "lower_limit": int(input_table.item(0, 1).text()) * 1000,
+                        "upper_limit": int(input_table.item(0, 2).text()) * 1000
+                    },
+                    "L2": {
+                        "lower_limit": int(input_table.item(0, 1).text()) * 1000,
+                        "upper_limit": int(input_table.item(0, 2).text()) * 1000
+                    },
+                    "L3": {
+                        "lower_limit": int(input_table.item(0, 1).text()) * 1000,
+                        "upper_limit": int(input_table.item(0, 2).text()) * 1000
+                    }
+                },
+                "current_limits": {
+                    "L1": {
+                        "lower_limit": int(input_table.item(1, 1).text()) * 100000,
+                        "upper_limit": int(input_table.item(1, 2).text()) * 100000
+                    },
+                    "L2": {
+                        "lower_limit": int(input_table.item(1, 1).text()) * 100000,
+                        "upper_limit": int(input_table.item(1, 2).text()) * 100000
+                    },
+                    "L3": {
+                        "lower_limit": int(input_table.item(1, 1).text()) * 100000,
+                        "upper_limit": int(input_table.item(1, 2).text()) * 100000
+                    }
+                },
+                "frequency_limits": {
+                        "lower_limit": int(input_table.item(2, 1).text()) * 1000,
+                        "upper_limit": int(input_table.item(2, 2).text()) * 1000
+                },
+                "power_factor_limits": {
+                    "L1": {
+                        "lower_limit": int(input_table.item(3, 1).text()) * 1000,
+                        "upper_limit": int(input_table.item(3, 2).text()) * 1000
+                    },
+                    "L2": {
+                        "lower_limit": int(input_table.item(3, 1).text()) * 1000,
+                        "upper_limit": int(input_table.item(3, 2).text()) * 1000
+                    },
+                    "L3": {
+                        "lower_limit": int(input_table.item(3, 1).text()) * 1000,
+                        "upper_limit": int(input_table.item(3, 2).text()) * 1000
+                    }
+                },
+                "block_energy_limits": {
+                    "kWh_import": {
+                        "lower_limit": int(input_table.item(4, 1).text()) * 100,
+                        "upper_limit": int(input_table.item(4, 2).text()) * 100
+                    },
+                    "kVAh_lag": {
+                        "lower_limit": int(input_table.item(4, 1).text()) * 100,
+                        "upper_limit": int(input_table.item(4, 2).text()) * 100
+                    },
+                    "kVAh_lead": {
+                        "lower_limit": int(input_table.item(4, 1).text()) * 100,
+                        "upper_limit": int(input_table.item(4, 2).text()) * 100
+                    },
+                    "kVAh_import": {
+                        "lower_limit": int(input_table.item(4, 1).text()) * 100,
+                        "upper_limit": int(input_table.item(4, 2).text()) * 100
+                    }
+                }
+            }
 
-        # Extract values from the table and update the JSON structure
-        voltage_value_min = int(input_table.item(0, 1).text()) * 1000
-        voltage_value_max = int(input_table.item(0, 2).text()) * 1000
-        config_data["voltage_limits"]["L1"]["lower_limit"] = voltage_value_min
-        config_data["voltage_limits"]["L1"]["upper_limit"] = voltage_value_max
-        config_data["voltage_limits"]["L2"]["lower_limit"] = voltage_value_min
-        config_data["voltage_limits"]["L2"]["upper_limit"] = voltage_value_max
-        config_data["voltage_limits"]["L3"]["lower_limit"] = voltage_value_min
-        config_data["voltage_limits"]["L3"]["upper_limit"] = voltage_value_max
-        
-        current_value_min = int(input_table.item(1, 1).text()) * 100000
-        current_value_max = int(input_table.item(1, 2).text()) * 100000
-        config_data["current_limits"]["L1"]["lower_limit"] = current_value_min
-        config_data["current_limits"]["L1"]["upper_limit"] = current_value_max
-        config_data["current_limits"]["L2"]["lower_limit"] = current_value_min
-        config_data["current_limits"]["L2"]["upper_limit"] = current_value_max
-        config_data["current_limits"]["L3"]["lower_limit"] = current_value_min
-        config_data["current_limits"]["L3"]["upper_limit"] = current_value_max
-        
-        power_factor_value_min = int(input_table.item(2, 1).text()) * 1000
-        power_factor_value_max = int(input_table.item(2, 2).text()) * 1000
-        config_data["power_factor_limits"]["L1"]["lower_limit"] = power_factor_value_min
-        config_data["power_factor_limits"]["L1"]["upper_limit"] = power_factor_value_max
-        config_data["power_factor_limits"]["L2"]["lower_limit"] = power_factor_value_min
-        config_data["power_factor_limits"]["L2"]["upper_limit"] = power_factor_value_max
-        config_data["power_factor_limits"]["L3"]["lower_limit"] = power_factor_value_min
-        config_data["power_factor_limits"]["L3"]["upper_limit"] = power_factor_value_max
+        # Save the configuration to a new JSON file
+        with open(file_path, "w") as f:
+            json.dump(config_data, f, indent=4)
+            
+        self.close()
 
-        config_data["frequency_limits"]["lower_limit"] = int(input_table.item(3, 1).text()) * 1000
-        config_data["frequency_limits"]["upper_limit"] = int(input_table.item(3, 2).text()) * 1000
-
-        # Extracting energy values for block energy limits
-        block_energy_value_min = int(input_table.item(4, 1).text()) * 100
-        block_energy_value_max = int(input_table.item(4, 2).text()) * 100
-        config_data["block_energy_limits"]["kWh_import"]["lower_limit"] = block_energy_value_min
-        config_data["block_energy_limits"]["kWh_import"]["upper_limit"] = block_energy_value_max
-        config_data["block_energy_limits"]["kVAh_lag"]["lower_limit"] = block_energy_value_min
-        config_data["block_energy_limits"]["kVAh_lag"]["upper_limit"] = block_energy_value_max
-        config_data["block_energy_limits"]["kVAh_lead"]["lower_limit"] = block_energy_value_min
-        config_data["block_energy_limits"]["kVAh_lead"]["upper_limit"] = block_energy_value_max
-        config_data["block_energy_limits"]["kVAh_import"]["lower_limit"] = block_energy_value_min
-        config_data["block_energy_limits"]["kVAh_import"]["upper_limit"] = block_energy_value_max
-
-        with open(r"GuruxDLMSSimpleServerExample\Python_GUI\three_phase_config.json", "w") as f:
-            f.write(json.dumps(config_data))
 class ServerPage(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -203,26 +237,17 @@ class ServerPage(QMainWindow):
         button_layout = QHBoxLayout()
         button_layout.setAlignment(Qt.AlignCenter)
 
-        back_btn = QPushButton("Back", self)
+        back_btn = createButton("Back")
         back_btn.clicked.connect(lambda: self.openPrevPage())
-        back_btn.setFont(QFont("Arial", 12))
-        back_btn.setMinimumWidth(100)
-        back_btn.setStyleSheet("background-color: white; border: 1px solid black; border-radius: 5px; padding:8px")
         button_layout.addWidget(back_btn)
 
-        add_btn = QPushButton("Add Row", self)
+        add_btn = createButton("Add Row")
         add_btn.clicked.connect(lambda: self.addRow())
-        add_btn.setFont(QFont("Arial", 12))
-        add_btn.setMinimumWidth(100)
-        add_btn.setStyleSheet("background-color: white; border: 1px solid black; border-radius: 5px;padding:8px")
         button_layout.addWidget(add_btn)
 
         # Submit button
-        submit_button = QPushButton("Submit", self)
+        submit_button = createButton("Submit")
         submit_button.clicked.connect(self.printTableData)
-        submit_button.setFont(QFont("Arial", 12))
-        submit_button.setMinimumWidth(100)
-        submit_button.setStyleSheet("background-color: white; border: 1px solid black; border-radius: 5px; padding:8px")
         button_layout.addWidget(submit_button)
         main_layout.addLayout(button_layout)
 
@@ -241,7 +266,7 @@ class ServerPage(QMainWindow):
             if column == 0:  # Type of Meter (Dropdown)
                 combobox = QComboBox()
                 combobox.addItems(meter_types)
-                combobox.setStyleSheet("QComboBox { text-align: center; }")  # Center align text
+                combobox.setStyleSheet("QComboBox { text-align: center; }")  
                 self.table.setCellWidget(row_index, column, combobox)
             elif column == 5: 
                 # Create a custom widget for the checkbox
@@ -249,41 +274,34 @@ class ServerPage(QMainWindow):
                 checkbox = QCheckBox()
                 checkbox_layout = QHBoxLayout()
                 checkbox_layout.addWidget(checkbox)
-                checkbox_layout.setAlignment(Qt.AlignCenter)  # Center align the checkbox
-                checkbox_layout.setContentsMargins(0, 0, 0, 0)  # Remove extra padding
+                checkbox_layout.setAlignment(Qt.AlignCenter)  
+                checkbox_layout.setContentsMargins(0, 0, 0, 0) 
                 checkbox_widget.setLayout(checkbox_layout)
                 self.table.setCellWidget(row_index, column, checkbox_widget)
             elif column == 6: 
-                push_btn = QPushButton("Open")
-                push_btn.setStyleSheet("background-color: white; border: 1px solid black; border-radius: 5px;padding:8px")
+                push_btn = createButton("Open", 10)
                 popup_window = ParameterPopup(self.table)
                 push_btn.clicked.connect(lambda: popup_window.show())
                 self.table.setCellWidget(row_index, column, push_btn)
             else:
-                item = QTableWidgetItem("")
-                item.setTextAlignment(Qt.AlignCenter)  # Center align text
-                item.setToolTip("Enter text")  # Tooltip for better UX when text is truncated
+                item = QTableWidgetItem()
+                item.setTextAlignment(Qt.AlignCenter)  
                 self.table.setItem(row_index, column, item)
 
     def printTableData(self):
-        row_count = self.table.rowCount()
-        column_count = self.table.columnCount()
-
-        for row in range(row_count):
-            row_data = []
-            for column in range(column_count):
-                if column == 0:  # Type of Meter (Dropdown)
-                    combobox = self.table.cellWidget(row, column)
-                    if combobox is not None:
-                        row_data.append(str(combobox.currentText()))
-                elif column == 5:  # Garbage Values (Checkbox)
-                    checkbox_widget = self.table.cellWidget(row, column)
-                    checkbox = checkbox_widget.layout().itemAt(0).widget()
-                    row_data.append("Checked" if checkbox.isChecked() else "Unchecked")
+        for row in range(self.table.rowCount()):
+            data = []
+            for col in range(self.table.columnCount()):
+                widget = self.table.cellWidget(row, col)
+                if isinstance(widget, QComboBox):
+                    data.append(widget.currentText())
+                elif isinstance(widget, QWidget):
+                    checkbox = widget.layout().itemAt(0).widget()
+                    data.append("Checked" if checkbox.isChecked() else "Unchecked")
                 else:
-                    item = self.table.item(row, column)
-                    row_data.append(item.text() if item else "")
-            print(f"Row {row + 1}: {row_data}")
+                    item = self.table.item(row, col)
+                    data.append(item.text() if item else "")
+            print(f"Row {row + 1}: {data}")
 
         self.openNextPage()
 

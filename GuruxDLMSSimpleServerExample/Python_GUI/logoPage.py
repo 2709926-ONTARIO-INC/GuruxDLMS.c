@@ -1,8 +1,7 @@
-from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QVBoxLayout, QMainWindow, QPushButton, QHBoxLayout
+from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QVBoxLayout, QMainWindow, QHBoxLayout
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import Qt
-from loginPage import LoginPage
-from utils import createLabel, open_next_page
+from utils import createLabel, open_next_page, createButton
 import os
 
 class LogoPage(QMainWindow):
@@ -41,17 +40,9 @@ class LogoPage(QMainWindow):
         # Next button
         button_layout = QHBoxLayout()
         button_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        next_button = QPushButton("Next", self)
-        next_button.setMaximumWidth(100)
-        next_button.setStyleSheet(
-            "QPushButton { font-size: 14px; background-color: #007BFF; color: white; "
-            "border-radius: 8px; padding: 8px 16px; }"
-            "QPushButton:hover { background-color: #0056b3; }"
-        )
-        next_page = LoginPage()
-        next_button.clicked.connect(lambda: open_next_page(self, next_page))
+        next_button = createButton("Next")
+        next_button.clicked.connect(lambda: openNextPage(self))
         button_layout.addWidget(next_button)
-
 
         # Adding widgets to the layout
         layout.addWidget(image_label)
@@ -61,6 +52,11 @@ class LogoPage(QMainWindow):
         layout.addWidget(version_label)
         layout.addSpacing(20)
         layout.addLayout(button_layout)
+
+        def openNextPage(self):
+            from loginPage import LoginPage
+            next_page = LoginPage()
+            open_next_page(self, next_page)
 
 if __name__ == "__main__":
     import sys

@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QVBoxLayout, QHBoxLayout, QTableWidget, QHeaderView, QPushButton, QComboBox
 from PyQt5.QtGui import QPixmap, QFont
 from PyQt5.QtCore import Qt
-from utils import createLabel, open_previous_page
+from utils import createLabel, open_previous_page, createButton
 import os
 import json
 
@@ -139,7 +139,6 @@ class ProfilePage(QWidget):
             input = QComboBox()
             input.setFont(QFont("Arial", 12))
             input.setStyleSheet("background-color: white;")
-            input.setMinimumSize
             if item == "Meter Type":
                 input.addItems(["Single Phase", "Three Phase"])
                 input.setObjectName("Metertype")
@@ -153,13 +152,8 @@ class ProfilePage(QWidget):
 
         self.main_layout.addLayout(container_layout)
 
-        back_btn = QPushButton("Back", self)
+        back_btn = createButton("Back")
         back_btn.clicked.connect(lambda: self.openPrevPage())
-        back_btn.setFont(QFont("Arial", 12))
-        back_btn.setMinimumWidth(100)
-        back_btn.setStyleSheet(
-            "background-color: white; border: 1px solid black; border-radius: 5px;padding:8px"
-        )
 
         button_layout = QHBoxLayout()
         button_layout.setAlignment(Qt.AlignCenter)

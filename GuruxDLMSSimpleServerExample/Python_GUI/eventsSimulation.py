@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtGui import QFont
 from PyQt5.QtCore import Qt
-from utils import createLabel, open_next_page, open_previous_page
+from utils import createLabel, open_next_page, open_previous_page, createButton
 
 class ComboBoxDelegate(QStyledItemDelegate):
     def __init__(self, options, parent=None):
@@ -71,20 +71,12 @@ class EventSimulationApp(QMainWindow):
         delegate = ComboBoxDelegate(event_options, self.table)
         self.table.setItemDelegateForColumn(1, delegate)
 
-        back_btn = QPushButton("Back", self)
+        back_btn = createButton("Back")
         back_btn.clicked.connect(lambda: self.openPrevPage())
-        back_btn.setFont(QFont("Arial", 12))
-        back_btn.setMinimumWidth(100)
-        back_btn.setStyleSheet(
-            "background-color: white; border: 1px solid black; border-radius: 5px;padding:8px"
-        )
 
         # Submit button
-        submit_button = QPushButton("Submit",self)
+        submit_button = createButton("Submit",self)
         submit_button.clicked.connect(lambda: self.openNextPage())
-        submit_button.setFont(QFont("Arial", 12))
-        submit_button.setMinimumWidth(100)
-        submit_button.setStyleSheet("background-color: white; border: 1px solid black; border-radius: 5px;padding:8px")
 
         button_layout = QHBoxLayout()
         button_layout.setAlignment(Qt.AlignCenter)

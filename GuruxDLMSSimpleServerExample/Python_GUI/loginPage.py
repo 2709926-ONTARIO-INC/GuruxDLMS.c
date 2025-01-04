@@ -1,7 +1,7 @@
-from PyQt5.QtWidgets import QApplication, QWidget, QLineEdit, QPushButton, QVBoxLayout, QHBoxLayout, QMainWindow, QMessageBox
-from PyQt5.QtGui import QFont, QRegExpValidator
-from PyQt5.QtCore import Qt, QRegExp
-from utils import createLabel, open_next_page, open_previous_page
+from PyQt5.QtWidgets import QApplication, QWidget, QLineEdit, QVBoxLayout, QHBoxLayout, QMainWindow, QMessageBox
+from PyQt5.QtGui import QFont
+from PyQt5.QtCore import Qt
+from utils import createLabel, open_next_page, open_previous_page, createButton
 
 class LoginPage(QMainWindow):
     def __init__(self):
@@ -19,7 +19,7 @@ class LoginPage(QMainWindow):
         container.setStyleSheet("*{background-color: lightblue;} .QWidget{border: 2px solid black;}")
         self.setCentralWidget(container)
         self.setContentsMargins(475, 250, 0, 0)
-        container.setMaximumSize(600,200)
+        container.setMaximumSize(600,210)
 
         # Layouts
         layout = QVBoxLayout(container)
@@ -30,22 +30,19 @@ class LoginPage(QMainWindow):
 
         # User ID field
         user_id_layout = QHBoxLayout()
-        user_id_label = createLabel("User ID:", 12, alignment=False)
+        user_id_label = createLabel("User ID:", 14, alignment=False)
         user_id_input = QLineEdit()
-        user_id_input.setFont(QFont("Arial", 12))
+        user_id_input.setFont(QFont("Arial", 14))
         user_id_input.setMaximumWidth(300)
         user_id_input.setStyleSheet("background-color: white; border: 1px solid black;")
-        user_regex = QRegExp("admin")
-        user_validator = QRegExpValidator(user_regex, user_id_input)
-        user_id_input.setValidator(user_validator)
         user_id_layout.addWidget(user_id_label)
         user_id_layout.addWidget(user_id_input)
 
         # Password field
         password_layout = QHBoxLayout()
-        password_label = createLabel("Password:", 12, alignment=False)
+        password_label = createLabel("Password:", 14, alignment=False)
         password_input = QLineEdit()
-        password_input.setFont(QFont("Arial", 12))
+        password_input.setFont(QFont("Arial", 14))
         password_input.setEchoMode(QLineEdit.Password)
         password_input.setMaximumWidth(300)
         password_input.setStyleSheet("background-color: white; border: 1px solid black;")
@@ -60,25 +57,17 @@ class LoginPage(QMainWindow):
         layout.addLayout(password_layout)
         layout.addSpacing(20)
 
-        back_btn = QPushButton("Back", self)
+        back_btn = createButton("Back")
         back_btn.clicked.connect(lambda: self.openPrevPage())
-        back_btn.setFont(QFont("Arial", 12))
-        back_btn.setMinimumWidth(100)
-        back_btn.setStyleSheet(
-            "background-color: white; border: 1px solid black; border-radius: 5px;"
-        )
 
         # Submit button
-        submit_button = QPushButton("Login",self)
-        submit_button.clicked.connect(lambda: validateInput())
-        submit_button.setFont(QFont("Arial", 12))
-        submit_button.setMinimumWidth(100)
-        submit_button.setStyleSheet("background-color: white; border: 1px solid black; border-radius: 5px;")
+        login_button = createButton("Login")
+        login_button.clicked.connect(lambda: validateInput())
 
         button_layout = QHBoxLayout()
         button_layout.setAlignment(Qt.AlignCenter)
         button_layout.addWidget(back_btn)
-        button_layout.addWidget(submit_button)
+        button_layout.addWidget(login_button)
         layout.addLayout(button_layout)
 
         # Ensure container resizes with the window
