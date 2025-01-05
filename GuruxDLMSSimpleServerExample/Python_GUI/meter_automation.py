@@ -59,9 +59,12 @@ def monitor_process(process, server_port):
 
 
 def start_servers(binary_path, config_path, num_servers, start_port, start_instance, type_of_meter, use_wsl=False, is_garbage_enabled=False):
-    view_garbage = is_garbage_enabled
-
     """Starts servers on consecutive ports."""
+
+    view_garbage = is_garbage_enabled
+    num_servers_started = 0
+    num_servers_failed = 0
+
     # Convert binary_path to WSL path if WSL is used
     if use_wsl:
         binary_path = convert_to_wsl_path(binary_path)
@@ -104,10 +107,14 @@ def start_servers(binary_path, config_path, num_servers, start_port, start_insta
         time.sleep(5)
         if check_port_status_wsl(port):
             print(f"{type_of_meter.capitalize()} server on port {port} with instance {instance} is running.")
+            num_servers_started += 1
         else:
             print(f"{type_of_meter.capitalize()} server on port {port} with instance {instance} failed to start.")
+            num_servers_failed += 1
 
     print(f"Started {len(ports)} server(s). Output is being monitored.")
+
+    return (num_servers_started, num_servers_failed)
 
 
 def cleanup():

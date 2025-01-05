@@ -372,7 +372,12 @@ class ServerPage(QMainWindow):
             print(binary_file_path)
 
             # Call the start_servers function with extracted values
-            meter_automation.start_servers(binary_file_path, config_file_path, num_meters, start_port, start_instance, type_of_meter, use_wsl=True, is_garbage_enabled=is_garbage_enabled)
+            temp_num_servers_started, temp_num_servers_failed = meter_automation.start_servers(binary_file_path, config_file_path, num_meters, start_port, start_instance, type_of_meter, use_wsl=True, is_garbage_enabled=is_garbage_enabled)
+
+            servers_started_successfully += temp_num_servers_started
+            servers_failed_to_start += temp_num_servers_failed
+        
+        QMessageBox.information(self, "Servers Status", f"{servers_started_successfully} servers started successfully, {servers_failed_to_start} servers failed to start.")
 
     def openNextPage(self):
         from meterConfig import MeterConfig
