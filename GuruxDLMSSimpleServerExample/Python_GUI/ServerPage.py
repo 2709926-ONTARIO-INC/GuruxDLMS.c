@@ -44,6 +44,7 @@ class ParameterPopup(QWidget):
         input_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         for i, label in enumerate(["V", "I", "P.F", "f", "Block Load"]):
             item = QTableWidgetItem(label)
+            item.setTextAlignment(Qt.AlignCenter)  
             item.setFlags(item.flags() & ~Qt.ItemIsEditable)  # Make the item non-editable
             input_table.setItem(i, 0, item)
 
@@ -64,7 +65,14 @@ class ParameterPopup(QWidget):
 
         # Function to check if input is a valid integer
         def is_valid_input(item):
-            return item and item.text().isdigit()
+            if item and item.text():  # Ensure the item and its text are not None or empty
+                text = item.text()
+                try:
+                    float(text)  # Try converting to a float
+                    return True
+                except ValueError:
+                    return False
+            return False
 
         # Check if all fields have valid input
         for row in range(5):
@@ -106,35 +114,35 @@ class ParameterPopup(QWidget):
             config_data = {
                 "manufacturer": manufacturer,
                 "voltage_limits": {
-                    "lower_limit": int(input_table.item(0, 1).text()) * 1000,
-                    "upper_limit": int(input_table.item(0, 2).text()) * 1000
+                    "lower_limit": int(float(input_table.item(0, 1).text()) * 1000),
+                    "upper_limit": int(float(input_table.item(0, 2).text()) * 1000)
                 },
                 "current_limits": {
                     "phase_current": {
-                        "lower_limit": int(input_table.item(1, 1).text()) * 1000,
-                        "upper_limit": int(input_table.item(1, 2).text()) * 1000
+                        "lower_limit": int(float(input_table.item(1, 1).text()) * 1000),
+                        "upper_limit": int(float(input_table.item(1, 2).text()) * 1000)
                     },
                     "neutral_current": {
-                        "lower_limit": int(input_table.item(1, 1).text()) * 1000,
-                        "upper_limit": int(input_table.item(1, 2).text()) * 1000
+                        "lower_limit": int(float(input_table.item(1, 1).text()) * 1000),
+                        "upper_limit": int(float(input_table.item(1, 2).text()) * 1000)
                     }
                 },
                 "frequency_limits": {
-                    "lower_limit": int(input_table.item(2, 1).text()) * 1000,
-                    "upper_limit": int(input_table.item(2, 2).text()) * 1000
+                    "lower_limit": int(float(input_table.item(2, 1).text()) * 1000),
+                    "upper_limit": int(float(input_table.item(2, 2).text()) * 1000)
                 },
                 "signed_power_factor_limits": {
-                    "lower_limit": int(input_table.item(3, 1).text()) * 1000,
-                    "upper_limit": int(input_table.item(3, 2).text()) * 1000
+                    "lower_limit": int(float(input_table.item(3, 1).text()) * 1000),
+                    "upper_limit": int(float(input_table.item(3, 2).text()) * 1000)
                 },
                 "block_energy_limits": {
                     "kWh_import": {
-                        "lower_limit": int(input_table.item(4, 1).text()) * 1000,
-                        "upper_limit": int(input_table.item(4, 2).text()) * 1000
+                        "lower_limit": int(float(input_table.item(4, 1).text()) * 1000),
+                        "upper_limit": int(float(input_table.item(4, 2).text()) * 1000)
                     },
                     "kWh_export": {
-                        "lower_limit": int(input_table.item(4, 1).text()) * 1000,
-                        "upper_limit": int(input_table.item(4, 2).text()) * 1000
+                        "lower_limit": int(float(input_table.item(4, 1).text()) * 1000),
+                        "upper_limit": int(float(input_table.item(4, 2).text()) * 1000)
                     }
                 }
             }
@@ -144,66 +152,66 @@ class ParameterPopup(QWidget):
                 "manufacturer": manufacturer,
                 "voltage_limits": {
                     "L1": {
-                        "lower_limit": int(input_table.item(0, 1).text()) * 1000,
-                        "upper_limit": int(input_table.item(0, 2).text()) * 1000
+                        "lower_limit": int(float(input_table.item(0, 1).text()) * 1000),
+                        "upper_limit": int(float(input_table.item(0, 2).text()) * 1000)
                     },
                     "L2": {
-                        "lower_limit": int(input_table.item(0, 1).text()) * 1000,
-                        "upper_limit": int(input_table.item(0, 2).text()) * 1000
+                        "lower_limit": int(float(input_table.item(0, 1).text()) * 1000),
+                        "upper_limit": int(float(input_table.item(0, 2).text()) * 1000)
                     },
                     "L3": {
-                        "lower_limit": int(input_table.item(0, 1).text()) * 1000,
-                        "upper_limit": int(input_table.item(0, 2).text()) * 1000
+                        "lower_limit": int(float(input_table.item(0, 1).text()) * 1000),
+                        "upper_limit": int(float(input_table.item(0, 2).text()) * 1000)
                     }
                 },
                 "current_limits": {
                     "L1": {
-                        "lower_limit": int(input_table.item(1, 1).text()) * 100000,
-                        "upper_limit": int(input_table.item(1, 2).text()) * 100000
+                        "lower_limit": int(float(input_table.item(1, 1).text()) * 100000),
+                        "upper_limit": int(float(input_table.item(1, 2).text()) * 100000)
                     },
                     "L2": {
-                        "lower_limit": int(input_table.item(1, 1).text()) * 100000,
-                        "upper_limit": int(input_table.item(1, 2).text()) * 100000
+                        "lower_limit": int(float(input_table.item(1, 1).text()) * 100000),
+                        "upper_limit": int(float(input_table.item(1, 2).text()) * 100000)
                     },
                     "L3": {
-                        "lower_limit": int(input_table.item(1, 1).text()) * 100000,
-                        "upper_limit": int(input_table.item(1, 2).text()) * 100000
+                        "lower_limit": int(float(input_table.item(1, 1).text()) * 100000),
+                        "upper_limit": int(float(input_table.item(1, 2).text()) * 100000)
                     }
                 },
                 "frequency_limits": {
-                        "lower_limit": int(input_table.item(2, 1).text()) * 1000,
-                        "upper_limit": int(input_table.item(2, 2).text()) * 1000
+                        "lower_limit": int(float(input_table.item(2, 1).text()) * 1000),
+                        "upper_limit": int(float(input_table.item(2, 2).text()) * 1000)
                 },
                 "power_factor_limits": {
                     "L1": {
-                        "lower_limit": int(input_table.item(3, 1).text()) * 1000,
-                        "upper_limit": int(input_table.item(3, 2).text()) * 1000
+                        "lower_limit": int(float(input_table.item(3, 1).text()) * 1000),
+                        "upper_limit": int(float(input_table.item(3, 2).text()) * 1000)
                     },
                     "L2": {
-                        "lower_limit": int(input_table.item(3, 1).text()) * 1000,
-                        "upper_limit": int(input_table.item(3, 2).text()) * 1000
+                        "lower_limit": int(float(input_table.item(3, 1).text()) * 1000),
+                        "upper_limit": int(float(input_table.item(3, 2).text()) * 1000)
                     },
                     "L3": {
-                        "lower_limit": int(input_table.item(3, 1).text()) * 1000,
-                        "upper_limit": int(input_table.item(3, 2).text()) * 1000
+                        "lower_limit": int(float(input_table.item(3, 1).text()) * 1000),
+                        "upper_limit": int(float(input_table.item(3, 2).text()) * 1000)
                     }
                 },
                 "block_energy_limits": {
                     "kWh_import": {
-                        "lower_limit": int(input_table.item(4, 1).text()) * 100,
-                        "upper_limit": int(input_table.item(4, 2).text()) * 100
+                        "lower_limit": int(float(input_table.item(4, 1).text()) * 100),
+                        "upper_limit": int(float(input_table.item(4, 2).text()) * 100)
                     },
                     "kVAh_lag": {
-                        "lower_limit": int(input_table.item(4, 1).text()) * 100,
-                        "upper_limit": int(input_table.item(4, 2).text()) * 100
+                        "lower_limit": int(float(input_table.item(4, 1).text()) * 100),
+                        "upper_limit": int(float(input_table.item(4, 2).text()) * 100)
                     },
                     "kVAh_lead": {
-                        "lower_limit": int(input_table.item(4, 1).text()) * 100,
-                        "upper_limit": int(input_table.item(4, 2).text()) * 100
+                        "lower_limit": int(float(input_table.item(4, 1).text()) * 100),
+                        "upper_limit": int(float(input_table.item(4, 2).text()) * 100)
                     },
                     "kVAh_import": {
-                        "lower_limit": int(input_table.item(4, 1).text()) * 100,
-                        "upper_limit": int(input_table.item(4, 2).text()) * 100
+                        "lower_limit": int(float(input_table.item(4, 1).text()) * 100),
+                        "upper_limit": int(float(input_table.item(4, 2).text()) * 100)
                     }
                 }
             }
