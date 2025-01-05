@@ -16,6 +16,7 @@ from utils import createLabel, open_next_page, open_previous_page, createButton
 import sys
 import json
 import os
+import meter_automation
 
 class ParameterPopup(QWidget):
     def __init__(self, parent_table):
@@ -38,11 +39,13 @@ class ParameterPopup(QWidget):
         )
         input_table.setRowCount(5)
         input_table.setColumnCount(3)
-        input_table.setHorizontalHeaderLabels(["Qty.","Min","Max"])
+        input_table.setHorizontalHeaderLabels(["Parameters","Min","Max"])
         input_table.verticalHeader().setVisible(False)
         input_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         for i, label in enumerate(["V", "I", "P.F", "f", "Block Load"]):
-            input_table.setItem(i, 0, QTableWidgetItem(label))
+            item = QTableWidgetItem(label)
+            item.setFlags(item.flags() & ~Qt.ItemIsEditable)  # Make the item non-editable
+            input_table.setItem(i, 0, item)
 
         popup_layout = QVBoxLayout(self)
         popup_layout.addWidget(input_table)
@@ -57,6 +60,8 @@ class ParameterPopup(QWidget):
         popup_layout.addLayout(button_layout)
 
     def save_to_json(self, input_table):
+        meter_type_for_file_path = ""
+
         # Function to check if input is a valid integer
         def is_valid_input(item):
             return item and item.text().isdigit()
@@ -75,11 +80,27 @@ class ParameterPopup(QWidget):
             return
         meter_type = self.parent_table.cellWidget(current_row, 0).currentText()
         manufacturer = self.parent_table.item(current_row, 2).text()
-        server_no = "SRV00" + str(current_row+1)
 
-        # Construct the filename
-        file_name = f"{manufacturer}_{server_no}_{meter_type}_config.json"
-        file_path = os.path.join("GuruxDLMSSimpleServerExample", "Python_GUI", file_name)
+        if meter_type == "Single Phase":
+            meter_type_for_file_path = "single_phase"
+        elif meter_type == "Three Phase (WC)":
+            meter_type_for_file_path = "three_phase_wc"
+        elif meter_type == "Three Phase (LTCT)":
+            meter_type_for_file_path = "three_phase_ltct"
+        elif meter_type == "Three Phase (HTCT)":
+            meter_type_for_file_path = "three_phase_htct"
+        else:
+            pass
+
+        # Get the directory of the current script
+        script_directory = os.path.dirname(os.path.abspath(__file__))
+
+        # Construct the config file path
+        print(manufacturer.lower().replace(' ', '_'))
+        config_file_name = f"{manufacturer.lower().replace(' ', '_')}_{meter_type_for_file_path}_config.json"
+
+        # Prepend the full directory path
+        config_file_path = os.path.join(script_directory, config_file_name)
 
         if meter_type == "Single Phase":
             config_data = {
@@ -188,7 +209,7 @@ class ParameterPopup(QWidget):
             }
 
         # Save the configuration to a new JSON file
-        with open(file_path, "w") as f:
+        with open(config_file_path, "w") as f:
             json.dump(config_data, f, indent=4)
             
         self.close()
@@ -222,7 +243,7 @@ class ServerPage(QMainWindow):
                 "Starting Port No.",
                 "Starting Instance no.",
                 "Garbage Values",
-                "Parameters"
+                "Configure Parameters"
             ]
         )
 
@@ -247,9 +268,13 @@ class ServerPage(QMainWindow):
 
         # Submit button
         submit_button = createButton("Submit")
-        submit_button.clicked.connect(self.printTableData)
+        submit_button.clicked.connect(self.submitRows)
         button_layout.addWidget(submit_button)
         main_layout.addLayout(button_layout)
+
+        next_btn = createButton("Next")
+        next_btn.clicked.connect(lambda: self.openNextPage())
+        button_layout.addWidget(next_btn)
 
         # Container widget
         container = QWidget(self)
@@ -288,22 +313,58 @@ class ServerPage(QMainWindow):
                 item.setTextAlignment(Qt.AlignCenter)  
                 self.table.setItem(row_index, column, item)
 
-    def printTableData(self):
-        for row in range(self.table.rowCount()):
-            data = []
-            for col in range(self.table.columnCount()):
-                widget = self.table.cellWidget(row, col)
-                if isinstance(widget, QComboBox):
-                    data.append(widget.currentText())
-                elif isinstance(widget, QWidget):
-                    checkbox = widget.layout().itemAt(0).widget()
-                    data.append("Checked" if checkbox.isChecked() else "Unchecked")
-                else:
-                    item = self.table.item(row, col)
-                    data.append(item.text() if item else "")
-            print(f"Row {row + 1}: {data}")
+    def submitRows(self):
+        servers_started_successfully = 0
+        servers_failed_to_start = 0
+        binary_file_name = ""
+        binary_file_path = ""
 
-        self.openNextPage()
+        # Loop through the rows of the table
+        for row in range(self.table.rowCount()):
+            meter_type_for_file_path = ""
+
+            # Extract values from each column
+            type_of_meter = self.table.cellWidget(row, 0).currentText() if self.table.cellWidget(row, 0) else ""
+            num_meters = int(self.table.item(row, 1).text()) if self.table.item(row, 1) else 0
+            manufacturer = self.table.item(row, 2).text() if self.table.item(row, 2) else ""
+            start_port = int(self.table.item(row, 3).text()) if self.table.item(row, 3) else 0
+            start_instance = int(self.table.item(row, 4).text()) if self.table.item(row, 4) else 0
+            is_garbage_enabled = self.table.cellWidget(row, 5).findChild(QCheckBox).isChecked() if self.table.cellWidget(row, 5) else False
+
+            if type_of_meter == "Single Phase":
+                meter_type_for_file_path = "single_phase"
+            elif type_of_meter == "Three Phase (WC)":
+                meter_type_for_file_path = "three_phase_wc"
+            elif type_of_meter == "Three Phase (LTCT)":
+                meter_type_for_file_path = "three_phase_ltct"
+            elif type_of_meter == "Three Phase (HTCT)":
+                meter_type_for_file_path = "three_phase_htct"
+            else:
+                pass
+
+            # Get the directory of the current script
+            script_directory = os.path.dirname(os.path.abspath(__file__))
+
+            # Construct the config file path
+            print(manufacturer.lower().replace(' ', '_'))
+            config_file_name = f"{manufacturer.lower().replace(' ', '_')}_{meter_type_for_file_path}_config.json"
+
+            # Prepend the full directory path
+            config_file_path = os.path.join(script_directory, config_file_name)
+
+            # Binary file path
+            if type_of_meter == "Single Phase":
+                binary_file_name = f"gurux.dlms.simple.server.single.phase.bin"
+            else:
+                binary_file_name = f"gurux.dlms.simple.server.three.phase.bin"
+
+            binary_file_path = os.path.join(script_directory, binary_file_name)
+
+            print(config_file_path)
+            print(binary_file_path)
+
+            # Call the start_servers function with extracted values
+            meter_automation.start_servers(binary_file_path, config_file_path, num_meters, start_port, start_instance, type_of_meter, use_wsl=True, is_garbage_enabled=is_garbage_enabled)
 
     def openNextPage(self):
         from meterConfig import MeterConfig
