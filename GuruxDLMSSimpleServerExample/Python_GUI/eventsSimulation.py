@@ -1,7 +1,7 @@
 import sys
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QTableWidget, QTableWidgetItem, QComboBox,
-    QVBoxLayout, QWidget, QHeaderView, QStyledItemDelegate, QPushButton, QHBoxLayout
+    QVBoxLayout, QWidget, QHeaderView, QStyledItemDelegate, QHBoxLayout
 )
 from PyQt5.QtCore import Qt
 from utils import createLabel, open_next_page, open_previous_page, createButton
@@ -11,7 +11,7 @@ class ComboBoxDelegate(QStyledItemDelegate):
         super().__init__(parent)
         self.options = options
 
-    def createEditor(self, parent):
+    def createEditor(self, parent, options, index):
         combo_box = QComboBox(parent)
         combo_box.addItems(self.options)
         return combo_box
