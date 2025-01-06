@@ -14,6 +14,7 @@
 //
 //---------------------------------------------------------------------------
 #include <stdio.h>
+#include <stdbool.h>
 
 #if defined(_WIN32) || defined(_WIN64)//Windows includes
 #if _MSC_VER > 1400
@@ -41,6 +42,7 @@
 #include <errno.h>
 #endif
 
+#include "../include/registers.h"
 #include "../include/exampleserver.h"
 #include "../include/connection.h"
 #include "../../development/include/cosem.h"
@@ -58,6 +60,8 @@ unsigned char ln47pduBuff[PDU_BUFFER_SIZE];
 char DATAFILE[FILENAME_MAX];
 char IMAGEFILE[FILENAME_MAX];
 char TRACEFILE[FILENAME_MAX];
+
+static bool enableGarbageValues = false;
 
 char _getch()
 {
@@ -220,7 +224,7 @@ int startServers(int port, int trace)
 #if defined(_WIN32) || defined(_WIN64)//Windows includes
         if (_kbhit()) {
             char c = _getch();
-            if (c == '\r')
+            if (c == '\n')
             {
                 printf("Closing the server.\n");
                 break;
@@ -241,11 +245,21 @@ int startServers(int port, int trace)
     return 0;
 }
 
+// Getter function for the enableGarbageValues flag.
+bool isGarbageValuesEnabled()
+{
+    return enableGarbageValues;
+}
+
 void showHelp()
 {
     printf("Gurux DLMS example Server implements four DLMS/COSEM devices.\r\n");
     printf(" -t [Error, Warning, Info, Verbose] Trace messages.\r\n");
     printf(" -p Start port number. Default is 4060.\r\n");
+    printf(" -c <json file>\t\t Provide a configuration file with register limits.\n");
+    printf(" -g\t\t\t Enable meter to send garbage values at random counts.\n");
+    printf(" -I <number>\t\t Use the specified instance number (e.g., 0, 1, 2, etc.) to modify the meter serial number.\n");
+    printf(" -h, -help\t\t Show this help.\n");
 }
 
 #if defined(_WIN32) || defined(_WIN64)//Windows includes
@@ -295,7 +309,7 @@ int main(int argc, char* argv[])
     fclose(f);
 #endif //defined(_WIN32) || defined(_WIN64) || defined(__linux__)
 
-    while ((opt = getopt(argc, argv, "t:p:")) != -1)
+    while ((opt = getopt(argc, argv, "t:p:c:hgI:")) != -1)
     {
         switch (opt)
         {
@@ -320,6 +334,32 @@ int main(int argc, char* argv[])
         case 'p':
             //Port.
             port = atoi(optarg);
+            break;
+        case 'h':
+            showHelp();
+            return 0;
+        case 'g':
+            enableGarbageValues = true; // Set flag to true when -g is used
+            initializeCounters();
+            printf("The meter is set to send garbage values at random counts.\n");
+            break;
+        case 'c':
+            if (setRegisterLimits(optarg))
+            {
+                printf("Register limits successfully set from the configuration file.\n");
+            }
+            else
+            {
+                printf("Failed to set registers limits from the configuration file.\n");
+                return 1;
+            }
+            break;
+        case 'I':
+            {
+                uint32_t instanceNumber = 0U;
+                instanceNumber = atoi(optarg);
+                updateMeterSerialNumber(instanceNumber);
+            }
             break;
         case '?':
         {

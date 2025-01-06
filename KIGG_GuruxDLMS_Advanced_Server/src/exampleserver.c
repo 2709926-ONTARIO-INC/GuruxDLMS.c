@@ -1016,7 +1016,7 @@ int addRegisterObject()
     return 0;
 }
 
-uint16_t readActivePowerValue()
+uint16_t readActivePowerL1Value()
 {
     return ++activePowerL1Value;
 }
@@ -4412,7 +4412,7 @@ void svr_preRead(
         //Update value by one every time when user reads register.
         if (e->target == BASE(activePowerL1) && e->index == 2)
         {
-            readActivePowerValue();
+            readActivePowerL1Value();
         }
         else if (e->target->objectType == DLMS_OBJECT_TYPE_REGISTER && e->index == 2)
         {
@@ -4580,7 +4580,7 @@ void handleProfileGenericActions(
         //This is needed for demo purpose only.
         if (it->target == BASE(loadProfile))
         {
-            readActivePowerValue();
+            readActivePowerL1Value();
         }
         it->error = captureProfileGeneric(settings, ((gxProfileGeneric*)it->target));
     }

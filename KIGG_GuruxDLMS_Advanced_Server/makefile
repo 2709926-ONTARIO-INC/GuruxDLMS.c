@@ -4,7 +4,7 @@ TARGET   = gurux.dlms.server.bin
 CC       = gcc
 
 # compiling flags here
-CFLAGS   = -std=gnu99 -Wall -I.
+CFLAGS   = -std=gnu99 -fstack-protector-all -Wall -I. -IcJSON/include
 
 LINKER   = gcc -o
 
@@ -16,19 +16,32 @@ LFLAGS   = -L../development/lib
 SRCDIR   = src
 OBJDIR   = obj
 BINDIR   = bin
+CJSONDIR = cJSON
 
-SOURCES  := $(wildcard $(SRCDIR)/*.c)
-INCLUDES := $(wildcard $(SRCDIR)/*.h)
-OBJECTS  := $(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
+SOURCES  := $(wildcard $(SRCDIR)/*.c) $(wildcard $(CJSONDIR)/*.c)
+INCLUDES := $(wildcard $(SRCDIR)/*.h) $(wildcard $(CJSONDIR)/include/*.h)
+OBJECTS  := $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(filter $(SRCDIR)/%, $(SOURCES))) \
+            $(patsubst $(CJSONDIR)/%.c, $(OBJDIR)/%.o, $(filter $(CJSONDIR)/%, $(SOURCES)))
 rm       = rm -f
+
+$(OBJDIR)/%.o: $(SRCDIR)/%.c
+	@$(CC) $(CFLAGS) -c $< -o $@
+	@echo "Compiled "$<" successfully!"
+
+$(OBJDIR)/%.o: $(CJSONDIR)/%.c
+	@$(CC) $(CFLAGS) -c $< -o $@
+	@echo "Compiled "$<" successfully!"
 
 $(BINDIR)/$(TARGET): $(OBJECTS)
 	@$(LINKER) $@ $(LFLAGS) $(OBJECTS) -lgurux_dlms_c -lpthread -lm
 	@echo "Linking complete!"
 
-$(OBJECTS): $(OBJDIR)/%.o : $(SRCDIR)/%.c
-	@$(CC) $(CFLAGS) -c $< -o $@
-	@echo "Compiled "$<" successfully!"
+# Build targets for single-phase and three-phase
+single_phase: CFLAGS += -DSINGLE_PHASE
+single_phase: $(BINDIR)/$(TARGET)
+
+three_phase: CFLAGS += -DTHREE_PHASE
+three_phase: $(BINDIR)/$(TARGET)
 
 .PHONEY: clean
 clean:
