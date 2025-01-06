@@ -3,17 +3,19 @@ from PyQt5.QtGui import QFont
 from PyQt5.QtCore import Qt
 from utils import createLabel, open_next_page, open_previous_page, createButton
 import json
+import os
 
 class Meter(QWidget):
-    def __init__(self, metertype, total, manufacturer):
+    def __init__(self,config):
         super().__init__()
-        self.createMeter(metertype, total, manufacturer)
+        self.createMeter(config)
     
-    def createMeter(self, metertype, total, manufacturer):
+    def createMeter(self, config):
+        self.setMaximumSize(500, 610)
         meter_layout = QVBoxLayout()
         meter_layout.setAlignment(Qt.AlignCenter) 
 
-        meter_label = createLabel(metertype)
+        meter_label = createLabel(config["meter_type"])
         meter_label.setStyleSheet("background-color: lightblue; border: 1px solid black;")
         meter_layout.addWidget(meter_label)
         meter_layout.setSpacing(50)
@@ -33,7 +35,7 @@ class Meter(QWidget):
                 item_input.setFixedWidth(200)
             elif (item == "Manufacturer"): 
                 item_input = QComboBox()
-                item_input.addItem(manufacturer)
+                item_input.addItem(config["manufacturer"])
                 item_input.setFont(QFont("Arial", 12))
                 item_input.setStyleSheet("background-color: white;")
                 item_input.setFixedWidth(200)
@@ -48,7 +50,7 @@ class Meter(QWidget):
                 item_input.setFont(QFont("Arial", 12))
                 item_input.setStyleSheet("background-color: white;")
                 item_input.setFixedWidth(200)
-                item_input.setText(total)
+                item_input.setText(str(config["no_of_meters"]))
             else: 
                 item_input = QLineEdit()
                 item_input.setFont(QFont("Arial", 12))
@@ -66,41 +68,43 @@ class Meter(QWidget):
             "QTableWidget {font-size: 16px; gridline-color: #dcdcdc; background-color: white;}"
             "QHeaderView::section { background-color: #f0f0f0; font-weight: bold; padding: 6px;}"
         )
-        table.setRowCount(4)
+        table.setRowCount(5)
         table.setColumnCount(3)
         table.setHorizontalHeaderLabels(["Qty.","Min","Max"])
         table.verticalHeader().setVisible(False)
+        table.setEditTriggers(QTableWidget.NoEditTriggers)
         table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        table.setItem(0,0, QTableWidgetItem("V"))
-        table.setItem(1,0, QTableWidgetItem("I"))
-        table.setItem(2,0, QTableWidgetItem("P.F"))
-        table.setItem(3,0, QTableWidgetItem("f"))
-        meter_layout.addWidget(table)
+        labels = ["V", "I", "P.F", "f", "Block Load"]
+        json_keys = ["voltage_limits", "current_limits", "frequency_limits", "power_factor_limits", "block_energy_limits"]
+        limits = ["lower_limit", "upper_limit"]
+        for row in range(table.rowCount()):
+            for col in range(table.columnCount()):
+                if col == 0:
+                    item = QTableWidgetItem(labels[row])
+                else: 
+                    if config["meter_type"] == "Single Phase":
+                        if row == 1:
+                            item = QTableWidgetItem(str(config[json_keys[row]]["phase_current"][limits[col-1]]/1000))
+                        elif row == 4:
+                            item = QTableWidgetItem(str(config[json_keys[row]]["kWh_import"][limits[col-1]]/100))
+                        else:
+                            item = QTableWidgetItem(str(config[json_keys[row]][limits[col-1]]/1000))
+                    else:
+                        if row == 2:
+                            item = QTableWidgetItem(str(config[json_keys[row]][limits[col-1]]/1000))
+                        elif row == 4:
+                            item = QTableWidgetItem(str(config[json_keys[row]]["kWh_import"][limits[col-1]]/100))
+                        else:
+                            multiplier = 100000 if json_keys[row] == "current_limits" else 1000
+                            item = QTableWidgetItem(str(config[json_keys[row]]["L1"][limits[col-1]]/multiplier))
+                item.setTextAlignment(Qt.AlignCenter)  
+                table.setItem(row, col, item)
+            meter_layout.addWidget(table)
 
-        button_bar = QHBoxLayout()
-        save_btn = QPushButton("Save")
-        save_btn.setFont(QFont("Arial", 12))
-        save_btn.setStyleSheet("background-color: lightblue; border: 1px solid black;")
-
-        edit_btn = QPushButton("Edit")
-        edit_btn.setFont(QFont("Arial", 12))
-        edit_btn.setStyleSheet("background-color: lightblue; border: 1px solid black;")
-
-        delete_btn = QPushButton("Delete")
-        delete_btn.setFont(QFont("Arial", 12))
-        delete_btn.setStyleSheet("background-color: lightblue; border: 1px solid black;")
-        delete_btn.clicked.connect(lambda: self.delete_meter())
-
-        button_bar.addWidget(save_btn)
-        button_bar.addWidget(edit_btn)
-        button_bar.addWidget(delete_btn)
-        meter_layout.addLayout(button_bar)
+        table.setFixedHeight(250)  
+        table.setFixedWidth(475)
             
         self.setLayout(meter_layout)
-
-    def delete_meter():
-        pass
-
 class MeterConfig(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -118,13 +122,13 @@ class MeterConfig(QMainWindow):
         self.setCentralWidget(main_widget)
         main_widget.setLayout(main_layout)
         meter_layout = QHBoxLayout()
-        meter_layout.setAlignment(Qt.AlignCenter) 
+        meter_layout.setAlignment(Qt.AlignLeft)
 
-        f =  open("simulation.json")
-        meter_data = json.load(f)
+        config_folder = r"GuruxDLMSSimpleServerExample/Python_GUI/Config"
+        meter_configs = self.load_meter_configs(config_folder)
 
-        for i in meter_data:
-            meter = Meter(i[1], i[2], i[3])
+        for config in meter_configs:
+            meter = Meter(config)
             meter_layout.addWidget(meter)
 
         # Container widget for the scroll area
@@ -135,6 +139,7 @@ class MeterConfig(QMainWindow):
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setWidget(container_widget)
+
         main_layout.addWidget(scroll)
 
         back_btn = createButton("Back")
@@ -159,6 +164,16 @@ class MeterConfig(QMainWindow):
         from ServerPage import ServerPage
         prev_page = ServerPage()
         open_previous_page(self, prev_page)
+
+    def load_meter_configs(self, config_folder):
+        meter_configs = []
+        for filename in os.listdir(config_folder):
+            if filename.endswith(".json"):
+                file_path = os.path.join(config_folder, filename)
+                with open(file_path, 'r') as f:
+                    meter_config = json.load(f)
+                    meter_configs.append(meter_config)
+        return meter_configs
 
 if __name__ == '__main__':
     import sys

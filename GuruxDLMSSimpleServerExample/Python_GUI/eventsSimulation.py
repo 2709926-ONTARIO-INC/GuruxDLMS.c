@@ -3,7 +3,6 @@ from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QTableWidget, QTableWidgetItem, QComboBox,
     QVBoxLayout, QWidget, QHeaderView, QStyledItemDelegate, QPushButton, QHBoxLayout
 )
-from PyQt5.QtGui import QFont
 from PyQt5.QtCore import Qt
 from utils import createLabel, open_next_page, open_previous_page, createButton
 
@@ -75,7 +74,7 @@ class EventSimulationApp(QMainWindow):
         back_btn.clicked.connect(lambda: self.openPrevPage())
 
         # Submit button
-        submit_button = createButton("Submit",self)
+        submit_button = createButton("Submit")
         submit_button.clicked.connect(lambda: self.openNextPage())
 
         button_layout = QHBoxLayout()

@@ -45,7 +45,7 @@ class ParameterPopup(QWidget):
         for i, label in enumerate(["V", "I", "P.F", "f", "Block Load"]):
             item = QTableWidgetItem(label)
             item.setTextAlignment(Qt.AlignCenter)  
-            item.setFlags(item.flags() & ~Qt.ItemIsEditable)  # Make the item non-editable
+            item.setFlags(item.flags() & ~Qt.ItemIsEditable) 
             input_table.setItem(i, 0, item)
 
         popup_layout = QVBoxLayout(self)
@@ -88,6 +88,7 @@ class ParameterPopup(QWidget):
             return
         meter_type = self.parent_table.cellWidget(current_row, 0).currentText()
         manufacturer = self.parent_table.item(current_row, 2).text()
+        no_of_meters = int(self.parent_table.item(current_row, 1).text()) if self.parent_table.item(current_row, 1).text() != "" else 0
 
         if meter_type == "Single Phase":
             meter_type_for_file_path = "single_phase"
@@ -105,13 +106,15 @@ class ParameterPopup(QWidget):
 
         # Construct the config file path
         print(manufacturer.lower().replace(' ', '_'))
-        config_file_name = f"{manufacturer.lower().replace(' ', '_')}_{meter_type_for_file_path}_config.json"
+        config_file_name = f"Config\{manufacturer.lower().replace(' ', '_')}_{meter_type_for_file_path}_config.json"
 
         # Prepend the full directory path
         config_file_path = os.path.join(script_directory, config_file_name)
 
         if meter_type == "Single Phase":
             config_data = {
+                "no_of_meters": no_of_meters,
+                "meter_type": meter_type,
                 "manufacturer": manufacturer,
                 "voltage_limits": {
                     "lower_limit": int(float(input_table.item(0, 1).text()) * 1000),
@@ -131,7 +134,7 @@ class ParameterPopup(QWidget):
                     "lower_limit": int(float(input_table.item(2, 1).text()) * 1000),
                     "upper_limit": int(float(input_table.item(2, 2).text()) * 1000)
                 },
-                "signed_power_factor_limits": {
+                "power_factor_limits": {
                     "lower_limit": int(float(input_table.item(3, 1).text()) * 1000),
                     "upper_limit": int(float(input_table.item(3, 2).text()) * 1000)
                 },
@@ -149,6 +152,8 @@ class ParameterPopup(QWidget):
 
         else:
             config_data = {
+                "no_of_meters": no_of_meters,
+                "meter_type": meter_type,
                 "manufacturer": manufacturer,
                 "voltage_limits": {
                     "L1": {
@@ -333,10 +338,10 @@ class ServerPage(QMainWindow):
 
             # Extract values from each column
             type_of_meter = self.table.cellWidget(row, 0).currentText() if self.table.cellWidget(row, 0) else ""
-            num_meters = int(self.table.item(row, 1).text()) if self.table.item(row, 1) else 0
+            num_meters = int(self.table.item(row, 1).text()) if self.table.item(row, 1).text() != "" else 0
             manufacturer = self.table.item(row, 2).text() if self.table.item(row, 2) else ""
-            start_port = int(self.table.item(row, 3).text()) if self.table.item(row, 3) else 0
-            start_instance = int(self.table.item(row, 4).text()) if self.table.item(row, 4) else 0
+            start_port = int(self.table.item(row, 3).text()) if self.table.item(row, 3).text() != "" else 0
+            start_instance = int(self.table.item(row, 4).text()) if self.table.item(row, 4).text() != "" else 0
             is_garbage_enabled = self.table.cellWidget(row, 5).findChild(QCheckBox).isChecked() if self.table.cellWidget(row, 5) else False
 
             if type_of_meter == "Single Phase":
