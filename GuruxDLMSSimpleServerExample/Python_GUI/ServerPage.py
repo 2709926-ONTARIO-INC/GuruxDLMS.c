@@ -360,16 +360,16 @@ class ServerPage(QMainWindow):
 
             # Construct the config file path
             print(manufacturer.lower().replace(' ', '_'))
-            config_file_name = f"{manufacturer.lower().replace(' ', '_')}_{meter_type_for_file_path}_config.json"
+            config_file_name = f"Config\{manufacturer.lower().replace(' ', '_')}_{meter_type_for_file_path}_config.json"
 
             # Prepend the full directory path
             config_file_path = os.path.join(script_directory, config_file_name)
 
             # Binary file path
             if type_of_meter == "Single Phase":
-                binary_file_name = f"gurux.dlms.simple.server.single.phase.bin"
+                binary_file_name = f"Bin\gurux.dlms.simple.server.single.phase.bin"
             else:
-                binary_file_name = f"gurux.dlms.simple.server.three.phase.bin"
+                binary_file_name = f"Bin\gurux.dlms.simple.server.three.phase.bin"
 
             binary_file_path = os.path.join(script_directory, binary_file_name)
 

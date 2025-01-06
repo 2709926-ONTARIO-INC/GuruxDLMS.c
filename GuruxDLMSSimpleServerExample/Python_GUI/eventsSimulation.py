@@ -73,14 +73,14 @@ class EventSimulationApp(QMainWindow):
         back_btn = createButton("Back")
         back_btn.clicked.connect(lambda: self.openPrevPage())
 
-        # Submit button
-        submit_button = createButton("Submit")
-        submit_button.clicked.connect(lambda: self.openNextPage())
+        # Next button
+        next_button = createButton("Next")
+        next_button.clicked.connect(lambda: self.openNextPage())
 
         button_layout = QHBoxLayout()
         button_layout.setAlignment(Qt.AlignCenter)
         button_layout.addWidget(back_btn)
-        button_layout.addWidget(submit_button)
+        button_layout.addWidget(next_button)
         main_layout.addLayout(button_layout)
 
     def load_table_data(self):
