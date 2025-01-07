@@ -14,6 +14,8 @@
 //
 //---------------------------------------------------------------------------
 #include "../include/connection.h"
+#include "../include/registers.h"
+#include "../include/exampleserver.h"
 #include "../../development/include/server.h"
 
 #include <stdlib.h> // malloc and free needs this or error is generated.
@@ -42,6 +44,7 @@
 #include <unistd.h> // UNIX standard function definitions
 #include <fcntl.h> // File control definitions
 #include <errno.h> // Error number definitions
+#include <pthread.h>
 #endif//Linux
 #endif
 
@@ -70,12 +73,14 @@ unsigned char isConnected(connection* con)
 
 void appendLog(unsigned char send, gxByteBuffer* reply)
 {
+    char fileName[64U] = {'\0'};
+    snprintf(fileName, sizeof(fileName), "%s/trace.txt", readMeterSerialNumber());
 #if defined(_WIN32) || defined(_WIN64) || defined(__linux__)
 #if _MSC_VER > 1400
     FILE* f = NULL;
-    fopen_s(&f, "trace.txt", "a");
+    fopen_s(&f, fileName, "a");
 #else
-    FILE* f = fopen("trace.txt", "a");
+    FILE* f = fopen(fileName, "a");
 #endif
     if (f != NULL)
     {
@@ -278,9 +283,11 @@ int svr_listen(
     con->osReader.hEvent = CreateEvent(NULL, 1, FALSE, NULL);
     con->osWrite.hEvent = CreateEvent(NULL, 1, FALSE, NULL);
     con->receiverThread = INVALID_HANDLE_VALUE;
+    con->captureThread = INVALID_HANDLE_VALUE;
 #else
     con->comPort = -1;
     con->receiverThread = -1;
+    con->captureThread = -1;
 #endif
     con->socket = -1;
     con->closing = 0;
@@ -316,9 +323,22 @@ int svr_listen(
         return -1;
     }
 #if defined(_WIN32) || defined(_WIN64)//Windows includes
-    con->receiverThread = (HANDLE)_beginthread(ListenerThread, 0, (LPVOID)con);
+    con->receiverThread = (HANDLE)_beginthreadex(NULL, STACK_SIZE, ListenerThread, (LPVOID)con, 0, NULL);
 #else
-    ret = pthread_create(&con->receiverThread, NULL, UnixListenerThread, (void*)con);
+    pthread_attr_init(&con->attr);
+    pthread_attr_setstacksize(&con->attr, STACK_SIZE);
+    ret = pthread_create(&con->receiverThread, &con->attr, UnixListenerThread, (void*)con);
+    pthread_attr_destroy(&con->attr);
+#endif
+
+    //Now start a thread for running capture at regular interval
+#if defined(_WIN32) || defined(_WIN64)//Windows includes
+    con->captureThread = (HANDLE)_beginthreadex(NULL, STACK_SIZE, captureThreadFunction, (LPVOID)con, 0, NULL);
+#else
+    pthread_attr_init(&con->attr);
+    pthread_attr_setstacksize(&con->attr, STACK_SIZE);
+    ret = pthread_create(&con->captureThread, &con->attr, captureThreadFunction, (void*)con);
+    pthread_attr_destroy(&con->attr);
 #endif
     return ret;
 }
@@ -337,11 +357,17 @@ int con_close(
             int ret = WaitForSingleObject(con->receiverThread, 5000);
             con->receiverThread = INVALID_HANDLE_VALUE;
         }
+        if (con->captureThread != INVALID_HANDLE_VALUE)
+        {
+            int ret = WaitForSingleObject(con->captureThread, 5000);
+            con->captureThread = INVALID_HANDLE_VALUE;
+        }
 #else
         close(con->socket);
         con->socket = -1;
         void* res;
         pthread_join(con->receiverThread, (void**)&res);
+        pthread_join(con->captureThread, (void**)&res);
         free(res);
 #endif
 

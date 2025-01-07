@@ -48,6 +48,7 @@ typedef struct
 
     //Receiver thread handle.
     HANDLE receiverThread;
+    HANDLE captureThread;
 #else //If Linux.
     //Socked handle.
     int socket;
@@ -55,6 +56,8 @@ typedef struct
     int comPort;
     //Receiver thread handle.
     pthread_t receiverThread;
+    pthread_t captureThread;
+    pthread_attr_t attr; // Thread attributes to set stack size
 #endif
     unsigned long   waitTime;
     //Received data.

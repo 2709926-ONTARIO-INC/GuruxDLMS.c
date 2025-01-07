@@ -2,6 +2,7 @@
 #define REGISTER_H__
 
 #include <stdint.h>
+#include <stdbool.h>
 
 // Functions to add the KIGG register
 int addVoltageL1(void);

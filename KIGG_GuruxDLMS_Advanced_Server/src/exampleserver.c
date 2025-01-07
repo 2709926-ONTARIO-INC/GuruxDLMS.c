@@ -16,6 +16,7 @@
 
 #include <stdio.h>
 #include <stdlib.h> // malloc and free needs this or error is generated.
+#include <sys/stat.h>
 
 #if defined(_WIN32) || defined(_WIN64)//Windows includes
 #if _MSC_VER > 1400
@@ -52,6 +53,7 @@
 #endif
 
 #include "../include/exampleserver.h"
+#include "../include/registers.h"
 #include "../../development/include/cosem.h"
 #include "../../development/include/gxkey.h"
 #include "../../development/include/gxobjects.h"
@@ -70,8 +72,6 @@ unsigned char testMode = 1;
 int socket1 = -1;
 uint32_t SERIAL_NUMBER = 123456;
 
-//TODO: Allocate space where profile generic row values are serialized.
-#define PDU_MAX_PROFILE_GENERIC_COLUMN_SIZE 100
 //Define server system title.
 static unsigned char SERVER_SYSTEM_TITLE[8] = { 0x47, 0x52, 0x58, 0x00, 0x00, 0x00, 0x00, 0x01 };
 time_t imageActionStartTime = 0;
@@ -115,7 +115,7 @@ static gxPushSetup pushSetup;
 static gxMbusDiagnostic mbusDiagnostic;
 static gxMBusPortSetup mbusPortSetup;
 static gxDisconnectControl disconnectControl;
-static gxProfileGeneric loadProfile;
+static gxProfileGeneric loadProfile, dailyLoadProfile, nameplateProfile, billingProfile;
 static gxSapAssignment sapAssignment;
 //Security Setup High is for High authentication.
 static gxSecuritySetup securitySetupHigh;
@@ -149,6 +149,43 @@ gxG3Plc6LoWPAN g3Plc6LoWPAN;
 gxArrayManager arrayManager;
 gxLteMonitoring lteMonitoring;
 gxAccount account;
+
+// Define external KIGG registers
+#ifdef SINGLE_PHASE
+// Define external KIGG registers for single phase meter
+extern gxRegister neutralCurrent;
+extern gxRegister activePower, apparentPower;
+extern gxRegister signedPowerFactor;
+extern gxRegister blockEnergyKWhExport;
+extern gxRegister cumulativeEnergyKWhExport;
+#elif defined(THREE_PHASE)
+extern gxRegister voltageL2, voltageL3;
+extern gxRegister currentL2, currentL3;
+extern gxRegister powerFactorL1, powerFactorL2, powerFactorL3;
+extern gxRegister blockEnergyKVAhLag, blockEnergyKVAhLead, blockEnergyKVAhImport;
+extern gxRegister cumulativeEnergyKVAhLag, cumulativeEnergyKVAhLead, cumulativeEnergyKVAhImport;
+
+// Define external KIGG Average registers
+extern gxRegister voltageL2Average, voltageL3Average;
+extern gxRegister currentL2Average, currentL3Average;
+
+// Define external KIGG nameplate profile data
+extern gxData ctr, ptr;
+#endif
+
+extern gxRegister voltageL1;
+extern gxRegister currentL1;
+extern gxRegister frequency;
+extern gxRegister blockEnergyKWhImport;
+extern gxRegister cumulativeEnergyKWhImport;
+
+// Define external KIGG Average registers
+extern gxRegister voltageL1Average;
+extern gxRegister currentL1Average;
+
+// Define external KIGG nameplate profile data
+extern gxData meterSerialNumber, manufacturerName, firmwareVersion, meterType, meterCategory;
+extern gxData currentRating, yearOfManufacture;
 
 #ifdef DLMS_ITALIAN_STANDARD
 
@@ -187,23 +224,96 @@ static gxData managementFrameCounterOnLine;
 static gxData billingSnapshotPeriodCounter;
 #endif //DLMS_ITALIAN_STANDARD
 
-//static gxObject* NONE_OBJECTS[] = { BASE(associationNone), BASE(ldn) };
+static gxObject *NONE_OBJECTS[] = {BASE(associationNone), BASE(ldn), BASE(sapAssignment), BASE(clock1)};
 
-static gxObject* ALL_OBJECTS[] = {
-    BASE(associationNone), BASE(associationLow), BASE(associationHigh), BASE(associationHighGMac),
+static gxObject *ALL_OBJECTS[] = {
+    BASE(associationNone),
+    BASE(associationLow),
+    BASE(associationHigh),
+    BASE(associationHighGMac),
     BASE(associationHighGMacPreEstablished),
     BASE(associationHighEcdsa),
-    BASE(securitySetupHigh), BASE(securitySetupHighGMac),BASE(securitySetupHighGMacPreEstablished),
+    BASE(securitySetupHigh),
+    BASE(securitySetupHighGMac),
+    BASE(securitySetupHighGMacPreEstablished),
     BASE(securitySetupHighEcdsa),
-    BASE(ldn), BASE(sapAssignment), BASE(eventCode),
-    BASE(clock1), BASE(activePowerL1), BASE(pushSetup), BASE(scriptTableGlobalMeterReset), BASE(scriptTableDisconnectControl),
-    BASE(scriptTableActivateTestMode), BASE(scriptTableActivateNormalMode), BASE(loadProfile), BASE(eventLog), BASE(hdlc),
-    BASE(disconnectControl), BASE(actionScheduleDisconnectOpen), BASE(actionScheduleDisconnectClose), BASE(unixTime), BASE(invocationCounter),
-    BASE(imageTransfer), BASE(udpSetup), BASE(autoConnect), BASE(activityCalendar), BASE(localPortSetup), BASE(demandRegister),
-    BASE(registerMonitor), BASE(autoAnswer), BASE(modemConfiguration), BASE(macAddressSetup), BASE(ip4Setup), BASE(pppSetup), BASE(gprsSetup),
-    BASE(tarifficationScriptTable), BASE(registerActivation), BASE(limiter),
-    BASE(mbusDiagnostic), BASE(mbusPortSetup),
-    BASE(g3plcMacLayerCounters), BASE(g3PlcMacSetup), BASE(g3Plc6LoWPAN), BASE(arrayManager),
+    BASE(ldn),
+    BASE(sapAssignment),
+    BASE(eventCode),
+    BASE(clock1),
+    // Add KIGG registers using conditional compilation
+#ifdef SINGLE_PHASE
+    BASE(neutralCurrent),
+    BASE(activePower),
+    BASE(apparentPower),
+    BASE(signedPowerFactor),
+    BASE(cumulativeEnergyKWhExport),
+#elif defined(THREE_PHASE)
+    BASE(voltageL2), 
+    BASE(voltageL3),
+    BASE(currentL2),
+    BASE(currentL3),
+    BASE(voltageL1Average),
+    BASE(voltageL2Average),
+    BASE(voltageL3Average),
+    BASE(currentL1Average),
+    BASE(currentL2Average),
+    BASE(currentL3Average),
+    BASE(powerFactorL1),
+    BASE(powerFactorL2),
+    BASE(powerFactorL3),
+    BASE(blockEnergyKWhImport),
+    BASE(blockEnergyKVAhLag),
+    BASE(blockEnergyKVAhLead),
+    BASE(blockEnergyKVAhImport),
+    BASE(cumulativeEnergyKVAhLag),
+    BASE(cumulativeEnergyKVAhLead),
+    BASE(cumulativeEnergyKVAhImport),
+    BASE(activePowerL1), 
+#endif
+    BASE(voltageL1),
+    BASE(currentL1), 
+    BASE(frequency),
+    BASE(cumulativeEnergyKWhImport),
+
+    BASE(pushSetup),
+    BASE(scriptTableGlobalMeterReset),
+    BASE(scriptTableDisconnectControl),
+    BASE(scriptTableActivateTestMode),
+    BASE(scriptTableActivateNormalMode),
+    BASE(loadProfile),
+    BASE(dailyLoadProfile),
+    BASE(nameplateProfile),
+    BASE(billingProfile),
+    BASE(eventLog),
+    BASE(hdlc),
+    BASE(disconnectControl),
+    BASE(actionScheduleDisconnectOpen),
+    BASE(actionScheduleDisconnectClose),
+    BASE(unixTime),
+    BASE(invocationCounter),
+    BASE(imageTransfer),
+    BASE(udpSetup),
+    BASE(autoConnect),
+    BASE(activityCalendar),
+    BASE(localPortSetup),
+    BASE(demandRegister),
+    BASE(registerMonitor),
+    BASE(autoAnswer),
+    BASE(modemConfiguration),
+    BASE(macAddressSetup),
+    BASE(ip4Setup),
+    BASE(pppSetup),
+    BASE(gprsSetup),
+    BASE(tarifficationScriptTable),
+    BASE(registerActivation),
+    BASE(limiter),
+    BASE(mbusDiagnostic),
+    BASE(mbusPortSetup),
+    BASE(g3plcMacLayerCounters),
+    BASE(g3PlcMacSetup),
+    BASE(g3Plc6LoWPAN),
+    BASE(arrayManager),
     BASE(lteMonitoring),
     BASE(account),
     #ifdef DLMS_ITALIAN_STANDARD
@@ -297,6 +407,51 @@ typedef enum
 } GURUX_EVENT_CODES;
 
 
+///////////////////////////////////////////////////////////////////////
+// Write trace to the serial port.
+//
+// This can be used for debugging.
+///////////////////////////////////////////////////////////////////////
+void GXTRACE(const char* str, const char* data)
+{
+    //Send trace to the serial port in test mode.
+    if (testMode)
+    {
+        if (data == NULL)
+        {
+            printf("%s\r\n", str);
+        }
+        else
+        {
+            printf("%s %s\r\n", str, data);
+        }
+    }
+}
+
+///////////////////////////////////////////////////////////////////////
+// Write trace to the serial port.
+//
+// This can be used for debugging.
+///////////////////////////////////////////////////////////////////////
+void GXTRACE_INT(const char* str, int32_t value)
+{
+    char data[10];
+    sprintf(data, " %d", value);
+    GXTRACE(str, data);
+}
+
+///////////////////////////////////////////////////////////////////////
+// Write trace to the serial port.
+//
+// This can be used for debugging.
+///////////////////////////////////////////////////////////////////////
+void GXTRACE_LN(const char* str, uint16_t type, unsigned char* ln)
+{
+    char buff[30];
+    sprintf(buff, "%d %d.%d.%d.%d.%d.%d", type, ln[0], ln[1], ln[2], ln[3], ln[4], ln[5]);
+    GXTRACE(str, buff);
+}
+
 /////////////////////////////////////////////////////////////////////////////
 // Save security settings to the EEPROM.
 //
@@ -307,7 +462,8 @@ int saveSecurity(
     dlmsSettings* settings)
 {
     int ret = 0;
-    const char* fileName = "security.raw";
+    char fileName[64U] = {'\0'};
+    snprintf(fileName, sizeof(fileName), "%s/security.raw", readMeterSerialNumber());
     //Save keys to own block in EEPROM.
 #if _MSC_VER > 1400
     FILE* f = NULL;
@@ -350,7 +506,8 @@ int saveSecurity(
 int saveSettings()
 {
     int ret = 0;
-    const char* fileName = "settings.raw";
+    char fileName[64U] = {'\0'};
+    snprintf(fileName, sizeof(fileName), "%s/settings.raw", readMeterSerialNumber());
     //Save keys to own block in EEPROM.
 #if _MSC_VER > 1400
     FILE* f = NULL;
@@ -378,6 +535,24 @@ int saveSettings()
 //Allocate profile generic buffer.
 void allocateProfileGenericBuffer(const char* fileName, uint32_t size)
 {
+    char directoryPath[32U] = {'\0'};
+
+    // Create directory path using meter serial number if it does not exist.
+    snprintf(directoryPath, sizeof(directoryPath), "%s", readMeterSerialNumber());
+#if defined(_MSC_VER)
+    if (_mkdir(directoryPath) != 0 && errno != EEXIST)
+    {
+        printf("Failed to create directory: %s\n", directoryPath);
+        return;
+    }
+#else
+    if (mkdir(directoryPath, 0777) != 0 && errno != EEXIST)
+    {
+        printf("Failed to create directory: %s\n", directoryPath);
+        return;
+    }
+#endif
+
     uint32_t pos;
     FILE* f = NULL;
 #if _MSC_VER > 1400
@@ -405,7 +580,12 @@ void allocateProfileGenericBuffer(const char* fileName, uint32_t size)
 
 int getProfileGenericFileName(gxProfileGeneric* pg, char* fileName)
 {
-    int ret = hlp_getLogicalNameToString(pg->base.logicalName, fileName);
+    char tempFileName[64U] = {'\0'}; // Temporary buffer to avoid overlap
+
+    int ret = hlp_getLogicalNameToString(pg->base.logicalName, tempFileName);
+    // Prepend the directory path to the filename.
+    snprintf(fileName, 64U, "%s/%s", readMeterSerialNumber(), tempFileName);
+
 #if defined(_WIN64)
     strcat(fileName, "64.raw");
 #else // defined(_WIN32) || defined(__linux__)
@@ -493,7 +673,7 @@ uint16_t getProfileGenericBufferMaxRowCount(
     gxProfileGeneric* pg)
 {
     uint16_t count = 0;
-    char fileName[30];
+    char fileName[64U];
     //Allocate space for load profile buffer.
     getProfileGenericFileName(pg, fileName);
     uint16_t rowSize = 0;
@@ -506,7 +686,7 @@ uint16_t getProfileGenericBufferMaxRowCount(
     if (f == NULL)
     {
         //Allocate space for the profile generic buffer.
-        allocateProfileGenericBuffer(fileName, 1024);
+        allocateProfileGenericBuffer(fileName, LOG_FILE_SIZE);
 #if _MSC_VER > 1400
         fopen_s(&f, fileName, "r+b");
 #else
@@ -526,6 +706,7 @@ uint16_t getProfileGenericBufferMaxRowCount(
         }
         fclose(f);
     }
+    GXTRACE_INT("Number of rows in profile generic", count);
     return count;
 }
 
@@ -533,7 +714,7 @@ uint16_t getProfileGenericBufferMaxRowCount(
 uint16_t getProfileGenericBufferEntriesInUse(gxProfileGeneric* pg)
 {
     uint16_t index = 0;
-    char fileName[30];
+    char fileName[64U];
     getProfileGenericFileName(pg, fileName);
     FILE* f = NULL;
 #if _MSC_VER > 1400
@@ -566,14 +747,16 @@ int captureProfileGeneric(
     unsigned char pos;
     gxKey* it;
     int ret = 0;
-    char fileName[30];
-    getProfileGenericFileName(pg, fileName);
+    char fileName[64] = {'\0'};
+    FILE* f = NULL;
+    getProfileGenericFileName(pg, &fileName[0U]);
+    printf("Filename: %s\n", fileName);
     unsigned char pduBuff[PDU_MAX_PROFILE_GENERIC_COLUMN_SIZE];
     gxByteBuffer pdu;
     bb_attach(&pdu, pduBuff, 0, sizeof(pduBuff));
     gxValueEventArg e;
     ve_init(&e);
-    FILE* f = NULL;
+    GXTRACE(("Running captureProfileGeneric"), NULL);
 #if _MSC_VER > 1400
     fopen_s(&f, fileName, "r+b");
 #else
@@ -601,6 +784,25 @@ int captureProfileGeneric(
         }
         //Load current entry index from the begin of the data.
         uint16_t index = 0;
+        #if 1
+        if((NULL != strstr(fileName, "0.0.94.91.10.255.raw")))
+        {
+            uint8_t _data[16U];
+            if (fread(&_data[0U], 1, sizeof(_data), f) == 16)
+            {
+                for(uint8_t i = 0U; i < 16U; i++)
+                {
+                    if(0U != _data[i])
+                    {
+                        fclose(f);
+                        GXTRACE(("Name plate already present"), NULL);
+                        return 0;
+                    }
+                }
+                fseek(f, 0, SEEK_SET);
+            }
+        }
+        #endif
         if (fread(pdu.data, 1, 2, f) == 2)
         {
             pdu.size = 2;
@@ -668,6 +870,10 @@ int captureProfileGeneric(
         }
     }
     //Append data.
+    else
+    {
+        printf("Failed to open %s. Error code: %d. Description: %s.\n", fileName, errno, strerror(errno));
+    }
     return ret;
 }
 
@@ -677,50 +883,6 @@ void updateState(
 {
     GX_UINT16(eventCode.value) = value;
     captureProfileGeneric(settings, &eventLog);
-}
-///////////////////////////////////////////////////////////////////////
-// Write trace to the serial port.
-//
-// This can be used for debugging.
-///////////////////////////////////////////////////////////////////////
-void GXTRACE(const char* str, const char* data)
-{
-    //Send trace to the serial port in test mode.
-    if (testMode)
-    {
-        if (data == NULL)
-        {
-            printf("%s\r\n", str);
-        }
-        else
-        {
-            printf("%s %s\r\n", str, data);
-        }
-    }
-}
-
-///////////////////////////////////////////////////////////////////////
-// Write trace to the serial port.
-//
-// This can be used for debugging.
-///////////////////////////////////////////////////////////////////////
-void GXTRACE_INT(const char* str, int32_t value)
-{
-    char data[10];
-    sprintf(data, " %d", value);
-    GXTRACE(str, data);
-}
-
-///////////////////////////////////////////////////////////////////////
-// Write trace to the serial port.
-//
-// This can be used for debugging.
-///////////////////////////////////////////////////////////////////////
-void GXTRACE_LN(const char* str, uint16_t type, unsigned char* ln)
-{
-    char buff[30];
-    sprintf(buff, "%d %d.%d.%d.%d.%d.%d", type, ln[0], ln[1], ln[2], ln[3], ln[4], ln[5]);
-    GXTRACE(str, buff);
 }
 
 void println(char* desc, gxByteBuffer* data)
@@ -743,9 +905,9 @@ int addAssociationNone()
     if ((ret = INIT_OBJECT(associationNone, DLMS_OBJECT_TYPE_ASSOCIATION_LOGICAL_NAME, ln)) == 0)
     {
         //All objects are shown also without authentication.
-        OA_ATTACH(associationNone.objectList, ALL_OBJECTS);
+        //OA_ATTACH(associationNone.objectList, ALL_OBJECTS);
         //Uncomment this if you want to show only part of the objects without authentication.
-        //OA_ATTACH(associationNone.objectList, NONE_OBJECTS);
+        OA_ATTACH(associationNone.objectList, NONE_OBJECTS);
         associationNone.authenticationMechanismName.mechanismId = DLMS_AUTHENTICATION_NONE;
         associationNone.clientSAP = 0x10;
         //Max PDU is half of PDU size. This is for demonstration purposes only.
@@ -1021,6 +1183,243 @@ uint16_t readActivePowerL1Value()
     return ++activePowerL1Value;
 }
 
+#ifdef SINGLE_PHASE
+int addRegisterNeutralCurrent()
+{
+    int ret = addNeutralCurrent();
+    return ret;
+}
+
+int addRegisterActivePower()
+{
+    int ret = addActivePower();
+    return ret;
+}
+
+int addRegisterApparentPower()
+{
+    int ret = addApparentPower();
+    return ret;
+}
+
+int addRegisterSignedPowerFactor()
+{
+    int ret = addSignedPowerFactor();
+    return ret;
+}
+
+int addRegisterBlockEnergyKWhExport()
+{
+    int ret = addBlockEnergyKWhExport();
+    return ret;
+}
+
+int addRegisterCumulativeEnergyKWhExport()
+{
+    int ret = addCumulativeEnergyKWhExport();
+    return ret;
+}
+
+#elif defined(THREE_PHASE)
+int addRegisterVoltageL2() 
+{
+    int ret = addVoltageL2();
+    return ret;
+}
+
+int addRegisterVoltageL3() 
+{
+    int ret = addVoltageL3();
+    return ret;
+}
+
+int addRegisterCurrentL2() 
+{
+    int ret = addCurrentL2();
+    return ret;
+}
+
+int addRegisterCurrentL3() 
+{
+    int ret = addCurrentL3();
+    return ret;
+}
+
+int addRegisterPowerFactorL1() 
+{
+    int ret = addPowerFactorL1();
+    return ret;
+}
+
+int addRegisterPowerFactorL2() 
+{
+    int ret = addPowerFactorL2();
+    return ret;
+}
+
+int addRegisterPowerFactorL3() 
+{
+    int ret = addPowerFactorL3();
+    return ret;
+}
+
+int addRegisterBlockEnergyKVAhLag()
+{
+    int ret = addBlockEnergyKVAhLag();
+    return ret;
+}
+
+int addRegisterBlockEnergyKVAhLead()
+{
+    int ret = addBlockEnergyKVAhLead();
+    return ret;
+}
+
+int addRegisterBlockEnergyKVAhImport()
+{
+    int ret = addBlockEnergyKVAhImport();
+    return ret;
+}
+
+int addRegisterCumulativeEnergyKVAhLag()
+{
+    int ret = addCumulativeEnergyKVAhLag();
+    return ret;
+}
+
+int addRegisterCumulativeEnergyKVAhLead()
+{
+    int ret = addCumulativeEnergyKVAhLead();
+    return ret;
+}
+
+int addRegisterCumulativeEnergyKVAhImport()
+{
+    int ret = addCumulativeEnergyKVAhImport();
+    return ret;
+}
+
+int addRegisterVoltageL2Average()
+{
+    int ret = addVoltageL2Average();
+    return ret;
+}
+
+int addRegisterVoltageL3Average()
+{
+    int ret = addVoltageL3Average();
+    return ret;
+}
+
+int addRegisterCurrentL2Average()
+{
+    int ret = addCurrentL2Average();
+    return ret;
+}
+
+int addRegisterCurrentL3Average()
+{
+    int ret = addCurrentL3Average();
+    return ret;
+}
+
+int addDataCTR()
+{
+    int ret = addCTR();
+    return ret;
+}
+
+int addDataPTR()
+{
+    int ret = addPTR();
+    return ret;
+}
+#endif
+
+int addRegisterVoltageL1() 
+{
+    int ret = addVoltageL1();
+    return ret;
+}
+
+int addRegisterCurrentL1() 
+{
+    int ret = addCurrentL1();
+    return ret;
+}
+
+int addRegisterFrequency() 
+{
+    int ret = addFrequency();
+    return ret;
+}
+
+int addRegisterBlockEnergyKWhImport()
+{
+    int ret = addBlockEnergyKWhImport();
+    return ret;
+}
+
+int addRegisterCumulativeEnergyKWhImport()
+{
+    int ret = addCumulativeEnergyKWhImport();
+    return ret;
+}
+
+int addRegisterVoltageL1Average()
+{
+    int ret = addVoltageL1Average();
+    return ret;
+}
+
+int addRegisterCurrentL1Average()
+{
+    int ret = addCurrentL1Average();
+    return ret;
+}
+
+int addDataMeterSerialNumber()
+{
+    int ret = addMeterSerialNumber();
+    return ret;
+}
+
+int addDataManufacturerName()
+{
+    int ret = addManufacturerName();
+    return ret;
+}
+
+int addDataFirmwareVersion()
+{
+    int ret = addFirmwareVersion();
+    return ret;
+}
+
+int addDataMeterType()
+{
+    int ret = addMeterType();
+    return ret;
+}
+
+int addDataMeterCategory()
+{
+    int ret = addMeterCategory();
+    return ret;
+}
+
+int addDataCurrentRating()
+{
+    int ret = addCurrentRating();
+    return ret;
+}
+
+int addDataYearOfManufacture()
+{
+    int ret = addYearOfManufacture();
+    return ret;
+}
+
 uint16_t readEventCode()
 {
     return eventCode.value.uiVal;
@@ -1285,7 +1684,7 @@ int addLoadProfileProfileGeneric(dlmsSettings* settings)
     {
         gxTarget* capture;
         //Set default values if load the first time.
-        loadProfile.sortMethod = DLMS_SORT_METHOD_FIFO;
+        loadProfile.sortMethod = DLMS_SORT_METHOD_LIFO;
         ///////////////////////////////////////////////////////////////////
         //Add 2 columns.
         //Add clock object.
@@ -1293,17 +1692,247 @@ int addLoadProfileProfileGeneric(dlmsSettings* settings)
         capture->attributeIndex = 2;
         capture->dataIndex = 0;
         arr_push(&loadProfile.captureObjects, key_init(&clock1, capture));
-        //Add active power.
+        //Add L1 voltage Average.
         capture = (gxTarget*)malloc(sizeof(gxTarget));
         capture->attributeIndex = 2;
         capture->dataIndex = 0;
-        arr_push(&loadProfile.captureObjects, key_init(&activePowerL1, capture));
+        arr_push(&loadProfile.captureObjects, key_init(&voltageL1Average, capture));
+#ifdef THREE_PHASE
+        //Add L2 voltage Average.
+        capture = (gxTarget*)malloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&loadProfile.captureObjects, key_init(&voltageL2Average, capture));
+        //Add L3 voltage Average.
+        capture = (gxTarget*)malloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&loadProfile.captureObjects, key_init(&voltageL3Average, capture));
+#endif
+        //Add L1 current Average.
+        capture = (gxTarget*)malloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&loadProfile.captureObjects, key_init(&currentL1Average, capture));
+#ifdef THREE_PHASE
+        //Add L2 current Average.
+        capture = (gxTarget*)malloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&loadProfile.captureObjects, key_init(&currentL2Average, capture));
+        //Add L3 current Average.
+        capture = (gxTarget*)malloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&loadProfile.captureObjects, key_init(&currentL3Average, capture));
+#endif
+        //Add Block Energy Wh - Import.
+        capture = (gxTarget*)malloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&loadProfile.captureObjects, key_init(&blockEnergyKWhImport, capture));
+#ifdef SINGLE_PHASE
+        //Add Block Energy Wh - Export.
+        capture = (gxTarget*)malloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&loadProfile.captureObjects, key_init(&blockEnergyKWhExport, capture));
+#elif defined(THREE_PHASE)
+        //Add Block Energy VAh - Lag.
+        capture = (gxTarget*)malloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&loadProfile.captureObjects, key_init(&blockEnergyKVAhLag, capture));
+        //Add Block Energy VAh - Lead.
+        capture = (gxTarget*)malloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&loadProfile.captureObjects, key_init(&blockEnergyKVAhLead, capture));
+        //Add Block Energy VAh - Import.
+        capture = (gxTarget*)malloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&loadProfile.captureObjects, key_init(&blockEnergyKVAhImport, capture));
+#endif
         ///////////////////////////////////////////////////////////////////
         //Update amount of capture objects.
         //Set clock to sort object.
         loadProfile.sortObject = BASE(clock1);
         loadProfile.sortObjectAttributeIndex = 2;
         loadProfile.profileEntries = getProfileGenericBufferMaxRowCount(settings, &loadProfile);
+        loadProfile.entriesInUse = getProfileGenericBufferEntriesInUse(&loadProfile);
+    }
+    return 0;
+}
+
+///////////////////////////////////////////////////////////////////////
+//Add profile generic (historical data) object.
+///////////////////////////////////////////////////////////////////////
+int addDailyLoadProfileProfileGeneric(dlmsSettings* settings)
+{
+    int ret;
+    const unsigned char ln[6] = { 1, 0, 99, 2, 0, 255 };
+    if ((ret = INIT_OBJECT(dailyLoadProfile, DLMS_OBJECT_TYPE_PROFILE_GENERIC, ln)) == 0)
+    {
+        gxTarget* capture;
+        //Set default values if load the first time.
+        dailyLoadProfile.sortMethod = DLMS_SORT_METHOD_LIFO;
+        ///////////////////////////////////////////////////////////////////
+        //Add columns.
+        //Add clock obect.
+        capture = (gxTarget*)malloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&dailyLoadProfile.captureObjects, key_init(&clock1, capture));
+        //Add Cumulative Energy Wh - Import.
+        capture = (gxTarget*)malloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&dailyLoadProfile.captureObjects, key_init(&cumulativeEnergyKWhImport, capture));
+#ifdef SINGLE_PHASE
+        // Add Cumulative Energy Wh - Export
+        capture = (gxTarget*)malloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&dailyLoadProfile.captureObjects, key_init(&cumulativeEnergyKWhExport, capture));
+#elif defined(THREE_PHASE)
+        //Add Cumulative Energy VAh - Lag.
+        capture = (gxTarget*)malloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&dailyLoadProfile.captureObjects, key_init(&cumulativeEnergyKVAhLag, capture));
+        //Add Cumulative Energy VAh - Import.
+        capture = (gxTarget*)malloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&dailyLoadProfile.captureObjects, key_init(&cumulativeEnergyKVAhImport, capture));
+#endif
+        ///////////////////////////////////////////////////////////////////
+        //Update amount of capture objects.
+        //Set clock to sort object.
+        dailyLoadProfile.sortObject = BASE(clock1);
+        dailyLoadProfile.sortObjectAttributeIndex = 2;
+        dailyLoadProfile.profileEntries = getProfileGenericBufferMaxRowCount(settings, &dailyLoadProfile);
+        dailyLoadProfile.entriesInUse = getProfileGenericBufferEntriesInUse(&dailyLoadProfile);
+    }
+    return 0;
+}
+
+///////////////////////////////////////////////////////////////////////
+//Add profile generic (historical data) object.
+///////////////////////////////////////////////////////////////////////
+int addNameplateProfileProfileGeneric(dlmsSettings* settings)
+{
+    int ret;
+    const unsigned char ln[6] = { 0, 0, 94, 91, 10, 255 };
+    if ((ret = INIT_OBJECT(nameplateProfile, DLMS_OBJECT_TYPE_PROFILE_GENERIC, ln)) == 0)
+    {
+        gxTarget* capture;
+        //Set default values if load the first time.
+        nameplateProfile.sortMethod = DLMS_SORT_METHOD_FIFO;
+        ///////////////////////////////////////////////////////////////////
+        //Add columns.
+        //Add meter serial number object.
+        capture = (gxTarget*)malloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&nameplateProfile.captureObjects, key_init(&meterSerialNumber, capture));
+        //Add manufacturer name object.
+        capture = (gxTarget*)malloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&nameplateProfile.captureObjects, key_init(&manufacturerName, capture));
+        //Add firmware version object.
+        capture = (gxTarget*)malloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&nameplateProfile.captureObjects, key_init(&firmwareVersion, capture));
+        //Add meter type object.
+        capture = (gxTarget*)malloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&nameplateProfile.captureObjects, key_init(&meterType, capture));
+        //Add meter category object.
+        capture = (gxTarget*)malloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&nameplateProfile.captureObjects, key_init(&meterCategory, capture));
+        //Add current rating object.
+        capture = (gxTarget*)malloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&nameplateProfile.captureObjects, key_init(&currentRating, capture));
+#ifdef THREE_PHASE
+        //Add ctr object
+        capture = (gxTarget*)malloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&nameplateProfile.captureObjects, key_init(&ctr, capture));
+        //Add ptr object
+        capture = (gxTarget*)malloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&nameplateProfile.captureObjects, key_init(&ptr, capture));
+#endif
+        //Add year of manufacture object.
+        capture = (gxTarget*)malloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&nameplateProfile.captureObjects, key_init(&yearOfManufacture, capture));
+        ///////////////////////////////////////////////////////////////////
+        //Update amount of capture objects.
+        nameplateProfile.profileEntries = getProfileGenericBufferMaxRowCount(settings, &nameplateProfile);
+        nameplateProfile.entriesInUse = getProfileGenericBufferEntriesInUse(&nameplateProfile);
+    }
+    return 0;
+}
+
+///////////////////////////////////////////////////////////////////////
+//Add profile generic (historical data) object.
+///////////////////////////////////////////////////////////////////////
+int addBillingProfileProfileGeneric(dlmsSettings* settings)
+{
+    int ret;
+    const unsigned char ln[6] = { 1, 0, 98, 1, 0, 255 };
+    if ((ret = INIT_OBJECT(billingProfile, DLMS_OBJECT_TYPE_PROFILE_GENERIC, ln)) == 0)
+    {
+        gxTarget* capture;
+        //Set default values if load the first time.
+        billingProfile.sortMethod = DLMS_SORT_METHOD_LIFO;
+        ///////////////////////////////////////////////////////////////////
+        //Add columns.
+        //Add Cumulative Energy Wh - Import.
+        capture = (gxTarget*)malloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&billingProfile.captureObjects, key_init(&cumulativeEnergyKWhImport, capture));
+#ifdef SINGLE_PHASE
+        //Add Cumulative Energy Wh - Export.
+        capture = (gxTarget*)malloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&billingProfile.captureObjects, key_init(&cumulativeEnergyKWhExport, capture));
+#elif defined(THREE_PHASE)
+        //Add Cumulative Energy VAh - Lag.
+        capture = (gxTarget*)malloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&billingProfile.captureObjects, key_init(&cumulativeEnergyKVAhLag, capture));
+        //Add Cumulative Energy VAh - Lead.
+        capture = (gxTarget*)malloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&billingProfile.captureObjects, key_init(&cumulativeEnergyKVAhLead, capture));
+        //Add Cumulative Energy VAh - Import.
+        capture = (gxTarget*)malloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&billingProfile.captureObjects, key_init(&cumulativeEnergyKVAhImport, capture));
+#endif
+        ///////////////////////////////////////////////////////////////////
+        //Update amount of capture objects.
+        billingProfile.profileEntries = getProfileGenericBufferMaxRowCount(settings, &billingProfile);
+        billingProfile.entriesInUse = getProfileGenericBufferEntriesInUse(&billingProfile);
     }
     return 0;
 }
@@ -3396,7 +4025,8 @@ int addLteMonitoring()
 /////////////////////////////////////////////////////////////////////////////
 int loadSecurity(dlmsSettings* settings)
 {
-    const char* fileName = "security.raw";
+    char fileName[64U] = {'\0'};
+    snprintf(fileName, sizeof(fileName), "%s/security.raw", readMeterSerialNumber());
     int ret = 0;
     //Update keys.
 #if _MSC_VER > 1400
@@ -3444,7 +4074,8 @@ int loadSecurity(dlmsSettings* settings)
 /////////////////////////////////////////////////////////////////////////////
 int loadSettings(dlmsSettings* settings)
 {
-    const char* fileName = "settings.raw";
+    char fileName[64U] = {'\0'};
+    snprintf(fileName, sizeof(fileName), "%s/settings.raw", readMeterSerialNumber());
     int ret;
     //Update keys.
 #if _MSC_VER > 1400
@@ -3532,6 +4163,48 @@ int svr_InitObjects(
         (ret = addInvocationCounter()) != 0 ||
         (ret = addClockObject()) != 0 ||
         (ret = addRegisterObject()) != 0 ||
+        (ret = addRegisterVoltageL1()) != 0 ||
+        (ret = addRegisterCurrentL1()) != 0 ||
+#ifdef SINGLE_PHASE
+        (ret = addRegisterNeutralCurrent()) != 0 ||
+        (ret = addRegisterActivePower()) != 0 ||
+        (ret = addRegisterApparentPower()) != 0 ||
+        (ret = addRegisterSignedPowerFactor()) != 0 ||
+        (ret = addRegisterBlockEnergyKWhExport()) != 0 ||
+        (ret = addRegisterCumulativeEnergyKWhExport()) != 0 ||
+#elif defined(THREE_PHASE)
+        (ret = addRegisterVoltageL2()) != 0 ||
+        (ret = addRegisterVoltageL3()) != 0 ||
+        (ret = addRegisterCurrentL2()) != 0 ||
+        (ret = addRegisterCurrentL3()) != 0 ||
+        (ret = addRegisterPowerFactorL1()) != 0 ||
+        (ret = addRegisterPowerFactorL2()) != 0 ||
+        (ret = addRegisterPowerFactorL3()) != 0 ||
+        (ret = addRegisterBlockEnergyKVAhLag()) != 0 ||
+        (ret = addRegisterBlockEnergyKVAhLead()) != 0 ||
+        (ret = addRegisterBlockEnergyKVAhImport()) != 0 ||
+        (ret = addRegisterCumulativeEnergyKVAhLag()) != 0 ||
+        (ret = addRegisterCumulativeEnergyKVAhLead()) != 0 ||
+        (ret = addRegisterCumulativeEnergyKVAhImport()) != 0 ||
+        (ret = addRegisterVoltageL2Average()) != 0 ||
+        (ret = addRegisterVoltageL3Average()) != 0 ||
+        (ret = addRegisterCurrentL2Average()) != 0 ||
+        (ret = addRegisterCurrentL3Average()) != 0 ||
+        (ret = addDataCTR()) != 0 ||
+        (ret = addDataPTR()) != 0 ||
+#endif
+        (ret = addRegisterFrequency()) != 0 ||
+        (ret = addRegisterBlockEnergyKWhImport()) != 0 ||
+        (ret = addRegisterCumulativeEnergyKWhImport()) != 0 ||
+        (ret = addRegisterVoltageL1Average()) != 0 ||
+        (ret = addRegisterCurrentL1Average()) != 0 ||
+        (ret = addDataMeterSerialNumber()) != 0 ||
+        (ret = addDataManufacturerName()) != 0 ||
+        (ret = addDataFirmwareVersion()) != 0 ||
+        (ret = addDataMeterType()) != 0 ||
+        (ret = addDataMeterCategory()) != 0 ||
+        (ret = addDataCurrentRating()) != 0 ||
+        (ret = addDataYearOfManufacture()) != 0 ||
         (ret = addAssociationNone()) != 0 ||
         (ret = addAssociationLow()) != 0 ||
         (ret = addAssociationHigh()) != 0 ||
@@ -3556,6 +4229,9 @@ int svr_InitObjects(
         (ret = addTarifficationScriptTable()) != 0 ||
         (ret = addRegisterActivation(settings)) != 0 ||
         (ret = addLoadProfileProfileGeneric(&settings->base)) != 0 ||
+        (ret = addDailyLoadProfileProfileGeneric(&settings->base)) != 0 ||
+        (ret = addNameplateProfileProfileGeneric(&settings->base)) != 0 ||
+        (ret = addBillingProfileProfileGeneric(&settings->base)) != 0 ||
         (ret = addEventLogProfileGeneric(&settings->base)) != 0 ||
         (ret = addActionScheduleDisconnectOpen()) != 0 ||
         (ret = addActionScheduleDisconnectClose()) != 0 ||
@@ -3903,12 +4579,14 @@ int readProfileGeneric(
     gxProfileGeneric* pg,
     gxValueEventArg* e)
 {
+    printf("Starting readProfileGeneric function.\n");
     unsigned char first = e->transactionEndIndex == 0;
     int ret;
     gxArray captureObjects;
     arr_init(&captureObjects);
     char fileName[30];
     ret = getProfileGenericFileName(pg, fileName);
+    printf("ProfileGeneric file name: %s\n", fileName);
     uint32_t startTime = 0, endTime = 0;
     unsigned char maxCount = 0;
     unsigned char selectedColumns = 0;
@@ -4414,6 +5092,205 @@ void svr_preRead(
         {
             readActivePowerL1Value();
         }
+#ifdef SINGLE_PHASE
+        //Update value every time when user reads register.
+        if (e->target == BASE(neutralCurrent) && e->index == 2)
+        {
+            readNeutralCurrentValue();
+        }
+        //Update value every time when user reads register.
+        if (e->target == BASE(activePower) && e->index == 2)
+        {
+            readActivePowerValue();
+        }
+        //Update value every time when user reads register.
+        if (e->target == BASE(apparentPower) && e->index == 2)
+        {
+            readApparentPowerValue();
+        }
+        //Update value every time when user reads register.
+        if (e->target == BASE(signedPowerFactor) && e->index == 2)
+        {
+            readSignedPowerFactorValue();
+        }
+        //Update value every time when user reads register.
+        if (e->target == BASE(blockEnergyKWhImport) && e->index == 2)
+        {
+            readBlockEnergyKWhExportValue();
+        }
+        //Update value every time when user reads register.
+        if (e->target == BASE(cumulativeEnergyKWhExport) && e->index == 2)
+        {
+            readCumulativeEnergyKWhExportValue();
+        }
+#elif defined(THREE_PHASE)
+        //Update value every time when user reads register.
+        if (e->target == BASE(voltageL2) && e->index == 2)
+        {
+            readVoltageL2Value();
+        }
+        //Update value every time when user reads register.
+        if (e->target == BASE(voltageL3) && e->index == 2)
+        {
+            readVoltageL3Value();
+        }
+        //Update value every time when user reads register.
+        if (e->target == BASE(currentL2) && e->index == 2)
+        {
+            readCurrentL2Value();
+        }
+        //Update value every time when user reads register.
+        if (e->target == BASE(currentL3) && e->index == 2)
+        {
+            readCurrentL3Value();
+        }
+        //Update value every time when user reads register.
+        if (e->target == BASE(powerFactorL1) && e->index == 2)
+        {
+            readPowerFactorL1Value();
+        }
+        //Update value every time when user reads register.
+        if (e->target == BASE(powerFactorL2) && e->index == 2)
+        {
+            readPowerFactorL2Value();
+        }
+        //Update value every time when user reads register.
+        if (e->target == BASE(powerFactorL3) && e->index == 2)
+        {
+            readPowerFactorL3Value();
+        }
+        //Update value every time when user reads register.
+        if (e->target == BASE(blockEnergyKVAhLag) && e->index == 2)
+        {
+            readBlockEnergyKVAhLagValue();
+        }
+        //Update value every time when user reads register.
+        if (e->target == BASE(blockEnergyKVAhLead) && e->index == 2)
+        {
+            readBlockEnergyKVAhLeadValue();
+        }
+        //Update value every time when user reads register.
+        if (e->target == BASE(blockEnergyKVAhImport) && e->index == 2)
+        {
+            readBlockEnergyKVAhImportValue();
+        }
+        // Update value every time when user reads register.
+        if (e->target == BASE(cumulativeEnergyKVAhLag) && e->index == 2)
+        {
+            readCumulativeEnergyKVAhLagValue();
+        }
+        // Update value every time when user reads register.
+        if (e->target == BASE(cumulativeEnergyKVAhLead) && e->index == 2)
+        {
+            readCumulativeEnergyKVAhLeadValue();
+        }
+        // Update value every time when user reads register.
+        if (e->target == BASE(cumulativeEnergyKVAhImport) && e->index == 2)
+        {
+            readCumulativeEnergyKVAhImportValue();
+        }
+        // Read value every time when user reads register.
+        if (e->target == BASE(voltageL1Average) && e->index == 2)
+        {
+            readVoltageL1AverageValue();
+        }
+        // Read value every time when user reads register.
+        if (e->target == BASE(voltageL2Average) && e->index == 2)
+        {
+            readVoltageL2AverageValue();
+        }
+        // Read value every time when user reads register.
+        if (e->target == BASE(voltageL3Average) && e->index == 2)
+        {
+            readVoltageL3AverageValue();
+        }
+        // Read value every time when user reads register.
+        if (e->target == BASE(currentL1Average) && e->index == 2)
+        {
+            readCurrentL1AverageValue();
+        }
+        // Read value every time when user reads register.
+        if (e->target == BASE(currentL2Average) && e->index == 2)
+        {
+            readCurrentL2AverageValue();
+        }
+        // Read value every time when user reads register.
+        if (e->target == BASE(currentL3Average) && e->index == 2)
+        {
+            readCurrentL3AverageValue();
+        }
+        // Read value every time when user reads register.
+        if (e->target == BASE(ctr) && e->index == 2)
+        {
+            readCTR();
+        }
+        // Read value every time when user reads register.
+        if (e->target == BASE(ptr) && e->index == 2)
+        {
+            readPTR();
+        }
+#endif
+        //Update value every time when user reads register.
+        if (e->target == BASE(voltageL1) && e->index == 2)
+        {
+            readVoltageL1Value();
+        }
+        //Update value every time when user reads register.
+        if (e->target == BASE(currentL1) && e->index == 2)
+        {
+            readCurrentL1Value();
+        }
+        //Update value every time when user reads register.
+        if (e->target == BASE(frequency) && e->index == 2)
+        {
+            readFrequencyValue();
+        }
+        //Update value every time when user reads register.
+        if (e->target == BASE(blockEnergyKWhImport) && e->index == 2)
+        {
+            readBlockEnergyKWhImportValue();
+        }
+        // Update value every time when user reads register.
+        if (e->target == BASE(cumulativeEnergyKWhImport) && e->index == 2)
+        {
+            readCumulativeEnergyKWhImportValue();
+        }
+        // Read value every time when user reads register.
+        if (e->target == BASE(meterSerialNumber) && e->index == 2)
+        {
+            readMeterSerialNumber();
+        }
+        // Read value every time when user reads register.
+        if (e->target == BASE(manufacturerName) && e->index == 2)
+        {
+            readManufacturerName();
+        }
+        // Read value every time when user reads register.
+        if (e->target == BASE(firmwareVersion) && e->index == 2)
+        {
+            readFirmwareVersion();
+        }
+        // Read value every time when user reads register.
+        if (e->target == BASE(meterType) && e->index == 2)
+        {
+            readMeterType();
+        }
+        // Read value every time when user reads register.
+        if (e->target == BASE(meterCategory) && e->index == 2)
+        {
+            readMeterCategory();
+        }
+        // Read value every time when user reads register.
+        if (e->target == BASE(currentRating) && e->index == 2)
+        {
+            readCurrentRating();
+        }
+        // Read value every time when user reads register.
+        if (e->target == BASE(yearOfManufacture) && e->index == 2)
+        {
+            readYearOfManufacture();
+        }
+
         else if (e->target->objectType == DLMS_OBJECT_TYPE_REGISTER && e->index == 2)
         {
             //Update value by one every time when user reads register.
@@ -4578,11 +5455,13 @@ void handleProfileGenericActions(
     {
         //Increase power value before each load profile read to increase the value.
         //This is needed for demo purpose only.
+        #if 0
         if (it->target == BASE(loadProfile))
         {
             readActivePowerL1Value();
         }
         it->error = captureProfileGeneric(settings, ((gxProfileGeneric*)it->target));
+        #endif
     }
     if (it->error == 0)
     {
@@ -4661,7 +5540,8 @@ void svr_preAction(
         else if (e->target == BASE(scriptTableGlobalMeterReset) && e->index == 1)
         {
             //Initialize data size so default values are used on next connection.
-            const char* fileName = "settings.raw";
+            char fileName[64U] = {'\0'};
+            snprintf(fileName, sizeof(fileName), "%s/settings.raw", readMeterSerialNumber());
 #if _MSC_VER > 1400
             FILE* f = NULL;
             fopen_s(&f, fileName, "wb");
@@ -4726,7 +5606,8 @@ void svr_preAction(
             FILE* f;
             dlmsVARIANT* identification, * pSize;
             gxImageTransfer* i = (gxImageTransfer*)e->target;
-            const char* imageFile = "image.raw";
+            char imageFile[64U] = {'\0'};
+            snprintf(imageFile, sizeof(imageFile), "%s/image.raw", readMeterSerialNumber());
             //Image name and size to transfer
             if (e->index == 1)
             {
@@ -5654,3 +6535,27 @@ void svr_getDataType(
 {
 
 }
+
+#if defined(__linux__)
+void* captureThreadFunction(void* pVoid)
+{
+    connection* con = (connection*)pVoid;
+    unsigned int loadProfileCounter = 0;
+
+    while(true)
+    {
+        captureProfileGeneric(&con->settings.base, &nameplateProfile);
+        sleep(30);
+        captureProfileGeneric(&con->settings.base, &loadProfile);
+        loadProfileCounter++;
+
+        if (loadProfileCounter == LOAD_PROFILE_COUNTER)
+        {
+            captureProfileGeneric(&con->settings.base, &dailyLoadProfile);
+            loadProfileCounter = 0;
+        }
+        captureProfileGeneric(&con->settings.base, &billingProfile);
+    }
+    return NULL;
+}
+#endif

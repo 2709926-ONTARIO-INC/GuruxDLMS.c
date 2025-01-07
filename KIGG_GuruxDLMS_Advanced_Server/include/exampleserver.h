@@ -23,10 +23,18 @@
 #include "../../development/include/server.h"
 #define HDLC_HEADER_SIZE 17
 #define HDLC_BUFFER_SIZE 128
-#define PDU_BUFFER_SIZE 512
+#define PDU_BUFFER_SIZE 4096
 #define WRAPPER_BUFFER_SIZE 8 + PDU_BUFFER_SIZE
 
+#define STACK_SIZE 4 * 1024 * 1024  // 4 MB stack size
+#define LOG_FILE_SIZE   2048U
+
+//TODO: Allocate space where profile generic row values are serialized.
+#define PDU_MAX_PROFILE_GENERIC_COLUMN_SIZE LOG_FILE_SIZE * 4U
+#define LOAD_PROFILE_COUNTER    4U
+
 #if defined(_WIN32) || defined(_WIN64) || defined(__linux__)
+#include "stdio.h"
 #include "connection.h"
 extern char DATAFILE[FILENAME_MAX];
 extern char IMAGEFILE[FILENAME_MAX];
@@ -203,3 +211,5 @@ void svr_getDataType(
     gxValueEventCollection* args);
 
 uint32_t time_current(void);
+
+void* captureThreadFunction(void* pVoid);
