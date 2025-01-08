@@ -4,7 +4,7 @@ from PyQt5.QtCore import Qt
 from utils import createLabel, open_next_page, open_previous_page, createButton
 import json
 import os
-
+import random
 class Meter(QWidget):
     def __init__(self,config):
         super().__init__()
@@ -23,43 +23,91 @@ class Meter(QWidget):
 
         Parameters = ["Total", "Manufacturer", "Frequency", "Model", "Meter Constant", "Communication"]
 
+        # Company models (change these to actual models for each company)
+        model_data = {
+            "Genus": {
+                "Single Phase": ["Saksham 145"],
+                "Three Phase": ["Saksham 345", "Saksham-340 LTCT", "Saksham-340 HTCT"]
+            },
+            "HPL": {
+                "Single Phase": ["SPSM152G111000ME00"],
+                "Three Phase": ["TLSM282I131000OC00"]
+            },
+            "AEW": {
+                "Single Phase": ["AT-121"],
+                "Three Phase": ["AEW100-D36"]
+            },
+            "Secure Meters Ltd.": {
+                "Single Phase": ["Liberty 200", "Sprint 231"],
+                "Three Phase": ["Premier 211", "Premier 520"]
+            }
+        }
+
         for item in Parameters:
             itembox = QHBoxLayout()
 
             item_label = QLabel(item)
             item_label.setFont(QFont("Arial", 12))
 
-            if (item == "Model"):
-                item_input = QComboBox()
-                item_input.setFont(QFont("Arial", 12))
-                item_input.setStyleSheet("background-color: white;")
-                item_input.setFixedWidth(200)
-            elif (item == "Manufacturer"): 
+            if (item == "Manufacturer"): 
                 item_input = QLineEdit()
                 item_input.setReadOnly(True)
                 item_input.setText(config["manufacturer"])
                 item_input.setFont(QFont("Arial", 12))
                 item_input.setStyleSheet("background-color: white;")
-                item_input.setFixedWidth(200)
+                item_input.setFixedWidth(250)
             elif (item == "Frequency"): 
                 item_input = QComboBox()
                 item_input.addItems(["50 Hz","60 Hz"])
                 item_input.setFont(QFont("Arial", 12))
                 item_input.setStyleSheet("background-color: white;")
-                item_input.setFixedWidth(200)
+                item_input.setFixedWidth(250)
             elif (item == "Total"): 
                 item_input = QLineEdit()
                 item_input.setReadOnly(True)
                 item_input.setFont(QFont("Arial", 12))
                 item_input.setStyleSheet("background-color: white;")
-                item_input.setFixedWidth(200)
+                item_input.setFixedWidth(250)
                 item_input.setText(str(config["no_of_meters"]))
+            elif (item == "Meter Constant"): 
+                a = [500, 600, 800, 1000]
+                item_input = QLineEdit()
+                value = random.sample(a,1)
+                item_input.setReadOnly(True)
+                item_input.setFont(QFont("Arial", 12))
+                item_input.setStyleSheet("background-color: white;")
+                item_input.setFixedWidth(250)
+                item_input.setText(str(value[0]))
+            elif (item == "Model"): 
+                # Get the manufacturer and meter type from config
+                manufacturer = config["manufacturer"]
+                meter_type = config["meter_type"]
+
+                if "Three Phase" in meter_type:
+                    meter_type = "Three Phase"
+                
+                # Fetch the list of models based on manufacturer and meter type
+                models = model_data.get(manufacturer, {}).get(meter_type, [])
+
+                # Randomly select a model from the available models
+                if models:
+                    model = random.choice(models)
+                else:
+                    model = "Unknown Model"
+
+                # Create a QLineEdit for the model
+                item_input = QLineEdit()
+                item_input.setReadOnly(True)
+                item_input.setFont(QFont("Arial", 12))
+                item_input.setStyleSheet("background-color: white;")
+                item_input.setFixedWidth(250)
+                item_input.setText(model)
             else: 
                 item_input = QLineEdit()
                 item_input.setReadOnly(True)
                 item_input.setFont(QFont("Arial", 12))
                 item_input.setStyleSheet("background-color: white;")
-                item_input.setFixedWidth(200)
+                item_input.setFixedWidth(250)
 
             itembox.addWidget(item_label)
             itembox.addWidget(item_input)

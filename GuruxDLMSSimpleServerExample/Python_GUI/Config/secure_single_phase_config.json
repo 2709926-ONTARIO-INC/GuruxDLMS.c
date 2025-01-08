@@ -1,7 +1,7 @@
 {
     "no_of_meters": 50,
     "meter_type": "Single Phase",
-    "manufacturer": "Secure",
+    "manufacturer": "Secure Meters Ltd.",
     "voltage_limits": {
         "lower_limit": 11000,
         "upper_limit": 11000

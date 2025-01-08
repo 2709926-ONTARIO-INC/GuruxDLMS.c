@@ -1,0 +1,69 @@
+{
+    "no_of_meters": 20,
+    "meter_type": "Three Phase (HTCT)",
+    "manufacturer": "HPL",
+    "voltage_limits": {
+        "L1": {
+            "lower_limit": 108000,
+            "upper_limit": 112000
+        },
+        "L2": {
+            "lower_limit": 108000,
+            "upper_limit": 112000
+        },
+        "L3": {
+            "lower_limit": 108000,
+            "upper_limit": 112000
+        }
+    },
+    "current_limits": {
+        "L1": {
+            "lower_limit": 0,
+            "upper_limit": 1000000
+        },
+        "L2": {
+            "lower_limit": 0,
+            "upper_limit": 1000000
+        },
+        "L3": {
+            "lower_limit": 0,
+            "upper_limit": 1000000
+        }
+    },
+    "frequency_limits": {
+            "lower_limit": 49800,
+            "upper_limit": 50200
+    },
+    "power_factor_limits": {
+        "L1": {
+            "lower_limit": 100,
+            "upper_limit": 990
+        },
+        "L2": {
+            "lower_limit": 100,
+            "upper_limit": 990
+        },
+        "L3": {
+            "lower_limit": 100,
+            "upper_limit": 990
+        }
+    },
+    "block_energy_limits": {
+        "kWh_import": {
+            "lower_limit": 0,
+            "upper_limit": 10000
+        },
+        "kVAh_lag": {
+            "lower_limit": 0,
+            "upper_limit": 10000
+        },
+        "kVAh_lead": {
+            "lower_limit": 0,
+            "upper_limit": 10000
+        },
+        "kVAh_import": {
+            "lower_limit": 0,
+            "upper_limit": 10000
+        }
+    }
+}
