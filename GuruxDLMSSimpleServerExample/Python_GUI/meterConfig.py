@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QVBoxLayout, QHBoxLayout, QMainWindow, QLineEdit, QTableWidget, QTableWidgetItem, QPushButton, QComboBox, QScrollArea, QHeaderView
+from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QVBoxLayout, QHBoxLayout, QMainWindow, QLineEdit, QTableWidget, QTableWidgetItem, QComboBox, QScrollArea, QHeaderView
 from PyQt5.QtGui import QFont
 from PyQt5.QtCore import Qt
 from utils import createLabel, open_next_page, open_previous_page, createButton
@@ -87,6 +87,8 @@ class Meter(QWidget):
                             item = QTableWidgetItem(str(config[json_keys[row]]["phase_current"][limits[col-1]]/1000))
                         elif row == 4:
                             item = QTableWidgetItem(str(config[json_keys[row]]["kWh_import"][limits[col-1]]/100))
+                        elif row == 3:
+                            item = QTableWidgetItem(str(config["signed_"+json_keys[row]][limits[col-1]]/1000))
                         else:
                             item = QTableWidgetItem(str(config[json_keys[row]][limits[col-1]]/1000))
                     else:

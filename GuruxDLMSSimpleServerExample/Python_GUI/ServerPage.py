@@ -90,27 +90,24 @@ class ParameterPopup(QWidget):
         manufacturer = self.parent_table.item(current_row, 2).text()
         no_of_meters = int(self.parent_table.item(current_row, 1).text()) if self.parent_table.item(current_row, 1).text() != "" else 0
 
-        if meter_type == "Single Phase":
-            meter_type_for_file_path = "single_phase"
-        elif meter_type == "Three Phase (WC)":
-            meter_type_for_file_path = "three_phase_wc"
-        elif meter_type == "Three Phase (LTCT)":
-            meter_type_for_file_path = "three_phase_ltct"
-        elif meter_type == "Three Phase (HTCT)":
-            meter_type_for_file_path = "three_phase_htct"
-        else:
-            pass
-
+        # Convert Meter Type for file name
+        file_path_name = {"Single Phase": "single_phase", "Three Phase (WC)": "three_phase_wc", "Three Phase (LTCT)": "three_phase_ltct", "Three Phase (HTCT)": "three_phase_htct"}
+        if meter_type:
+            meter_type_for_file_path = file_path_name[meter_type]
+        
         # Get the directory of the current script
         script_directory = os.path.dirname(os.path.abspath(__file__))
 
         # Construct the config file path
         print(manufacturer.lower().replace(' ', '_'))
-        config_file_name = f"Config\{manufacturer.lower().replace(' ', '_')}_{meter_type_for_file_path}_config.json"
+        config_file_name = fr"Config\{manufacturer.lower().replace(' ', '_')}_{meter_type_for_file_path}_config.json"
 
         # Prepend the full directory path
         config_file_path = os.path.join(script_directory, config_file_name)
 
+        json_keys = ["voltage_limits", "current_limits", "frequency_limits", "power_factor_limits", "block_energy_limits"]
+        phases = ["L1", "L2", "L3"]
+        limits = ["lower_limit", "upper_limit"]
         if meter_type == "Single Phase":
             config_data = {
                 "no_of_meters": no_of_meters,
@@ -134,7 +131,7 @@ class ParameterPopup(QWidget):
                     "lower_limit": int(float(input_table.item(2, 1).text()) * 1000),
                     "upper_limit": int(float(input_table.item(2, 2).text()) * 1000)
                 },
-                "power_factor_limits": {
+                "signed_power_factor_limits": {
                     "lower_limit": int(float(input_table.item(3, 1).text()) * 1000),
                     "upper_limit": int(float(input_table.item(3, 2).text()) * 1000)
                 },
@@ -344,32 +341,26 @@ class ServerPage(QMainWindow):
             start_instance = int(self.table.item(row, 4).text()) if self.table.item(row, 4).text() != "" else 0
             is_garbage_enabled = self.table.cellWidget(row, 5).findChild(QCheckBox).isChecked() if self.table.cellWidget(row, 5) else False
 
-            if type_of_meter == "Single Phase":
-                meter_type_for_file_path = "single_phase"
-            elif type_of_meter == "Three Phase (WC)":
-                meter_type_for_file_path = "three_phase_wc"
-            elif type_of_meter == "Three Phase (LTCT)":
-                meter_type_for_file_path = "three_phase_ltct"
-            elif type_of_meter == "Three Phase (HTCT)":
-                meter_type_for_file_path = "three_phase_htct"
-            else:
-                pass
+            # Convert Meter Type for file name
+            file_path_name = {"Single Phase": "single_phase", "Three Phase (WC)": "three_phase_wc", "Three Phase (LTCT)": "three_phase_ltct", "Three Phase (HTCT)": "three_phase_htct"}
+            if type_of_meter:
+                meter_type_for_file_path = file_path_name[type_of_meter]
 
             # Get the directory of the current script
             script_directory = os.path.dirname(os.path.abspath(__file__))
 
             # Construct the config file path
             print(manufacturer.lower().replace(' ', '_'))
-            config_file_name = f"Config\{manufacturer.lower().replace(' ', '_')}_{meter_type_for_file_path}_config.json"
+            config_file_name = fr"Config\{manufacturer.lower().replace(' ', '_')}_{meter_type_for_file_path}_config.json"
 
             # Prepend the full directory path
             config_file_path = os.path.join(script_directory, config_file_name)
 
             # Binary file path
             if type_of_meter == "Single Phase":
-                binary_file_name = f"Bin\gurux.dlms.simple.server.single.phase.bin"
+                binary_file_name = r"Bin\gurux.dlms.simple.server.single.phase.bin"
             else:
-                binary_file_name = f"Bin\gurux.dlms.simple.server.three.phase.bin"
+                binary_file_name = r"Bin\gurux.dlms.simple.server.three.phase.bin"
 
             binary_file_path = os.path.join(script_directory, binary_file_name)
 
