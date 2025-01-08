@@ -126,7 +126,13 @@ class MeterConfig(QMainWindow):
         meter_layout = QHBoxLayout()
         meter_layout.setAlignment(Qt.AlignLeft)
 
-        config_folder = r"GuruxDLMSSimpleServerExample/Python_GUI/Config"
+        # Get the directory of the current script
+        script_directory = os.path.dirname(os.path.abspath(__file__))
+
+        config_file_name = f"Config\\"
+
+        # Prepend the full directory path
+        config_folder = os.path.join(script_directory, config_file_name)
         meter_configs = self.load_meter_configs(config_folder)
 
         for config in meter_configs:
