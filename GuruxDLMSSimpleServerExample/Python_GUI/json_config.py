@@ -1,4 +1,5 @@
-from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtWidgets import QMessageBox, QCheckBox
+from app_state import state
 import json
 import os
 
@@ -32,6 +33,40 @@ class SaveConfigJson():
             meter_type = self.parent_table.cellWidget(current_row, 0).currentText()
             manufacturer = self.parent_table.item(current_row, 2).text()
             no_of_meters = int(self.parent_table.item(current_row, 1).text()) if self.parent_table.item(current_row, 1).text() != "" else 0
+
+            # Save data to global state
+            row_data = {
+                "voltage_limits": {
+                    "min": input_table.item(0, 1).text(),
+                    "max": input_table.item(0, 2).text()
+                },
+                "current_limits": {
+                    "min": input_table.item(1, 1).text(),
+                    "max": input_table.item(1, 2).text()
+                },
+                "power_factor_limits": {
+                    "min": input_table.item(2, 1).text(),
+                    "max": input_table.item(2, 2).text()
+                },
+                "frequency_limits": {
+                    "min": input_table.item(3, 1).text(),
+                    "max": input_table.item(3, 2).text()
+                },
+                "block_load_limits": {
+                    "min": input_table.item(4, 1).text(),
+                    "max": input_table.item(4, 2).text()
+                },
+                'meter_type': self.parent_table.cellWidget(current_row, 0).currentText() if self.parent_table.cellWidget(current_row, 0) else "",
+                'num_meters': self.parent_table.item(current_row, 1).text() if self.parent_table.item(current_row, 1) else "",
+                'manufacturer': self.parent_table.item(current_row, 2).text() if self.parent_table.item(current_row, 2) else "",
+                'start_port': self.parent_table.item(current_row, 3).text() if self.parent_table.item(current_row, 3) else "",
+                'start_instance': self.parent_table.item(current_row, 4).text() if self.parent_table.item(current_row, 4) else "",
+                'garbage_enabled': self.parent_table.cellWidget(current_row, 5).findChild(QCheckBox).isChecked() if self.parent_table.cellWidget(current_row, 5) else False
+            }
+
+            state.row_data[current_row] = row_data
+
+            print(state.row_data)
 
             # Convert Meter Type for file name
             file_path_name = {"Single Phase": "single_phase", "Three Phase (WC)": "three_phase_wc", "Three Phase (LTCT)": "three_phase_ltct", "Three Phase (HTCT)": "three_phase_htct"}

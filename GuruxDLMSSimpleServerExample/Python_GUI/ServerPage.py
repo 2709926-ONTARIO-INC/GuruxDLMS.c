@@ -1,15 +1,17 @@
 from PyQt5.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QTableWidget, QApplication, QHBoxLayout, QHeaderView, QTableWidgetItem, QCheckBox, QComboBox, QMessageBox
 from PyQt5.QtCore import Qt
 from utils import createLabel, open_next_page, open_previous_page, createButton
-import sys
 from json_config import SaveConfigJson
+from app_state import state
+import sys
 import os
 import meter_automation
 
 class ParameterPopup(QWidget):
-    def __init__(self, parent_table):
+    def __init__(self, parent_table, current_row):
         super().__init__()
         self.parent_table = parent_table
+        self.current_row = current_row
         self.initUI()
 
     def initUI(self):
@@ -39,7 +41,54 @@ class ParameterPopup(QWidget):
             for col in range(1, 3):
                 item = QTableWidgetItem("")
                 item.setTextAlignment(Qt.AlignCenter)
-                input_table.setItem(row, col, item)  
+                input_table.setItem(row, col, item)
+            print(self.current_row)
+            print(len(state.row_data))
+            if len(state.row_data) > 0 and self.current_row < len(state.row_data):
+                if row == 0:
+                    min_item = QTableWidgetItem(state.row_data[self.current_row]["voltage_limits"]["min"])
+                    min_item.setTextAlignment(Qt.AlignCenter)
+                    input_table.setItem(0, 1, min_item)
+
+                    max_item = QTableWidgetItem(state.row_data[self.current_row]["voltage_limits"]["max"])
+                    max_item.setTextAlignment(Qt.AlignCenter)
+                    input_table.setItem(0, 2, max_item)
+
+                if row == 1:
+                    min_item = QTableWidgetItem(state.row_data[self.current_row]["current_limits"]["min"])
+                    min_item.setTextAlignment(Qt.AlignCenter)
+                    input_table.setItem(1, 1, min_item)
+
+                    max_item = QTableWidgetItem(state.row_data[self.current_row]["current_limits"]["max"])
+                    max_item.setTextAlignment(Qt.AlignCenter)
+                    input_table.setItem(1, 2, max_item)
+
+                if row == 2:
+                    min_item = QTableWidgetItem(state.row_data[self.current_row]["power_factor_limits"]["min"])
+                    min_item.setTextAlignment(Qt.AlignCenter)
+                    input_table.setItem(2, 1, min_item)
+
+                    max_item = QTableWidgetItem(state.row_data[self.current_row]["power_factor_limits"]["max"])
+                    max_item.setTextAlignment(Qt.AlignCenter)
+                    input_table.setItem(2, 2, max_item)
+
+                if row == 3:
+                    min_item = QTableWidgetItem(state.row_data[self.current_row]["frequency_limits"]["min"])
+                    min_item.setTextAlignment(Qt.AlignCenter)
+                    input_table.setItem(3, 1, min_item)
+
+                    max_item = QTableWidgetItem(state.row_data[self.current_row]["frequency_limits"]["max"])
+                    max_item.setTextAlignment(Qt.AlignCenter)
+                    input_table.setItem(3, 2, max_item)
+
+                if row == 4:
+                    min_item = QTableWidgetItem(state.row_data[self.current_row]["block_load_limits"]["min"])
+                    min_item.setTextAlignment(Qt.AlignCenter)
+                    input_table.setItem(4, 1, min_item)
+
+                    max_item = QTableWidgetItem(state.row_data[self.current_row]["block_load_limits"]["max"])
+                    max_item.setTextAlignment(Qt.AlignCenter)
+                    input_table.setItem(4, 2, max_item)
 
         popup_layout = QVBoxLayout(self)
         popup_layout.addWidget(input_table)
@@ -86,6 +135,24 @@ class ServerPage(QMainWindow):
             "QAbstractItemView::indicator { width: 25px; height: 25px }"
         )
         main_layout.addWidget(self.table)
+
+        if state.row_data:
+            for _ in range(len(state.row_data)):
+                self.addRow()
+                current_row = self.table.rowCount() - 1
+                self.table.setItem(current_row, 0, QTableWidgetItem(state.row_data[current_row]['meter_type']))
+                self.table.setItem(current_row, 1, QTableWidgetItem(state.row_data[current_row]['num_meters']))
+                self.table.setItem(current_row, 2, QTableWidgetItem(state.row_data[current_row]['manufacturer']))
+                self.table.setItem(current_row, 3, QTableWidgetItem(state.row_data[current_row]['start_port']))
+                self.table.setItem(current_row, 4, QTableWidgetItem(state.row_data[current_row]['start_instance']))
+                checkbox_widget = self.table.cellWidget(current_row, 5)
+                checkbox = checkbox_widget.findChild(QCheckBox)
+                checkbox.setChecked(state.row_data[current_row]['garbage_enabled'])
+
+                for column in range(1, 5):
+                    item = self.table.item(current_row, column)
+                    if item:
+                        item.setTextAlignment(Qt.AlignCenter)
 
         button_layout = QHBoxLayout()
         button_layout.setAlignment(Qt.AlignCenter)
@@ -137,7 +204,8 @@ class ServerPage(QMainWindow):
                 self.table.setCellWidget(row_index, column, checkbox_widget)
             elif column == 6: 
                 push_btn = createButton("Open", 10)
-                popup_window = ParameterPopup(self.table)
+                print(f"Row Index: {row_index}")
+                popup_window = ParameterPopup(self.table, row_index)
                 push_btn.clicked.connect(lambda: popup_window.show())
                 self.table.setCellWidget(row_index, column, push_btn)
             else:
