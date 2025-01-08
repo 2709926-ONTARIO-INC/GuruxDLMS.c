@@ -29,9 +29,8 @@ class EventSimulationApp(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Events to be Simulated")
-        self.setFixedSize(1550, 725)
+        self.setWindowState(Qt.WindowMaximized)
         self.setStyleSheet("background-color: #F1F1F1;")
-        self.setWindowFlag(Qt.WindowStaysOnTopHint)
 
         # Central Widget
         central_widget = QWidget(self)

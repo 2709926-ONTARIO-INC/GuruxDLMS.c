@@ -11,9 +11,8 @@ class LogoPage(QMainWindow):
 
     def initUI(self):
         self.setWindowTitle("Logo Page")
-        self.setFixedSize(1550, 725)
+        self.setWindowState(Qt.WindowMaximized)
         self.setStyleSheet("background-color: #F1F1F1;")
-        self.setWindowFlag(Qt.WindowStaysOnTopHint)
 
         # Container widget
         container = QWidget(self)

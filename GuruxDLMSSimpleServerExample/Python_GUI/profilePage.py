@@ -98,9 +98,8 @@ class ProfilePage(QWidget):
 
     def initUI(self):
         self.setWindowTitle('Load Profile Page')
-        self.setFixedSize(1550,725)
+        self.setWindowState(Qt.WindowMaximized)
         self.setStyleSheet("background-color: #F1F1F1;")
-        self.setWindowFlag(Qt.WindowStaysOnTopHint)
 
         # Main layout
         self.main_layout = QVBoxLayout(self)

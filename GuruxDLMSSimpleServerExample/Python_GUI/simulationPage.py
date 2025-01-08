@@ -14,8 +14,7 @@ class SimulationDetailsApp(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Simulation Details")
-        self.setFixedSize(1550,725)
-        self.setWindowFlag(Qt.WindowStaysOnTopHint)
+        self.setWindowState(Qt.WindowMaximized)
 
         # File to store saved data
         self.data_file = "simulation.json"

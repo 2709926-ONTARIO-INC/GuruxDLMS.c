@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QApplication, QWidget, QLineEdit, QVBoxLayout, QHBoxLayout, QMainWindow, QMessageBox
-from PyQt5.QtGui import QFont
+from PyQt5.QtGui import QFont, QDesktopServices
 from PyQt5.QtCore import Qt
 from utils import createLabel, open_next_page, open_previous_page, createButton
 
@@ -10,17 +10,17 @@ class LoginPage(QMainWindow):
 
     def initUI(self):
         self.setWindowTitle('Login Page')
-        self.setFixedSize(1550,725)
+        self.setWindowState(Qt.WindowMaximized)
         self.setStyleSheet("background-color: #F1F1F1;")
-        self.setWindowFlag(Qt.WindowStaysOnTopHint)
 
         # Container widget
         container = QWidget(self)
         container.setStyleSheet("*{background-color: lightblue;} .QWidget{border: 2px solid black;}")
         self.setCentralWidget(container)
-        self.setContentsMargins(475, 250, 0, 0)
-        container.setMaximumSize(600,210)
-
+        screensize = QApplication.primaryScreen().size()
+        container.setMaximumSize(600,220)
+        self.setContentsMargins((screensize.width()-600)//2, (screensize.height()-270)//2, 0, 0)
+        
         # Layouts
         layout = QVBoxLayout(container)
         layout.setAlignment(Qt.AlignCenter)
@@ -74,14 +74,17 @@ class LoginPage(QMainWindow):
         container.setLayout(layout)
 
         def validateInput():
+            popup = QMessageBox()
+            popup.setStandardButtons(QMessageBox.Ok)
+            popup.setWindowTitle("Error Message")
+            popup.setDefaultButton(QMessageBox.Ok)
             if (user_id_input.text() == "admin" and password_input.text() == "Admin@123"):
                 self.openNextPage()
+            elif (user_id_input.text() == "" or password_input.text() == ""):
+                popup.setText("This field cannot be empty. Please enter a value.")
+                popup.exec_()
             else:
-                popup = QMessageBox()
-                popup.setStandardButtons(QMessageBox.Ok)
-                popup.setWindowTitle("Error Message")
-                popup.setDefaultButton(QMessageBox.Ok)
-                popup.setText("Please enter correct User Id and Password")
+                popup.setText("Please enter correct User Id and Password.")
                 popup.exec_()
 
     def openNextPage(self):
