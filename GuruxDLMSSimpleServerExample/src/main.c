@@ -225,7 +225,6 @@ static gxObject *ALL_OBJECTS[] = {
     BASE(scriptTableDisconnectControl),
     BASE(scriptTableActivateTestMode),
     BASE(scriptTableActivateNormalMode),
-    BASE(instantaneousProfile),
     BASE(loadProfile),
     BASE(dailyLoadProfile),
     BASE(nameplateProfile),
