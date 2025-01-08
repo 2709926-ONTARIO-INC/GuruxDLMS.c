@@ -136,21 +136,25 @@ class Meter(QWidget):
                 else: 
                     if config["meter_type"] == "Single Phase":
                         if row == 1:
-                            item = QTableWidgetItem(str(config[json_keys[row]]["phase_current"][limits[col-1]]/1000))
+                            item = QTableWidgetItem(str(int(config[json_keys[row]]["phase_current"][limits[col-1]]/1000)))
                         elif row == 4:
-                            item = QTableWidgetItem(str(config[json_keys[row]]["kWh_import"][limits[col-1]]/100))
+                            item = QTableWidgetItem(str(int(config[json_keys[row]]["kWh_import"][limits[col-1]]/100)))
                         elif row == 3:
                             item = QTableWidgetItem(str(config["signed_"+json_keys[row]][limits[col-1]]/1000))
+                        elif row == 0:
+                            item = QTableWidgetItem(str(int(config[json_keys[row]][limits[col-1]]/1000)))
                         else:
                             item = QTableWidgetItem(str(config[json_keys[row]][limits[col-1]]/1000))
                     else:
                         if row == 2:
                             item = QTableWidgetItem(str(config[json_keys[row]][limits[col-1]]/1000))
                         elif row == 4:
-                            item = QTableWidgetItem(str(config[json_keys[row]]["kWh_import"][limits[col-1]]/100))
-                        else:
+                            item = QTableWidgetItem(str(int(config[json_keys[row]]["kWh_import"][limits[col-1]]/100)))
+                        elif row == 0 or row == 1:
                             multiplier = 100000 if json_keys[row] == "current_limits" else 1000
-                            item = QTableWidgetItem(str(config[json_keys[row]]["L1"][limits[col-1]]/multiplier))
+                            item = QTableWidgetItem(str(int(config[json_keys[row]]["L1"][limits[col-1]]/multiplier)))
+                        else:
+                            item = QTableWidgetItem(str(config[json_keys[row]]["L1"][limits[col-1]]/1000))
                 item.setTextAlignment(Qt.AlignCenter)  
                 table.setItem(row, col, item)
             meter_layout.addWidget(table)
