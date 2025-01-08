@@ -105,118 +105,71 @@ class ParameterPopup(QWidget):
         # Prepend the full directory path
         config_file_path = os.path.join(script_directory, config_file_name)
 
-        json_keys = ["voltage_limits", "current_limits", "frequency_limits", "power_factor_limits", "block_energy_limits"]
+        json_keys = ["no_of_meters", "meter_type", "manufacturer", "voltage_limits", "current_limits", "frequency_limits", "power_factor_limits", "block_energy_limits"]
         phases = ["L1", "L2", "L3"]
         limits = ["lower_limit", "upper_limit"]
-        if meter_type == "Single Phase":
-            config_data = {
-                "no_of_meters": no_of_meters,
-                "meter_type": meter_type,
-                "manufacturer": manufacturer,
-                "voltage_limits": {
-                    "lower_limit": int(float(input_table.item(0, 1).text()) * 1000),
-                    "upper_limit": int(float(input_table.item(0, 2).text()) * 1000)
-                },
-                "current_limits": {
-                    "phase_current": {
-                        "lower_limit": int(float(input_table.item(1, 1).text()) * 1000),
-                        "upper_limit": int(float(input_table.item(1, 2).text()) * 1000)
-                    },
-                    "neutral_current": {
-                        "lower_limit": int(float(input_table.item(1, 1).text()) * 1000),
-                        "upper_limit": int(float(input_table.item(1, 2).text()) * 1000)
-                    }
-                },
-                "frequency_limits": {
-                    "lower_limit": int(float(input_table.item(2, 1).text()) * 1000),
-                    "upper_limit": int(float(input_table.item(2, 2).text()) * 1000)
-                },
-                "signed_power_factor_limits": {
-                    "lower_limit": int(float(input_table.item(3, 1).text()) * 1000),
-                    "upper_limit": int(float(input_table.item(3, 2).text()) * 1000)
-                },
-                "block_energy_limits": {
-                    "kWh_import": {
-                        "lower_limit": int(float(input_table.item(4, 1).text()) * 1000),
-                        "upper_limit": int(float(input_table.item(4, 2).text()) * 1000)
-                    },
-                    "kWh_export": {
-                        "lower_limit": int(float(input_table.item(4, 1).text()) * 1000),
-                        "upper_limit": int(float(input_table.item(4, 2).text()) * 1000)
-                    }
-                }
-            }
+        
+        config_data = {}
 
-        else:
-            config_data = {
-                "no_of_meters": no_of_meters,
-                "meter_type": meter_type,
-                "manufacturer": manufacturer,
-                "voltage_limits": {
-                    "L1": {
-                        "lower_limit": int(float(input_table.item(0, 1).text()) * 1000),
-                        "upper_limit": int(float(input_table.item(0, 2).text()) * 1000)
-                    },
-                    "L2": {
-                        "lower_limit": int(float(input_table.item(0, 1).text()) * 1000),
-                        "upper_limit": int(float(input_table.item(0, 2).text()) * 1000)
-                    },
-                    "L3": {
-                        "lower_limit": int(float(input_table.item(0, 1).text()) * 1000),
-                        "upper_limit": int(float(input_table.item(0, 2).text()) * 1000)
-                    }
-                },
-                "current_limits": {
-                    "L1": {
-                        "lower_limit": int(float(input_table.item(1, 1).text()) * 100000),
-                        "upper_limit": int(float(input_table.item(1, 2).text()) * 100000)
-                    },
-                    "L2": {
-                        "lower_limit": int(float(input_table.item(1, 1).text()) * 100000),
-                        "upper_limit": int(float(input_table.item(1, 2).text()) * 100000)
-                    },
-                    "L3": {
-                        "lower_limit": int(float(input_table.item(1, 1).text()) * 100000),
-                        "upper_limit": int(float(input_table.item(1, 2).text()) * 100000)
-                    }
-                },
-                "frequency_limits": {
-                        "lower_limit": int(float(input_table.item(2, 1).text()) * 1000),
-                        "upper_limit": int(float(input_table.item(2, 2).text()) * 1000)
-                },
-                "power_factor_limits": {
-                    "L1": {
-                        "lower_limit": int(float(input_table.item(3, 1).text()) * 1000),
-                        "upper_limit": int(float(input_table.item(3, 2).text()) * 1000)
-                    },
-                    "L2": {
-                        "lower_limit": int(float(input_table.item(3, 1).text()) * 1000),
-                        "upper_limit": int(float(input_table.item(3, 2).text()) * 1000)
-                    },
-                    "L3": {
-                        "lower_limit": int(float(input_table.item(3, 1).text()) * 1000),
-                        "upper_limit": int(float(input_table.item(3, 2).text()) * 1000)
-                    }
-                },
-                "block_energy_limits": {
-                    "kWh_import": {
-                        "lower_limit": int(float(input_table.item(4, 1).text()) * 100),
-                        "upper_limit": int(float(input_table.item(4, 2).text()) * 100)
-                    },
-                    "kVAh_lag": {
-                        "lower_limit": int(float(input_table.item(4, 1).text()) * 100),
-                        "upper_limit": int(float(input_table.item(4, 2).text()) * 100)
-                    },
-                    "kVAh_lead": {
-                        "lower_limit": int(float(input_table.item(4, 1).text()) * 100),
-                        "upper_limit": int(float(input_table.item(4, 2).text()) * 100)
-                    },
-                    "kVAh_import": {
-                        "lower_limit": int(float(input_table.item(4, 1).text()) * 100),
-                        "upper_limit": int(float(input_table.item(4, 2).text()) * 100)
-                    }
-                }
-            }
+        # Loop to dynamically insert keys in config_data
+        for i, key in enumerate(json_keys):
+            # First three static keys
+            if key == "no_of_meters":
+                config_data[key] = no_of_meters
+            elif key == "meter_type":
+                config_data[key] = meter_type
+            elif key == "manufacturer":
+                config_data[key] = manufacturer
+            else:
+                # Keys about meter values
+                for j, limit in enumerate(limits):
+                    if key not in config_data:
+                        config_data[key] = {}
+                    # For Single Phase
+                    if meter_type == "Single Phase":
+                        # For current
+                        if key == "current_limits":
+                            subkeys = ["phase_current", "neutral_current"]
+                            for subkey in subkeys:
+                                if subkey not in config_data[key]:
+                                    config_data[key][subkey] = {}
+                                config_data[key][subkey][limit] = int(float(input_table.item(i-3, j+1).text()) * 1000)
+                        # For block load
+                        elif key == "block_energy_limits":
+                            subkeys = ["kWh_import", "kWh_export"]
+                            for subkey in subkeys:
+                                if subkey not in config_data[key]:
+                                    config_data[key][subkey] = {}
+                                config_data[key][subkey][limit] = int(float(input_table.item(i-3, j+1).text()) * 100)
+                        # For Signed power factor
+                        elif key == "power_factor_limits":
+                            del config_data[key]
+                            if "signed_" + key not in config_data:      
+                                config_data["signed_" + key] = {}
+                            config_data["signed_"+key][limit] = int(float(input_table.item(i-3, j+1).text()) * 1000)
+                        # Other keys
+                        else:
+                            config_data[key][limit] = int(float(input_table.item(i-3, j+1).text()) * 1000)
+                    # For Three phase
+                    else:
+                        # For frequency
+                        if key == "frequency_limits":
+                            config_data[key][limit] = int(float(input_table.item(i-3, j+1).text()) * 1000)
+                        # For block load
+                        elif key == "block_energy_limits":
+                            subkeys = ["kWh_import", "kVAh_lag", "kVAh_lead", "kVAh_import"]
+                            for subkey in subkeys:
+                                if subkey not in config_data[key]:
+                                    config_data[key][subkey] = {}
+                                config_data[key][subkey][limit] = int(float(input_table.item(i-3, j+1).text()) * 100)
+                        # Other keys
+                        else:
+                            for phase in phases:
+                                # Current Multiplier
+                                multiplier = 100000 if key == "current_limits" else 1000
+                                if phase not in config_data[key]:
+                                    config_data[key][phase] = {}
+                                config_data[key][phase][limit] = int(float(input_table.item(i-3, j+1).text()) * multiplier)
 
         # Save the configuration to a new JSON file
         with open(config_file_path, "w") as f:
@@ -350,7 +303,6 @@ class ServerPage(QMainWindow):
             script_directory = os.path.dirname(os.path.abspath(__file__))
 
             # Construct the config file path
-            print(manufacturer.lower().replace(' ', '_'))
             config_file_name = fr"Config\{manufacturer.lower().replace(' ', '_')}_{meter_type_for_file_path}_config.json"
 
             # Prepend the full directory path
