@@ -41,11 +41,17 @@ class ParameterPopup(QWidget):
         input_table.setHorizontalHeaderLabels(["Parameters","Min","Max"])
         input_table.verticalHeader().setVisible(False)
         input_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        for i, label in enumerate(["V", "I", "P.F", "f", "Block Load"]):
+        for i, label in enumerate(["Voltage (V)", "Current (A)", "Power Factor", "Frequency (Hz)", "Block Load (kWh)"]):
             item = QTableWidgetItem(label)
             item.setTextAlignment(Qt.AlignCenter)  
             item.setFlags(item.flags() & ~Qt.ItemIsEditable) 
             input_table.setItem(i, 0, item)
+
+        for row in range(5):
+            for col in range(1, 3):
+                item = QTableWidgetItem("")
+                item.setTextAlignment(Qt.AlignCenter)
+                input_table.setItem(row, col, item)  
 
         popup_layout = QVBoxLayout(self)
         popup_layout.addWidget(input_table)
@@ -202,7 +208,7 @@ class ServerPage(QMainWindow):
                 "No. of Meters",
                 "Manufacturer",
                 "Starting Port No.",
-                "Starting Instance no.",
+                "Starting Instance No.",
                 "Garbage Values",
                 "Configure Parameters"
             ]
