@@ -31,7 +31,7 @@ class SaveConfigJson():
                 QMessageBox.warning(self, "Selection Error", "Please select a row to save the data.")
                 return
             meter_type = self.parent_table.cellWidget(current_row, 0).currentText()
-            manufacturer = self.parent_table.item(current_row, 2).text()
+            manufacturer = self.parent_table.cellWidget(current_row, 2).currentText()
             no_of_meters = int(self.parent_table.item(current_row, 1).text()) if self.parent_table.item(current_row, 1).text() != "" else 0
 
             # Save data to global state
@@ -58,7 +58,7 @@ class SaveConfigJson():
                 },
                 'meter_type': self.parent_table.cellWidget(current_row, 0).currentText() if self.parent_table.cellWidget(current_row, 0) else "",
                 'num_meters': self.parent_table.item(current_row, 1).text() if self.parent_table.item(current_row, 1) else "",
-                'manufacturer': self.parent_table.item(current_row, 2).text() if self.parent_table.item(current_row, 2) else "",
+                'manufacturer': self.parent_table.cellWidget(current_row, 2).currentText() if self.parent_table.cellWidget(current_row, 2) else "",
                 'start_port': self.parent_table.item(current_row, 3).text() if self.parent_table.item(current_row, 3) else "",
                 'start_instance': self.parent_table.item(current_row, 4).text() if self.parent_table.item(current_row, 4) else "",
                 'garbage_enabled': self.parent_table.cellWidget(current_row, 5).findChild(QCheckBox).isChecked() if self.parent_table.cellWidget(current_row, 5) else False
