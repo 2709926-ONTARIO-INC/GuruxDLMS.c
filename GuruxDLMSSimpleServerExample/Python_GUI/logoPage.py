@@ -27,7 +27,9 @@ class LogoPage(QMainWindow):
         script_dir = os.path.dirname(os.path.abspath(__file__))
         image_path = os.path.join(script_dir, "assets", "images", "logo.png")
         logo_pixmap = QPixmap(image_path)
+        logo_pixmap = logo_pixmap.scaled(500,300, Qt.KeepAspectRatio)
         image_label.setPixmap(logo_pixmap)
+        image_label.setMinimumSize(500,300)
         image_label.setAlignment(Qt.AlignCenter)
 
         # Title label

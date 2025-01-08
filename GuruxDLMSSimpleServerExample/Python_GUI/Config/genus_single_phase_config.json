@@ -1,0 +1,37 @@
+{
+    "no_of_meters": 144,
+    "meter_type": "Single Phase",
+    "manufacturer": "Genus",
+    "voltage_limits": {
+        "lower_limit": 1000,
+        "upper_limit": 100000
+    },
+    "current_limits": {
+        "phase_current": {
+            "lower_limit": 1000,
+            "upper_limit": 100000
+        },
+        "neutral_current": {
+            "lower_limit": 1000,
+            "upper_limit": 100000
+        }
+    },
+    "frequency_limits": {
+        "lower_limit": 1000,
+        "upper_limit": 100000
+    },
+    "signed_power_factor_limits": {
+        "lower_limit": 1000,
+        "upper_limit": 100000
+    },
+    "block_energy_limits": {
+        "kWh_import": {
+            "lower_limit": 100,
+            "upper_limit": 10000
+        },
+        "kWh_export": {
+            "lower_limit": 100,
+            "upper_limit": 10000
+        }
+    }
+}

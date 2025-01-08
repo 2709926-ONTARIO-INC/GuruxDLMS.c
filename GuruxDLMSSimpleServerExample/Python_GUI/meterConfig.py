@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QVBoxLayout, QHBoxLayout, QMainWindow, QLineEdit, QTableWidget, QTableWidgetItem, QComboBox, QScrollArea, QHeaderView
+from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QVBoxLayout, QHBoxLayout, QMainWindow, QLineEdit, QTableWidget, QTableWidgetItem, QComboBox, QScrollArea, QHeaderView, QGridLayout
 from PyQt5.QtGui import QFont
 from PyQt5.QtCore import Qt
 from utils import createLabel, open_next_page, open_previous_page, createButton
@@ -11,7 +11,8 @@ class Meter(QWidget):
         self.createMeter(config)
     
     def createMeter(self, config):
-        self.setMaximumSize(500, 610)
+        screensize = QApplication.primaryScreen().size()
+        self.setMaximumSize((screensize.width()-125)//4, 610)
         meter_layout = QVBoxLayout()
         meter_layout.setAlignment(Qt.AlignCenter) 
 
@@ -34,8 +35,9 @@ class Meter(QWidget):
                 item_input.setStyleSheet("background-color: white;")
                 item_input.setFixedWidth(200)
             elif (item == "Manufacturer"): 
-                item_input = QComboBox()
-                item_input.addItem(config["manufacturer"])
+                item_input = QLineEdit()
+                item_input.setReadOnly(True)
+                item_input.setText(config["manufacturer"])
                 item_input.setFont(QFont("Arial", 12))
                 item_input.setStyleSheet("background-color: white;")
                 item_input.setFixedWidth(200)
@@ -47,12 +49,14 @@ class Meter(QWidget):
                 item_input.setFixedWidth(200)
             elif (item == "Total"): 
                 item_input = QLineEdit()
+                item_input.setReadOnly(True)
                 item_input.setFont(QFont("Arial", 12))
                 item_input.setStyleSheet("background-color: white;")
                 item_input.setFixedWidth(200)
                 item_input.setText(str(config["no_of_meters"]))
             else: 
                 item_input = QLineEdit()
+                item_input.setReadOnly(True)
                 item_input.setFont(QFont("Arial", 12))
                 item_input.setStyleSheet("background-color: white;")
                 item_input.setFixedWidth(200)
@@ -104,7 +108,7 @@ class Meter(QWidget):
             meter_layout.addWidget(table)
 
         table.setFixedHeight(250)  
-        table.setFixedWidth(475)
+        table.setFixedWidth((screensize.width()-180)//4)
             
         self.setLayout(meter_layout)
 class MeterConfig(QMainWindow):
@@ -122,8 +126,9 @@ class MeterConfig(QMainWindow):
         main_layout = QVBoxLayout()
         self.setCentralWidget(main_widget)
         main_widget.setLayout(main_layout)
-        meter_layout = QHBoxLayout()
+        meter_layout = QGridLayout()
         meter_layout.setAlignment(Qt.AlignLeft)
+        meter_layout.setSpacing(20)
 
         # Get the directory of the current script
         script_directory = os.path.dirname(os.path.abspath(__file__))
@@ -134,9 +139,16 @@ class MeterConfig(QMainWindow):
         config_folder = os.path.join(script_directory, config_file_name)
         meter_configs = self.load_meter_configs(config_folder)
 
+        # Add each meter into the grid layout (4 per row)
+        row = 0
+        col = 0
         for config in meter_configs:
             meter = Meter(config)
-            meter_layout.addWidget(meter)
+            meter_layout.addWidget(meter, row, col)
+            col += 1
+            if col == 4: 
+                col = 0
+                row += 1
 
         # Container widget for the scroll area
         container_widget = QWidget()
