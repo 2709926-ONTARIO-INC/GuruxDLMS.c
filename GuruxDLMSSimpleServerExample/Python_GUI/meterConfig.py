@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QVBoxLayout, QHBoxLayout, QMainWindow, QLineEdit, QTableWidget, QTableWidgetItem, QComboBox, QScrollArea, QHeaderView, QGridLayout
-from PyQt5.QtGui import QFont
+from PyQt5.QtGui import QFont, QIcon
 from PyQt5.QtCore import Qt
 from utils import createLabel, open_next_page, open_previous_page, createButton
 import json
@@ -122,11 +122,11 @@ class Meter(QWidget):
         )
         table.setRowCount(5)
         table.setColumnCount(3)
-        table.setHorizontalHeaderLabels(["Qty.","Min","Max"])
+        table.setHorizontalHeaderLabels(["Parameters","Min","Max"])
         table.verticalHeader().setVisible(False)
         table.setEditTriggers(QTableWidget.NoEditTriggers)
         table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        labels = ["V", "I", "P.F", "f", "Block Load"]
+        labels = ["Voltage (V)", "Current (A)", "Power Factor", "Frequency (Hz)", "Block Load (Wh)"]
         json_keys = ["voltage_limits", "current_limits", "frequency_limits", "power_factor_limits", "block_energy_limits"]
         limits = ["lower_limit", "upper_limit"]
         for row in range(table.rowCount()):
@@ -165,9 +165,12 @@ class MeterConfig(QMainWindow):
         self.initUI()
 
     def initUI(self):
-        self.setWindowTitle('Meter Config')
+        self.setWindowTitle("KiGG VM Simulator")
         self.setWindowState(Qt.WindowMaximized)
         self.setStyleSheet("background-color: #F1F1F1;")
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        image_path = os.path.join(script_dir, "assets", "images", "icon.png")
+        self.setWindowIcon(QIcon(image_path))
 
         # Layouts
         main_widget = QWidget()

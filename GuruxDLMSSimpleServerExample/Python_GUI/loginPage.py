@@ -1,17 +1,20 @@
 from PyQt5.QtWidgets import QApplication, QWidget, QLineEdit, QVBoxLayout, QHBoxLayout, QMainWindow, QMessageBox
-from PyQt5.QtGui import QFont, QDesktopServices
+from PyQt5.QtGui import QFont, QIcon
 from PyQt5.QtCore import Qt
 from utils import createLabel, open_next_page, open_previous_page, createButton
-
+import os
 class LoginPage(QMainWindow):
     def __init__(self):
         super().__init__()
         self.initUI()
 
     def initUI(self):
-        self.setWindowTitle('Login Page')
+        self.setWindowTitle("KiGG VM Simulator")
         self.setWindowState(Qt.WindowMaximized)
         self.setStyleSheet("background-color: #F1F1F1;")
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        image_path = os.path.join(script_dir, "assets", "images", "icon.png")
+        self.setWindowIcon(QIcon(image_path))
 
         # Container widget
         container = QWidget(self)
@@ -30,7 +33,7 @@ class LoginPage(QMainWindow):
 
         # User ID field
         user_id_layout = QHBoxLayout()
-        user_id_label = createLabel("User ID:", 14, alignment=False)
+        user_id_label = createLabel("Login ID:", 14, alignment=False)
         user_id_input = QLineEdit()
         user_id_input.setFont(QFont("Arial", 14))
         user_id_input.setMaximumWidth(300)

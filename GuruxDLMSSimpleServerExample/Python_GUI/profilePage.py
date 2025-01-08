@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QVBoxLayout, QHBoxLayout, QTableWidget, QHeaderView, QPushButton, QComboBox
-from PyQt5.QtGui import QPixmap, QFont
+from PyQt5.QtGui import QPixmap, QFont, QIcon
 from PyQt5.QtCore import Qt
 from utils import createLabel, open_previous_page, createButton
 import os
@@ -97,9 +97,12 @@ class ProfilePage(QWidget):
         self.initUI()
 
     def initUI(self):
-        self.setWindowTitle('Load Profile Page')
+        self.setWindowTitle("KiGG VM Simulator")
         self.setWindowState(Qt.WindowMaximized)
         self.setStyleSheet("background-color: #F1F1F1;")
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        image_path = os.path.join(script_dir, "assets", "images", "icon.png")
+        self.setWindowIcon(QIcon(image_path))
 
         # Main layout
         self.main_layout = QVBoxLayout(self)

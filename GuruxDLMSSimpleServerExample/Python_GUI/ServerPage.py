@@ -1,5 +1,6 @@
-from PyQt5.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QTableWidget, QApplication, QHBoxLayout, QHeaderView, QTableWidgetItem, QCheckBox, QComboBox, QMessageBox
-from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QTableWidget, QApplication, QHBoxLayout, QHeaderView, QTableWidgetItem, QCheckBox, QComboBox, QMessageBox, QLabel, QDialog
+from PyQt5.QtGui import QIcon, QMovie
+from PyQt5.QtCore import Qt, QSize
 from utils import createLabel, open_next_page, open_previous_page, createButton
 from json_config import SaveConfigJson
 from app_state import state
@@ -15,10 +16,13 @@ class ParameterPopup(QWidget):
         self.initUI()
 
     def initUI(self):
-        self.setWindowTitle("Input Parameters")
+        self.setWindowTitle("KiGG VM Simulator")
         self.setMinimumSize(500, 310)
         self.setStyleSheet("background-color: #F1F1F1;")
         self.setWindowModality(Qt.ApplicationModal)
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        image_path = os.path.join(script_dir, "assets", "images", "icon.png")
+        self.setWindowIcon(QIcon(image_path))
 
         input_table = QTableWidget()
         # Table Styling and Resizing
@@ -31,7 +35,7 @@ class ParameterPopup(QWidget):
         input_table.setHorizontalHeaderLabels(["Parameters","Min","Max"])
         input_table.verticalHeader().setVisible(False)
         input_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        for i, label in enumerate(["Voltage (V)", "Current (A)", "Power Factor", "Frequency (Hz)", "Block Load (kWh)"]):
+        for i, label in enumerate(["Voltage (V)", "Current (A)", "Power Factor", "Frequency (Hz)", "Block Load (Wh)"]):
             item = QTableWidgetItem(label)
             item.setTextAlignment(Qt.AlignCenter)  
             item.setFlags(item.flags() & ~Qt.ItemIsEditable) 
@@ -112,10 +116,13 @@ class ServerPage(QMainWindow):
         self.initUI()
 
     def initUI(self):
-        self.setWindowTitle("Server Page")
+        self.setWindowTitle("KiGG VM Simulator")
         self.setWindowState(Qt.WindowMaximized)
         self.setStyleSheet("background-color: #F1F1F1;")
-        
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        image_path = os.path.join(script_dir, "assets", "images", "icon.png")
+        self.setWindowIcon(QIcon(image_path))
+
         # Main layout
         main_layout = QVBoxLayout()
         main_layout.setAlignment(Qt.AlignCenter)
@@ -219,6 +226,31 @@ class ServerPage(QMainWindow):
         binary_file_name = ""
         binary_file_path = ""
 
+        # Create a loading message box
+        loading_dialog = QDialog(self)
+        loading_dialog.setWindowTitle("KiGG VM Simulator")
+        loading_dialog.setFixedSize(300, 100)
+        loading_dialog.setModal(True)
+
+        # Layout for the dialog
+        dialog_layout = QVBoxLayout(loading_dialog)
+        dialog_layout.setAlignment(Qt.AlignCenter)
+
+        # Add loading animation
+        loading_label = QLabel("Servers are loading. Please wait...")
+        dialog_layout.addWidget(loading_label)
+
+        loading_gif = QLabel()
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        gif_path = os.path.join(script_dir, "assets", "gifs", "loading.gif")
+        movie = QMovie(gif_path)
+        movie.setScaledSize(QSize(32, 32))
+        loading_gif.setMovie(movie)
+        movie.start()
+
+        dialog_layout.addWidget(loading_gif)
+        loading_dialog.show()
+
         # Loop through the rows of the table
         for row in range(self.table.rowCount()):
             meter_type_for_file_path = ""
@@ -262,7 +294,8 @@ class ServerPage(QMainWindow):
             servers_started_successfully += temp_num_servers_started
             servers_failed_to_start += temp_num_servers_failed
         
-        QMessageBox.information(self, "Servers Status", f"{servers_started_successfully} servers started successfully, {servers_failed_to_start} servers failed to start.")
+        loading_dialog.close()
+        QMessageBox.information(self, "KiGG VM Simulator", f"{servers_started_successfully} servers started successfully, {servers_failed_to_start} servers failed to start.")
 
     def openNextPage(self):
         from meterConfig import MeterConfig
