@@ -191,12 +191,15 @@ class ServerPage(QMainWindow):
         row_index = self.table.rowCount()
         self.table.insertRow(row_index)
 
-        meter_types = ["Single Phase", "Three Phase (WC)", "Three Phase (LTCT)", "Three Phase (HTCT)"]
-
         for column in range(self.table.columnCount()):
             if column == 0:  # Type of Meter (Dropdown)
                 combobox = QComboBox()
-                combobox.addItems(meter_types)
+                combobox.addItems(["Single Phase", "Three Phase (WC)", "Three Phase (LTCT)", "Three Phase (HTCT)"])
+                combobox.setStyleSheet("QComboBox { text-align: center; }")  
+                self.table.setCellWidget(row_index, column, combobox)
+            elif column == 2:  
+                combobox = QComboBox()
+                combobox.addItems(["AEW", "Genus", "HPL", "Secure Meters Ltd."])
                 combobox.setStyleSheet("QComboBox { text-align: center; }")  
                 self.table.setCellWidget(row_index, column, combobox)
             elif column == 5: 
@@ -258,7 +261,7 @@ class ServerPage(QMainWindow):
             # Extract values from each column
             type_of_meter = self.table.cellWidget(row, 0).currentText() if self.table.cellWidget(row, 0) else ""
             num_meters = int(self.table.item(row, 1).text()) if self.table.item(row, 1).text() != "" else 0
-            manufacturer = self.table.item(row, 2).text() if self.table.item(row, 2) else ""
+            manufacturer = self.table.item(row, 2).currentText() if self.table.item(row, 2) else ""
             start_port = int(self.table.item(row, 3).text()) if self.table.item(row, 3).text() != "" else 0
             start_instance = int(self.table.item(row, 4).text()) if self.table.item(row, 4).text() != "" else 0
             is_garbage_enabled = self.table.cellWidget(row, 5).findChild(QCheckBox).isChecked() if self.table.cellWidget(row, 5) else False
