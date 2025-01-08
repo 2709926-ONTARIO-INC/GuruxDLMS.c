@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QTableWidget, QApplication, QHBoxLayout, QHeaderView, QTableWidgetItem, QCheckBox, QComboBox, QMessageBox, QLabel, QDialog
+from PyQt5.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QTableWidget, QApplication, QHBoxLayout, QHeaderView, QTableWidgetItem, QCheckBox, QComboBox, QMessageBox
 from PyQt5.QtGui import QIcon, QMovie
 from PyQt5.QtCore import Qt, QSize
 from utils import createLabel, open_next_page, open_previous_page, createButton
@@ -233,31 +233,6 @@ class ServerPage(QMainWindow):
         binary_file_name = ""
         binary_file_path = ""
 
-        # Create a loading message box
-        loading_dialog = QDialog(self)
-        loading_dialog.setWindowTitle("KiGG VM Simulator")
-        loading_dialog.setFixedSize(300, 100)
-        loading_dialog.setModal(True)
-
-        # Layout for the dialog
-        dialog_layout = QVBoxLayout(loading_dialog)
-        dialog_layout.setAlignment(Qt.AlignCenter)
-
-        # Add loading animation
-        loading_label = QLabel("Servers are loading. Please wait...")
-        dialog_layout.addWidget(loading_label)
-
-        loading_gif = QLabel()
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        gif_path = os.path.join(script_dir, "assets", "gifs", "loading.gif")
-        movie = QMovie(gif_path)
-        movie.setScaledSize(QSize(32, 32))
-        loading_gif.setMovie(movie)
-        movie.start()
-
-        dialog_layout.addWidget(loading_gif)
-        loading_dialog.show()
-
         # Loop through the rows of the table
         for row in range(self.table.rowCount()):
             meter_type_for_file_path = ""
@@ -301,7 +276,6 @@ class ServerPage(QMainWindow):
             servers_started_successfully += temp_num_servers_started
             servers_failed_to_start += temp_num_servers_failed
         
-        loading_dialog.close()
         QMessageBox.information(self, "KiGG VM Simulator", f"{servers_started_successfully} servers started successfully, {servers_failed_to_start} servers failed to start.")
 
     def openNextPage(self):
