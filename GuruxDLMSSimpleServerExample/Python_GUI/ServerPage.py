@@ -146,9 +146,19 @@ class ServerPage(QMainWindow):
             for _ in range(len(state.row_data)):
                 self.addRow()
                 current_row = self.table.rowCount() - 1
-                self.table.setItem(current_row, 0, QTableWidgetItem(state.row_data[current_row]['meter_type']))
+                # Set up meter_type as a combo box
+                combo_box = QComboBox()
+                combo_box.addItems(["Single Phase", "Three Phase (WC)", "Three Phase (LTCT)", "Three Phase (HTCT)"])
+                combo_box.setCurrentText(state.row_data[current_row]['meter_type'])  # Set the appropriate meter type
+                self.table.setCellWidget(current_row, 0, combo_box)
+
                 self.table.setItem(current_row, 1, QTableWidgetItem(state.row_data[current_row]['num_meters']))
-                self.table.setItem(current_row, 2, QTableWidgetItem(state.row_data[current_row]['manufacturer']))
+
+                combo_box2 = QComboBox()
+                combo_box2.addItems(["AEW", "Genus", "HPL", "Secure Meters Ltd."])
+                combo_box2.setCurrentText(state.row_data[current_row]['manufacturer'])  # Set the appropriate meter type
+                self.table.setCellWidget(current_row, 2, combo_box2)
+
                 self.table.setItem(current_row, 3, QTableWidgetItem(state.row_data[current_row]['start_port']))
                 self.table.setItem(current_row, 4, QTableWidgetItem(state.row_data[current_row]['start_instance']))
                 checkbox_widget = self.table.cellWidget(current_row, 5)
