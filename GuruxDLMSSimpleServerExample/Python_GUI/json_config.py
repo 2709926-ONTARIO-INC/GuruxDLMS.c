@@ -1,5 +1,6 @@
 from PyQt5.QtWidgets import QMessageBox, QCheckBox
 from app_state import state
+from resource_path import resource_path
 import json
 import os
 
@@ -72,15 +73,16 @@ class SaveConfigJson():
             file_path_name = {"Single Phase": "single_phase", "Three Phase (WC)": "three_phase_wc", "Three Phase (LTCT)": "three_phase_ltct", "Three Phase (HTCT)": "three_phase_htct"}
             if meter_type:
                 meter_type_for_file_path = file_path_name[meter_type]
-            
-            # Get the directory of the current script
-            script_directory = os.path.dirname(os.path.abspath(__file__))
 
             # Construct the config file path
             config_file_name = fr"Config\{manufacturer.lower().replace(' ', '_')}_{meter_type_for_file_path}_config.json"
 
             # Prepend the full directory path
-            config_file_path = os.path.join(script_directory, config_file_name)
+            config_file_path = resource_path(config_file_name)
+
+            print(config_file_path)
+
+            os.makedirs(resource_path("Config"), exist_ok=True)
 
             json_keys = ["no_of_meters", "meter_type", "manufacturer", "voltage_limits", "current_limits", "frequency_limits", "power_factor_limits", "block_energy_limits"]
             phases = ["L1", "L2", "L3"]

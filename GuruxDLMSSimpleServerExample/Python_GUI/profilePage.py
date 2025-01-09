@@ -2,6 +2,7 @@ from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QVBoxLayout, QHBoxLay
 from PyQt5.QtGui import QPixmap, QFont, QIcon
 from PyQt5.QtCore import Qt
 from utils import createLabel, open_previous_page, createButton
+from resource_path import resource_path
 import os
 import json
 
@@ -100,8 +101,7 @@ class ProfilePage(QWidget):
         self.setWindowTitle("KiGG VM Simulator")
         self.setWindowState(Qt.WindowMaximized)
         self.setStyleSheet("background-color: #F1F1F1;")
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        image_path = os.path.join(script_dir, "assets", "images", "icon.png")
+        image_path = fr"{resource_path('assets/images/icon.png')}"
         self.setWindowIcon(QIcon(image_path))
 
         # Main layout
@@ -116,13 +116,11 @@ class ProfilePage(QWidget):
         container_layout = QHBoxLayout()
         container_layout.setAlignment(Qt.AlignCenter)
 
-        # List of images and labels
-        script_dir = os.path.dirname(os.path.abspath(__file__))
         images_and_labels = [
-            (os.path.join(script_dir, "assets", "images", "instant.png"), "Name Plate"),
-            (os.path.join(script_dir, "assets", "images", "mins15.png"), "Block Load"),
-            (os.path.join(script_dir, "assets", "images", "hrs24.png"), "Daily Load"),
-            (os.path.join(script_dir, "assets", "images", "days30.png"), "Billing"),
+            [resource_path('assets/images/instant.png'), "Name Plate"],
+            [resource_path('assets/images/mins15.png'), "Block Load"],
+            [resource_path('assets/images/hrs24.png'), "Daily Load"],
+            [resource_path('assets/images/days30.png'), "Billing"],
         ]
 
         # Create containers with unique images and labels
@@ -131,8 +129,6 @@ class ProfilePage(QWidget):
             container_layout.addWidget(container)
 
         selection = ["Subtest", "Meter Type", "Meter No."]
-        f =  open("simulation.json")
-        meter_data = json.load(f)
         for item in selection:
             input_container = QWidget()
             input_container.setMaximumSize(200, 100)
@@ -145,8 +141,8 @@ class ProfilePage(QWidget):
                 input.addItems(["Single Phase", "Three Phase"])
                 input.setObjectName("Metertype")
             elif item == "Subtest":
-                for i in meter_data:
-                    input.addItem(i[0])
+                for i in range(6):
+                    input.addItem(str(i + 1))
             select_layout.addWidget(label)
             select_layout.addWidget(input)
             input_container.setLayout(select_layout)

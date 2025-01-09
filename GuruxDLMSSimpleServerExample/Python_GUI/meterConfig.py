@@ -2,9 +2,11 @@ from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QVBoxLayout, QHBoxLay
 from PyQt5.QtGui import QFont, QIcon
 from PyQt5.QtCore import Qt
 from utils import createLabel, open_next_page, open_previous_page, createButton
+from resource_path import resource_path
 import json
-import os
 import random
+import os
+
 class Meter(QWidget):
     def __init__(self,config):
         super().__init__()
@@ -172,8 +174,7 @@ class MeterConfig(QMainWindow):
         self.setWindowTitle("KiGG VM Simulator")
         self.setWindowState(Qt.WindowMaximized)
         self.setStyleSheet("background-color: #F1F1F1;")
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        image_path = os.path.join(script_dir, "assets", "images", "icon.png")
+        image_path = fr"{resource_path('assets/images/icon.png')}"
         self.setWindowIcon(QIcon(image_path))
 
         # Layouts
@@ -185,13 +186,10 @@ class MeterConfig(QMainWindow):
         meter_layout.setAlignment(Qt.AlignLeft)
         meter_layout.setSpacing(20)
 
-        # Get the directory of the current script
-        script_directory = os.path.dirname(os.path.abspath(__file__))
-
         config_file_name = f"Config\\"
 
         # Prepend the full directory path
-        config_folder = os.path.join(script_directory, config_file_name)
+        config_folder = resource_path(config_file_name)
         meter_configs = self.load_meter_configs(config_folder)
 
         # Add each meter into the grid layout (4 per row)
@@ -241,9 +239,11 @@ class MeterConfig(QMainWindow):
 
     def load_meter_configs(self, config_folder):
         meter_configs = []
-        for filename in os.listdir(config_folder):
+        full_config_folder = resource_path(config_folder)
+        for filename in os.listdir(full_config_folder):
             if filename.endswith(".json"):
-                file_path = os.path.join(config_folder, filename)
+                # Construct the full file path
+                file_path = os.path.join(full_config_folder, filename)
                 with open(file_path, 'r') as f:
                     meter_config = json.load(f)
                     meter_configs.append(meter_config)

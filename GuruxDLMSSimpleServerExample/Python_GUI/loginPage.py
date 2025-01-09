@@ -2,7 +2,8 @@ from PyQt5.QtWidgets import QApplication, QWidget, QLineEdit, QVBoxLayout, QHBox
 from PyQt5.QtGui import QFont, QIcon
 from PyQt5.QtCore import Qt
 from utils import createLabel, open_next_page, open_previous_page, createButton
-import os
+from resource_path import resource_path
+
 class LoginPage(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -12,8 +13,7 @@ class LoginPage(QMainWindow):
         self.setWindowTitle("KiGG VM Simulator")
         self.setWindowState(Qt.WindowMaximized)
         self.setStyleSheet("background-color: #F1F1F1;")
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        image_path = os.path.join(script_dir, "assets", "images", "icon.png")
+        image_path = fr"{resource_path('assets/images/icon.png')}"
         self.setWindowIcon(QIcon(image_path))
 
         # Container widget

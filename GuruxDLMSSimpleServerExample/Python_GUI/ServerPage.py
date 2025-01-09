@@ -4,6 +4,7 @@ from PyQt5.QtCore import Qt, QSize
 from utils import createLabel, open_next_page, open_previous_page, createButton
 from json_config import SaveConfigJson
 from app_state import state
+from resource_path import resource_path
 import sys
 import os
 import meter_automation
@@ -20,8 +21,7 @@ class ParameterPopup(QWidget):
         self.setMinimumSize(500, 310)
         self.setStyleSheet("background-color: #F1F1F1;")
         self.setWindowModality(Qt.ApplicationModal)
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        image_path = os.path.join(script_dir, "assets", "images", "icon.png")
+        image_path = fr"{resource_path('assets/images/icon.png')}"
         self.setWindowIcon(QIcon(image_path))
 
         input_table = QTableWidget()
@@ -119,8 +119,7 @@ class ServerPage(QMainWindow):
         self.setWindowTitle("KiGG VM Simulator")
         self.setWindowState(Qt.WindowMaximized)
         self.setStyleSheet("background-color: #F1F1F1;")
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        image_path = os.path.join(script_dir, "assets", "images", "icon.png")
+        image_path = fr"{resource_path('assets/images/icon.png')}"
         self.setWindowIcon(QIcon(image_path))
 
         # Main layout
@@ -256,14 +255,11 @@ class ServerPage(QMainWindow):
             if type_of_meter:
                 meter_type_for_file_path = file_path_name[type_of_meter]
 
-            # Get the directory of the current script
-            script_directory = os.path.dirname(os.path.abspath(__file__))
-
             # Construct the config file path
             config_file_name = fr"Config\{manufacturer.lower().replace(' ', '_')}_{meter_type_for_file_path}_config.json"
 
             # Prepend the full directory path
-            config_file_path = os.path.join(script_directory, config_file_name)
+            config_file_path = resource_path(config_file_name)
 
             # Binary file path
             if type_of_meter == "Single Phase":
@@ -271,7 +267,7 @@ class ServerPage(QMainWindow):
             else:
                 binary_file_name = r"Bin\gurux.dlms.simple.server.three.phase.bin"
 
-            binary_file_path = os.path.join(script_directory, binary_file_name)
+            binary_file_path = resource_path(binary_file_name)
 
             print(config_file_path)
             print(binary_file_path)
@@ -285,6 +281,7 @@ class ServerPage(QMainWindow):
         QMessageBox.information(self, "KiGG VM Simulator", f"{servers_started_successfully} servers started successfully, {servers_failed_to_start} servers failed to start.")
 
     def openNextPage(self):
+        os.makedirs(resource_path("Config"), exist_ok=True)
         from meterConfig import MeterConfig
         next_page = MeterConfig()
         open_next_page(self, next_page)

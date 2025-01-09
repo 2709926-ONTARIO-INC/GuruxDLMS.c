@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QVBoxLayout, QMainWin
 from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtCore import Qt
 from utils import createLabel, open_next_page, createButton
-import os
+from resource_path import resource_path
 
 class LogoPage(QMainWindow):
     def __init__(self):
@@ -13,8 +13,7 @@ class LogoPage(QMainWindow):
         self.setWindowTitle("KiGG VM Simulator")
         self.setWindowState(Qt.WindowMaximized)
         self.setStyleSheet("background-color: #F1F1F1;")
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        image_path = os.path.join(script_dir, "assets", "images", "icon.png")
+        image_path = fr"{resource_path('assets/images/icon.png')}"
         self.setWindowIcon(QIcon(image_path))
 
         # Container widget
@@ -27,8 +26,7 @@ class LogoPage(QMainWindow):
 
         # Image
         image_label = QLabel(self)
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        image_path = os.path.join(script_dir, "assets", "images", "logo.png")
+        image_path = fr"{resource_path('assets/images/logo.png')}"
         logo_pixmap = QPixmap(image_path)
         logo_pixmap = logo_pixmap.scaled(500,300, Qt.KeepAspectRatio)
         image_label.setPixmap(logo_pixmap)
