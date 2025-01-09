@@ -128,7 +128,7 @@ class Meter(QWidget):
         table.verticalHeader().setVisible(False)
         table.setEditTriggers(QTableWidget.NoEditTriggers)
         table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        labels = ["Voltage (V)", "Current (A)", "Power Factor", "Frequency (Hz)", "Block Load (Wh)"]
+        labels = ["Voltage (V)", "Current (A)", "Power Factor", "Frequency (Hz)", "Block Load (kWh)"]
         json_keys = ["voltage_limits", "current_limits", "frequency_limits", "power_factor_limits", "block_energy_limits"]
         limits = ["lower_limit", "upper_limit"]
         for row in range(table.rowCount()):
@@ -140,7 +140,7 @@ class Meter(QWidget):
                         if row == 1:
                             item = QTableWidgetItem(str(int(config[json_keys[row]]["phase_current"][limits[col-1]]/1000)))
                         elif row == 4:
-                            item = QTableWidgetItem(str(int(config[json_keys[row]]["kWh_import"][limits[col-1]]/100)))
+                            item = QTableWidgetItem(str(int(config[json_keys[row]]["kWh_import"][limits[col-1]])))
                         elif row == 3:
                             item = QTableWidgetItem(str(config["signed_"+json_keys[row]][limits[col-1]]/1000))
                         elif row == 0:
@@ -151,7 +151,7 @@ class Meter(QWidget):
                         if row == 2:
                             item = QTableWidgetItem(str(config[json_keys[row]][limits[col-1]]/1000))
                         elif row == 4:
-                            item = QTableWidgetItem(str(int(config[json_keys[row]]["kWh_import"][limits[col-1]]/100)))
+                            item = QTableWidgetItem(str(int(config[json_keys[row]]["kWh_import"][limits[col-1]])))
                         elif row == 0 or row == 1:
                             multiplier = 100000 if json_keys[row] == "current_limits" else 1000
                             item = QTableWidgetItem(str(int(config[json_keys[row]]["L1"][limits[col-1]]/multiplier)))

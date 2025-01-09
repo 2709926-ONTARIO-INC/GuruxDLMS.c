@@ -35,7 +35,7 @@ class ParameterPopup(QWidget):
         input_table.setHorizontalHeaderLabels(["Parameters","Min","Max"])
         input_table.verticalHeader().setVisible(False)
         input_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        for i, label in enumerate(["Voltage (V)", "Current (A)", "Power Factor", "Frequency (Hz)", "Block Load (Wh)"]):
+        for i, label in enumerate(["Voltage (V)", "Current (A)", "Power Factor", "Frequency (Hz)", "Block Load (kWh)"]):
             item = QTableWidgetItem(label)
             item.setTextAlignment(Qt.AlignCenter)  
             item.setFlags(item.flags() & ~Qt.ItemIsEditable) 

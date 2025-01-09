@@ -119,7 +119,7 @@ class SaveConfigJson():
                                 for subkey in subkeys:
                                     if subkey not in config_data[key]:
                                         config_data[key][subkey] = {}
-                                    config_data[key][subkey][limit] = int(float(input_table.item(i-3, j+1).text()) * 100)
+                                    config_data[key][subkey][limit] = int(float(input_table.item(i-3, j+1).text()))
                             # For Signed power factor
                             elif key == "power_factor_limits":
                                 del config_data[key]
@@ -140,7 +140,7 @@ class SaveConfigJson():
                                 for subkey in subkeys:
                                     if subkey not in config_data[key]:
                                         config_data[key][subkey] = {}
-                                    config_data[key][subkey][limit] = int(float(input_table.item(i-3, j+1).text()) * 100)
+                                    config_data[key][subkey][limit] = int(float(input_table.item(i-3, j+1).text()))
                             # Other keys
                             else:
                                 for phase in phases:
