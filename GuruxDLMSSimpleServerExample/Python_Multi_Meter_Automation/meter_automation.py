@@ -58,10 +58,43 @@ def monitor_process(process, server_port):
         print(f"Error monitoring process {process.pid}: {e}")
 
 
-def start_servers(binary_path, config_path, num_servers, start_port, start_instance, type_of_meter, use_wsl=False):
-    global view_garbage
+def get_resource_usage(processes):
+    """Returns resource usage statistics for all running processes."""
+    total_cpu = 0
+    total_memory = 0
+    details = []
+    
+    for process in processes:
+        try:
+            p = psutil.Process(process.pid)
+            cpu_usage = p.cpu_percent(interval=1)  # CPU usage in percentage
+            memory_usage = p.memory_info().rss / (1024 * 1024)  # Memory usage in MB
+            
+            total_cpu += cpu_usage
+            total_memory += memory_usage
+            
+            details.append({
+                "pid": p.pid,
+                "cpu_percent": cpu_usage,
+                "memory_mb": memory_usage
+            })
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            continue
+    
+    return {
+        "total_cpu_percent": total_cpu,
+        "total_memory_mb": total_memory,
+        "process_details": details
+    }
 
+
+def start_servers(binary_path, config_path, num_servers, start_port, start_instance, type_of_meter, use_wsl=False, is_garbage_enabled=False):
     """Starts servers on consecutive ports."""
+
+    view_garbage = is_garbage_enabled
+    num_servers_started = 0
+    num_servers_failed = 0
+
     # Convert binary_path to WSL path if WSL is used
     if use_wsl:
         binary_path = convert_to_wsl_path(binary_path)
@@ -70,6 +103,8 @@ def start_servers(binary_path, config_path, num_servers, start_port, start_insta
     ports = range(start_port, start_port + num_servers)
     instances = range(start_instance, start_instance + num_servers)
     print(f"\nStarting {type_of_meter} servers on the following ports: {list(ports)}")
+
+    start_time = time.perf_counter()  # Track start time
 
     for port, instance in zip(ports, instances):
         print(f"\nPreparing to start {type_of_meter} server on port: {port} with instance: {instance}")
@@ -104,10 +139,32 @@ def start_servers(binary_path, config_path, num_servers, start_port, start_insta
         time.sleep(5)
         if check_port_status_wsl(port):
             print(f"{type_of_meter.capitalize()} server on port {port} with instance {instance} is running.")
+            num_servers_started += 1
         else:
             print(f"{type_of_meter.capitalize()} server on port {port} with instance {instance} failed to start.")
+            num_servers_failed += 1
+
+    end_time = time.perf_counter()  # Track end time
+    total_time_taken = end_time - start_time
 
     print(f"Started {len(ports)} server(s). Output is being monitored.")
+
+    # Get system-wide resource usage
+    cpu_usage = psutil.cpu_percent(interval=1)
+    memory_info = psutil.virtual_memory()
+    total_ram_used = memory_info.used / (1024 * 1024)
+
+    # Get individual process stats
+    resource_stats = get_resource_usage(processes)
+
+    print(f"\nStarted {num_servers_started} out of {num_servers} server(s) in {total_time_taken:.2f} seconds.")
+    print(f"System CPU Usage: {cpu_usage:.2f}%")
+    print(f"System RAM Used: {total_ram_used:.2f} MB")
+    print(f"Total CPU Used by Servers: {resource_stats['total_cpu_percent']:.2f}%")
+    print(f"Total Memory Used by Servers: {resource_stats['total_memory_mb']:.2f} MB")
+    print(f"Process-level stats: {resource_stats["process_details"]}")
+
+    return (num_servers_started, num_servers_failed)
 
 
 def cleanup():
@@ -145,6 +202,7 @@ if __name__ == "__main__":
     three_phase_num_servers = int(input("Enter the number of servers to start for three phase meter: "))
     three_phase_start_port = int(input("Enter the starting port number of first three phase meter: "))
     three_phase_start_instance = int(input("Enter the starting instance number of first three phase meter: "))
+    three_phase_view_garbage = input("Do you want to enable garbage values? (yes/no): ").strip().lower() == "yes"
     print()
 
     single_phase_binary_path = input("Enter the path to the binary executable for single phase meter: ")
@@ -152,9 +210,7 @@ if __name__ == "__main__":
     single_phase_num_servers = int(input("Enter the number of servers to start for single phase meter: "))
     single_phase_start_port = int(input("Enter the starting port number of first single phase meter: "))
     single_phase_start_instance = int(input("Enter the starting instance number of first single phase meter: "))
-    print()
-
-    view_garbage = input("Do you want to enable garbage values? (yes/no): ").strip().lower() == "yes"
+    single_phase_view_garbage = input("Do you want to enable garbage values? (yes/no): ").strip().lower() == "yes"
     print()
 
     try:
@@ -162,11 +218,11 @@ if __name__ == "__main__":
         use_wsl = is_windows
 
         print(f"Starting {three_phase_num_servers} three phase meter servers from port {three_phase_start_port} with instances starting at {three_phase_start_instance}.")
-        start_servers(three_phase_binary_path, three_phase_config_path, three_phase_num_servers, three_phase_start_port, three_phase_start_instance, "three_phase_meter", use_wsl=use_wsl)
+        start_servers(three_phase_binary_path, three_phase_config_path, three_phase_num_servers, three_phase_start_port, three_phase_start_instance, "three_phase_meter", use_wsl=use_wsl, is_garbage_enabled=three_phase_view_garbage)
         print("Servers for three phase meter are running.\n\n")
 
         print(f"Starting {single_phase_num_servers} single phase meter servers from port {single_phase_start_port} with instances starting at {single_phase_start_instance}.")
-        start_servers(single_phase_binary_path, single_phase_config_path, single_phase_num_servers, single_phase_start_port, single_phase_start_instance, "single_phase_meter", use_wsl=use_wsl)
+        start_servers(single_phase_binary_path, single_phase_config_path, single_phase_num_servers, single_phase_start_port, single_phase_start_instance, "single_phase_meter", use_wsl=use_wsl, is_garbage_enabled=single_phase_view_garbage)
         print("Servers for single phase meter are running.\n\n")
 
         # Keep the script running to allow monitoring
