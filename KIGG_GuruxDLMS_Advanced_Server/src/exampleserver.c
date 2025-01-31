@@ -5324,11 +5324,6 @@ void svr_preRead(
             readYearOfManufacture();
         }
 
-        else if (e->target->objectType == DLMS_OBJECT_TYPE_REGISTER && e->index == 2)
-        {
-            //Update value by one every time when user reads register.
-            GX_ADD(((gxRegister*)e->target)->value, 1);
-        }
         //Get time if user want to read date and time.
         if (e->target == BASE(clock1) && e->index == 2)
         {

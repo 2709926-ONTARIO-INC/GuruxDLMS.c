@@ -196,7 +196,7 @@ static uint32_t currentL1ValueMin = 0, currentL1ValueMax = 10 * 1000;
 static uint32_t voltageL1ValueMin = 108 * 1000, voltageL1ValueMax = 112 * 1000;
 static uint32_t currentL1ValueMin = 0, currentL1ValueMax = 10 * 100000;
 #endif
-static uint32_t frequencyValueMin = 498 * 1000, frequencyValueMax = 502 * 1000;
+static uint32_t frequencyValueMin = 49.8 * 1000, frequencyValueMax = 50.2 * 1000;
 static uint32_t blockEnergyKWhImportValueMin = 0, blockEnergyKWhImportValueMax = 100 * 100;
 
 
