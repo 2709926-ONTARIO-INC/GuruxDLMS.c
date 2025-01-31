@@ -160,8 +160,8 @@ def start_servers(binary_path, config_path, num_servers, start_port, start_insta
     print(f"\nStarted {num_servers_started} out of {num_servers} server(s) in {total_time_taken:.2f} seconds.")
     print(f"System CPU Usage: {cpu_usage:.2f}%")
     print(f"System RAM Used: {total_ram_used:.2f} MB")
-    print(f"Total CPU Used by Servers: {resource_stats['total_cpu_percent']:.2f}%")
-    print(f"Total Memory Used by Servers: {resource_stats['total_memory_mb']:.2f} MB")
+    print(f"Total CPU used to start the servers: {resource_stats['total_cpu_percent']:.2f}%")
+    print(f"Total Memory used to start the servers: {resource_stats['total_memory_mb']:.2f} MB")
     print(f"Process-level stats: {resource_stats["process_details"]}")
 
     return (num_servers_started, num_servers_failed)
@@ -224,6 +224,11 @@ if __name__ == "__main__":
         print(f"Starting {single_phase_num_servers} single phase meter servers from port {single_phase_start_port} with instances starting at {single_phase_start_instance}.")
         start_servers(single_phase_binary_path, single_phase_config_path, single_phase_num_servers, single_phase_start_port, single_phase_start_instance, "single_phase_meter", use_wsl=use_wsl, is_garbage_enabled=single_phase_view_garbage)
         print("Servers for single phase meter are running.\n\n")
+
+        # Monitor CPU usage
+        print("Monitoring CPU usage...")
+        cpu_usage = psutil.cpu_percent(interval=1)
+        print(f"CPU usage after starting all servers: {cpu_usage}%")
 
         # Keep the script running to allow monitoring
         while True:
