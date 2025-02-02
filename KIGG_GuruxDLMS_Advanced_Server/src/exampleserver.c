@@ -4579,14 +4579,12 @@ int readProfileGeneric(
     gxProfileGeneric* pg,
     gxValueEventArg* e)
 {
-    printf("Starting readProfileGeneric function.\n");
     unsigned char first = e->transactionEndIndex == 0;
     int ret;
     gxArray captureObjects;
     arr_init(&captureObjects);
     char fileName[30];
     ret = getProfileGenericFileName(pg, fileName);
-    printf("ProfileGeneric file name: %s\n", fileName);
     uint32_t startTime = 0, endTime = 0;
     unsigned char maxCount = 0;
     unsigned char selectedColumns = 0;
@@ -4599,100 +4597,100 @@ int readProfileGeneric(
         gxtime start, end;
         time_now(&end, 1);
         //Reset seconds.
-        time_addSeconds(&end , -time_getSeconds(&end));
+        time_addSeconds(&end, -time_getSeconds(&end));
         end.millisecond = 0;
         maxCount = (unsigned char)(e->dataIndex & 0xFF);
         selective = (e->dataIndex >> 12);
-        selectedColumns = (unsigned char) ((e->dataIndex >> 8) & 0xF);
+        selectedColumns = (unsigned char)((e->dataIndex >> 8) & 0xF);
         switch (selective)
         {
             /*Last number of seconds.*/
-            case DLMS_SELECTIVE_ACCESS_PARAMETER_COMPLETE_SECONDS:
-                time_copy(&start, &end);
-                time_addSeconds(&start, -maxCount);
-                break;
-                /*Last complete number of minutes.*/
-            case DLMS_SELECTIVE_ACCESS_PARAMETER_COMPLETE_MINUTES:
-                /*Last complete number of minutes including the current minute.*/
-            case DLMS_SELECTIVE_ACCESS_PARAMETER_MINUTES:
-                if (selective == DLMS_SELECTIVE_ACCESS_PARAMETER_COMPLETE_MINUTES)
-                {
-                    //Reset seconds.
-                    time_addSeconds(&end, -time_getSeconds(&end));
-                }
-                time_copy(&start, &end);
-                time_addMinutes(&start, -maxCount);
-                break;
-                /*Last complete number of hours.*/
-            case DLMS_SELECTIVE_ACCESS_PARAMETER_COMPLETE_HOURS:
-                /*Last complete number of hours including the current hour.*/
-            case DLMS_SELECTIVE_ACCESS_PARAMETER_HOURS:
-                if (selective == DLMS_SELECTIVE_ACCESS_PARAMETER_COMPLETE_HOURS)
-                {
-                    //Reset seconds.
-                    time_addSeconds(&end, -time_getSeconds(&end));
-                    //Reset minutes.
-                    time_addMinutes(&end, -time_getMinutes(&end));
-                }
-                time_copy(&start, &end);
-                time_addHours(&start, -maxCount);
-                break;
-                /*Last complete number of days.*/
-            case DLMS_SELECTIVE_ACCESS_PARAMETER_COMPLETE_DAYS:
-                /*Last complete number of days including the current day.*/
-            case DLMS_SELECTIVE_ACCESS_PARAMETER_DAYS:
-                if (selective == DLMS_SELECTIVE_ACCESS_PARAMETER_COMPLETE_DAYS)
-                {
-                    //Reset seconds.
-                    time_addSeconds(&end, -time_getSeconds(&end));
-                    //Reset minutes.
-                    time_addMinutes(&end, -time_getMinutes(&end));
-                    //Reset hours.
-                    time_addHours(&end, -time_getHours(&end));
-                }
-                time_copy(&start, &end);
-                if (selective == DLMS_SELECTIVE_ACCESS_PARAMETER_DAYS)
-                {
-                    //Reset seconds.
-                    time_addSeconds(&start, -time_getSeconds(&start));
-                    //Reset minutes.
-                    time_addMinutes(&start, -time_getMinutes(&start));
-                    //Reset hours.
-                    time_addHours(&start, -time_getHours(&start));
-                }
-                time_addDays(&start, -maxCount);
-                break;
-                /*Last complete number of months.*/
-            case DLMS_SELECTIVE_ACCESS_PARAMETER_COMPLETE_MONTHS:
-                /*Last complete number of months including the current month.*/
-            case DLMS_SELECTIVE_ACCESS_PARAMETER_MONTHS:
-                if (selective == DLMS_SELECTIVE_ACCESS_PARAMETER_COMPLETE_MONTHS)
-                {
-                    //Reset seconds.
-                    time_addSeconds(&end, -time_getSeconds(&end));
-                    //Reset minutes.
-                    time_addMinutes(&end, -time_getMinutes(&end));
-                    //Reset hours.
-                    time_addHours(&end, -time_getHours(&end));
-                    //Reset days.
-                    time_addDays(&end, -(time_getDays(&end) - 1));
-                }
-                time_copy(&start, &end);
-                if (selective == DLMS_SELECTIVE_ACCESS_PARAMETER_MONTHS)
-                {
-                    //Reset seconds.
-                    time_addSeconds(&start, -time_getSeconds(&start));
-                    //Reset minutes.
-                    time_addMinutes(&start, -time_getMinutes(&start));
-                    //Reset hours.
-                    time_addHours(&start, -time_getHours(&start));
-                    //Reset days.
-                    time_addDays(&start, -(time_getDays(&start) - 1));
-                }
-                time_addMonths(&start, -maxCount);
-                break;
-            default:
-                return DLMS_ERROR_CODE_INVALID_PARAMETER;
+        case DLMS_SELECTIVE_ACCESS_PARAMETER_COMPLETE_SECONDS:
+            time_copy(&start, &end);
+            time_addSeconds(&start, -maxCount);
+            break;
+            /*Last complete number of minutes.*/
+        case DLMS_SELECTIVE_ACCESS_PARAMETER_COMPLETE_MINUTES:
+            /*Last complete number of minutes including the current minute.*/
+        case DLMS_SELECTIVE_ACCESS_PARAMETER_MINUTES:
+            if (selective == DLMS_SELECTIVE_ACCESS_PARAMETER_COMPLETE_MINUTES)
+            {
+                //Reset seconds.
+                time_addSeconds(&end, -time_getSeconds(&end));
+            }
+            time_copy(&start, &end);
+            time_addMinutes(&start, -maxCount);
+            break;
+            /*Last complete number of hours.*/
+        case DLMS_SELECTIVE_ACCESS_PARAMETER_COMPLETE_HOURS:
+            /*Last complete number of hours including the current hour.*/
+        case DLMS_SELECTIVE_ACCESS_PARAMETER_HOURS:
+            if (selective == DLMS_SELECTIVE_ACCESS_PARAMETER_COMPLETE_HOURS)
+            {
+                //Reset seconds.
+                time_addSeconds(&end, -time_getSeconds(&end));
+                //Reset minutes.
+                time_addMinutes(&end, -time_getMinutes(&end));
+            }
+            time_copy(&start, &end);
+            time_addHours(&start, -maxCount);
+            break;
+            /*Last complete number of days.*/
+        case DLMS_SELECTIVE_ACCESS_PARAMETER_COMPLETE_DAYS:
+            /*Last complete number of days including the current day.*/
+        case DLMS_SELECTIVE_ACCESS_PARAMETER_DAYS:
+            if (selective == DLMS_SELECTIVE_ACCESS_PARAMETER_COMPLETE_DAYS)
+            {
+                //Reset seconds.
+                time_addSeconds(&end, -time_getSeconds(&end));
+                //Reset minutes.
+                time_addMinutes(&end, -time_getMinutes(&end));
+                //Reset hours.
+                time_addHours(&end, -time_getHours(&end));
+            }
+            time_copy(&start, &end);
+            if (selective == DLMS_SELECTIVE_ACCESS_PARAMETER_DAYS)
+            {
+                //Reset seconds.
+                time_addSeconds(&start, -time_getSeconds(&start));
+                //Reset minutes.
+                time_addMinutes(&start, -time_getMinutes(&start));
+                //Reset hours.
+                time_addHours(&start, -time_getHours(&start));
+            }
+            time_addDays(&start, -maxCount);
+            break;
+            /*Last complete number of months.*/
+        case DLMS_SELECTIVE_ACCESS_PARAMETER_COMPLETE_MONTHS:
+            /*Last complete number of months including the current month.*/
+        case DLMS_SELECTIVE_ACCESS_PARAMETER_MONTHS:
+            if (selective == DLMS_SELECTIVE_ACCESS_PARAMETER_COMPLETE_MONTHS)
+            {
+                //Reset seconds.
+                time_addSeconds(&end, -time_getSeconds(&end));
+                //Reset minutes.
+                time_addMinutes(&end, -time_getMinutes(&end));
+                //Reset hours.
+                time_addHours(&end, -time_getHours(&end));
+                //Reset days.
+                time_addDays(&end, -(time_getDays(&end) - 1));
+            }
+            time_copy(&start, &end);
+            if (selective == DLMS_SELECTIVE_ACCESS_PARAMETER_MONTHS)
+            {
+                //Reset seconds.
+                time_addSeconds(&start, -time_getSeconds(&start));
+                //Reset minutes.
+                time_addMinutes(&start, -time_getMinutes(&start));
+                //Reset hours.
+                time_addHours(&start, -time_getHours(&start));
+                //Reset days.
+                time_addDays(&start, -(time_getDays(&start) - 1));
+            }
+            time_addMonths(&start, -maxCount);
+            break;
+        default:
+            return DLMS_ERROR_CODE_INVALID_PARAMETER;
         };
         startTime = time_toUnixTime2(&start);
         endTime = time_toUnixTime2(&end);
@@ -4710,22 +4708,17 @@ int readProfileGeneric(
         if (first)
         {
             //Read all.
-            printf("First read operation detected. Selector: %d\n", e->selector);
             if (e->selector == 0)
             {
-                printf("Selector is 0 - Reading all entries.\n");
                 e->transactionStartIndex = 1;
                 e->transactionEndIndex = pg->entriesInUse;
-                printf("Transaction Start Index: %d, End Index: %d\n", e->transactionStartIndex, e->transactionEndIndex);
             }
             else if (e->selector == 1)
             {
                 //Read by entry. Find start and end index from the ring buffer.
-                printf("Selector is 1 - Reading by entry range.\n");
                 if ((ret = getProfileGenericDataByRangeFromRingBuffer(settings, fileName, e, startTime, endTime)) != 0 ||
                     (ret = cosem_getColumns(&pg->captureObjects, e->selector, &e->parameters, &captureObjects)) != 0)
                 {
-                    printf("Error reading by entry range. Error code: %d\n", ret);
                     e->transactionStartIndex = e->transactionEndIndex = 0;
                 }
                 else if (e->action && maxCount != 0 &&
@@ -4737,7 +4730,6 @@ int readProfileGeneric(
             }
             else if (e->selector == 2)
             {
-                printf("Selector is 2 - Reading by specific entry.\n");
                 dlmsVARIANT* it;
                 if ((ret = va_getByIndex(e->parameters.Arr, 0, &it)) == 0)
                 {
@@ -4749,7 +4741,6 @@ int readProfileGeneric(
                 }
                 if (ret != 0)
                 {
-                    printf("Error reading by specific entry. Error code: %d\n", ret);
                     e->transactionStartIndex = e->transactionEndIndex = 0;
                 }
                 else
@@ -4757,17 +4748,14 @@ int readProfileGeneric(
                     //If start index is too high.
                     if (e->transactionStartIndex > pg->entriesInUse)
                     {
-                        printf("Start index too high, adjusting to 0.\n");
                         e->transactionStartIndex = e->transactionEndIndex = 0;
                     }
                     //If end index is too high.
                     if (e->transactionEndIndex > pg->entriesInUse)
                     {
-                        printf("End index too high, adjusting to maximum entries.\n");
                         e->transactionEndIndex = pg->entriesInUse;
                     }
                 }
-                printf("Transaction Start Index: %d, End Index: %d\n", e->transactionStartIndex, e->transactionEndIndex);
             }
         }
         bb_clear(e->value.byteArr);
@@ -4778,18 +4766,15 @@ int readProfileGeneric(
             if (e->transactionEndIndex == 0)
             {
                 ret = cosem_setArray(e->value.byteArr, 0);
-                printf("No entries to process, setting empty array.\n");
             }
             else
             {
                 ret = cosem_setArray(e->value.byteArr, (uint16_t)(e->transactionEndIndex - e->transactionStartIndex + 1));
-                printf("Setting array with number of rows: %d\n", (uint16_t)(e->transactionEndIndex - e->transactionStartIndex + 1));
             }
         }
         if (ret == 0 && e->transactionEndIndex != 0)
         {
             //Loop items.
-            printf("Starting to read data from file.\n");
             uint32_t pos;
             gxtime tm;
             FILE* f = NULL;
@@ -4802,7 +4787,7 @@ int readProfileGeneric(
 #else
             if ((f = fopen(fileName, "rb")) == NULL)
             {
-                printf("Failed to open %s. Error code: %d. Description: %s\r\n", fileName, errno, strerror(errno));
+                printf("Failed to open %s.\r\n", fileName);
                 return DLMS_ERROR_CODE_INVALID_PARAMETER;
             }
 #endif
@@ -4817,17 +4802,14 @@ int readProfileGeneric(
             if (f != NULL)
             {
                 ret = getProfileGenericBufferColumnSizes(settings, pg, dataTypes, columnSizes, &dataSize, NULL);
-                printf("Data size per row: %d bytes\n", dataSize);
             }
             //Append data.
             if (ret == 0 && dataSize != 0)
             {
                 //Skip current index and total amount of the entries (+4 bytes).
-                printf("Skipping current index and starting to seek file to entry %d.\n", e->transactionStartIndex);
                 if (fseek(f, 4 + ((e->transactionStartIndex - 1) * dataSize), SEEK_SET) != 0)
                 {
                     printf("Failed to seek %s.\r\n", fileName);
-                    fclose(f);
                     return -1;
                 }
                 //Objects are saved to the buffer when action is used.
@@ -4851,10 +4833,8 @@ int readProfileGeneric(
                             break;
                         }
                         pduSize = e->value.byteArr->size;
-                        printf("Reading entry %d\n", pos + 1);
                         if ((ret = cosem_setStructure(e->value.byteArr, pg->captureObjects.size)) != 0)
                         {
-                            printf("Error setting structure for capture objects. Error code: %d\n", ret);
                             break;
                         }
                     }
@@ -4883,22 +4863,16 @@ int readProfileGeneric(
                         if ((ret = arr_getByIndex(&pg->captureObjects, colIndex, (void**)&it)) == 0)
                         {
                             //Date time is saved in EPOCH to save space.
-                            printf("Processing column index: %d\n", colIndex);
                             if ((((gxObject*)it->key)->objectType == DLMS_OBJECT_TYPE_CLOCK || (gxObject*)it->key == BASE(unixTime))
                                 && ((gxTarget*)it->value)->attributeIndex == 2)
                             {
                                 uint32_t time;
                                 fread(&time, 4, 1, f);
-                                printf("Read clock value: %u\n", time);
                                 time_initUnix(&tm, time);
                                 //Convert to meter time if UNIX time is not used.
                                 if (((gxObject*)it->key) != BASE(unixTime))
                                 {
                                     clock_utcToMeterTime(&clock1, &tm);
-                                }
-                                if ((ret = cosem_setDateTimeAsOctetString(e->value.byteArr, &tm)) != 0)
-                                {
-                                    printf("Error converting time to octet string. Error code: %d\n", ret);
                                 }
                                 //Objects are saved to the buffer when action is used.
                                 if (va != NULL)
@@ -4951,10 +4925,7 @@ int readProfileGeneric(
                                     }
                                 }
                                 //Read data.
-                                e->value.byteArr->data[e->value.byteArr->size] = dataTypes[colIndex];
-                                ++e->value.byteArr->size;
                                 fread(&e->value.byteArr->data[e->value.byteArr->size], columnSizes[colIndex], 1, f);
-                                printf("Read column data (size %d): %.*s\n", columnSizes[colIndex], columnSizes[colIndex], &e->value.byteArr->data[e->value.byteArr->size]);
                                 e->value.byteArr->size += columnSizes[colIndex];
                                 if (e->action)
                                 {
@@ -4975,35 +4946,29 @@ int readProfileGeneric(
                         }
                         if (ret != 0)
                         {
-                            if (ret == DLMS_ERROR_CODE_OUTOFMEMORY)
-                            {
-                                printf("Out of memory error encountered. Resetting PDU.\n");
-                                --e->transactionStartIndex;
-                                e->value.byteArr->size = pduSize;
-                                ret = 0;
-                            }
-                            else
-                            {
-                                printf("Error processing column index %d. Error code: %d\n", colIndex, ret);
-                                break;
-                            }
+                            break;
                         }
+                    }
+                    if (ret != 0)
+                    {
+                        break;
                     }
                     ++e->transactionStartIndex;
                 }
                 fclose(f);
-                printf("Finished reading from file.\n");
             }
             else
             {
                 printf("Failed to open %s.\r\n", fileName);
-                printf("Data size is zero, no data to read.\n");
-                fclose(f);
                 return DLMS_ERROR_CODE_INVALID_PARAMETER;
             }
         }
     }
-    printf("Finished readProfileGeneric function.\n");
+    if (ret == DLMS_ERROR_CODE_OUTOFMEMORY)
+    {
+        //Don't set error if PDU is full.
+        ret = 0;
+    }
     return ret;
 }
 
