@@ -115,7 +115,7 @@ static gxPushSetup pushSetup;
 static gxMbusDiagnostic mbusDiagnostic;
 static gxMBusPortSetup mbusPortSetup;
 static gxDisconnectControl disconnectControl;
-static gxProfileGeneric loadProfile, dailyLoadProfile, nameplateProfile, billingProfile;
+static gxProfileGeneric loadProfile, dailyLoadProfile, nameplateProfile, billingProfile, instantaneousProfile;
 static gxSapAssignment sapAssignment;
 //Security Setup High is for High authentication.
 static gxSecuritySetup securitySetupHigh;
@@ -285,6 +285,7 @@ static gxObject *ALL_OBJECTS[] = {
     BASE(dailyLoadProfile),
     BASE(nameplateProfile),
     BASE(billingProfile),
+    BASE(instantaneousProfile),
     BASE(eventLog),
     BASE(hdlc),
     BASE(disconnectControl),
@@ -1933,6 +1934,143 @@ int addBillingProfileProfileGeneric(dlmsSettings* settings)
         //Update amount of capture objects.
         billingProfile.profileEntries = getProfileGenericBufferMaxRowCount(settings, &billingProfile);
         billingProfile.entriesInUse = getProfileGenericBufferEntriesInUse(&billingProfile);
+    }
+    return 0;
+}
+
+///////////////////////////////////////////////////////////////////////
+//Add profile generic (historical data) object.
+///////////////////////////////////////////////////////////////////////
+int addInstantaneousProfileProfileGeneric(dlmsSettings* settings)
+{
+    int ret;
+    const unsigned char ln[6] = {1, 0, 94, 91, 0, 255};
+    if ((ret = INIT_OBJECT(instantaneousProfile, DLMS_OBJECT_TYPE_PROFILE_GENERIC, ln)) == 0)
+    {
+        gxTarget* capture;
+        //Set default values if load the first time.
+        instantaneousProfile.sortMethod = DLMS_SORT_METHOD_LIFO;
+        ///////////////////////////////////////////////////////////////////
+        //Add columns.
+        //Add clock obect.
+        capture = (gxTarget*)malloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&instantaneousProfile.captureObjects, key_init(&clock1, capture));
+        //Add L1 voltage.
+        capture = (gxTarget*)malloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&instantaneousProfile.captureObjects, key_init(&voltageL1, capture));
+#ifdef THREE_PHASE
+        //Add L2 voltage.
+        capture = (gxTarget*)malloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&instantaneousProfile.captureObjects, key_init(&voltageL2, capture));
+        //Add L3 voltage.
+        capture = (gxTarget*)malloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&instantaneousProfile.captureObjects, key_init(&voltageL3, capture));
+#endif
+        //Add L1 current.
+        capture = (gxTarget*)malloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&instantaneousProfile.captureObjects, key_init(&currentL1, capture));
+#ifdef THREE_PHASE
+        //Add L2 current.
+        capture = (gxTarget*)malloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&instantaneousProfile.captureObjects, key_init(&currentL2, capture));
+        //Add L3 current.
+        capture = (gxTarget*)malloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&instantaneousProfile.captureObjects, key_init(&currentL3, capture));
+#endif
+#ifdef SINGLE_PHASE
+        //Add neutral current.
+        capture = (gxTarget*)malloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&instantaneousProfile.captureObjects, key_init(&neutralCurrent, capture));
+        //Add signed power factor.
+        capture = (gxTarget*)malloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&instantaneousProfile.captureObjects, key_init(&signedPowerFactor, capture));
+#elif defined(THREE_PHASE)
+        //Add L1 power factor.
+        capture = (gxTarget*)malloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&instantaneousProfile.captureObjects, key_init(&powerFactorL1, capture));
+        //Add L2 power factor.
+        capture = (gxTarget*)malloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&instantaneousProfile.captureObjects, key_init(&powerFactorL2, capture));
+        //Add L3 power factor.
+        capture = (gxTarget*)malloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&instantaneousProfile.captureObjects, key_init(&powerFactorL3, capture));
+#endif
+        //Add frequency.
+        capture = (gxTarget*)malloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&instantaneousProfile.captureObjects, key_init(&frequency, capture));
+#ifdef SINGLE_PHASE
+        //Add apparent Power
+        capture = (gxTarget*)malloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&instantaneousProfile.captureObjects, key_init(&apparentPower, capture));
+        //Add active Power
+        capture = (gxTarget*)malloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&instantaneousProfile.captureObjects, key_init(&activePower, capture));
+#endif
+        //Add Cumulative Energy Wh - Import.
+        capture = (gxTarget*)malloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&instantaneousProfile.captureObjects, key_init(&cumulativeEnergyKWhImport, capture));
+#ifdef SINGLE_PHASE
+        // Add Cumulative Energy Wh - Export
+        capture = (gxTarget*)malloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&instantaneousProfile.captureObjects, key_init(&cumulativeEnergyKWhExport, capture));
+#elif defined(THREE_PHASE)
+        //Add Cumulative Energy VAh - Lag.
+        capture = (gxTarget*)malloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&instantaneousProfile.captureObjects, key_init(&cumulativeEnergyKVAhLag, capture));
+        //Add Cumulative Energy VAh - Lead.
+        capture = (gxTarget*)malloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&instantaneousProfile.captureObjects, key_init(&cumulativeEnergyKVAhLead, capture));
+        //Add Cumulative Energy VAh - Import.
+        capture = (gxTarget*)malloc(sizeof(gxTarget));
+        capture->attributeIndex = 2;
+        capture->dataIndex = 0;
+        arr_push(&instantaneousProfile.captureObjects, key_init(&cumulativeEnergyKVAhImport, capture));
+#endif
+        ///////////////////////////////////////////////////////////////////
+        //Update amount of capture objects.
+        //Set clock to sort object.
+        instantaneousProfile.sortObject = BASE(clock1);
+        instantaneousProfile.sortObjectAttributeIndex = 2;
+        instantaneousProfile.profileEntries = getProfileGenericBufferMaxRowCount(settings, &instantaneousProfile);
+        instantaneousProfile.entriesInUse = getProfileGenericBufferEntriesInUse(&instantaneousProfile);
     }
     return 0;
 }
@@ -4232,6 +4370,7 @@ int svr_InitObjects(
         (ret = addDailyLoadProfileProfileGeneric(&settings->base)) != 0 ||
         (ret = addNameplateProfileProfileGeneric(&settings->base)) != 0 ||
         (ret = addBillingProfileProfileGeneric(&settings->base)) != 0 ||
+        (ret = addInstantaneousProfileProfileGeneric(&settings->base)) != 0 ||
         (ret = addEventLogProfileGeneric(&settings->base)) != 0 ||
         (ret = addActionScheduleDisconnectOpen()) != 0 ||
         (ret = addActionScheduleDisconnectClose()) != 0 ||
@@ -6539,6 +6678,7 @@ void* captureThreadFunction(void* pVoid)
     {
         captureProfileGeneric(&con->settings.base, &nameplateProfile);
         sleep(30);
+        captureProfileGeneric(&con->settings.base, &instantaneousProfile);
         captureProfileGeneric(&con->settings.base, &loadProfile);
         loadProfileCounter++;
 
