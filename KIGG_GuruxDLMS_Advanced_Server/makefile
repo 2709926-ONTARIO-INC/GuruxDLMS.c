@@ -1,12 +1,12 @@
 # project name (generate executable with this name)
 TARGET   = gurux.dlms.server.bin
 
-CC       = gcc
+CC       = musl-gcc
 
 # compiling flags here
-CFLAGS   = -std=gnu99 -fstack-protector-all -Wall -I. -IcJSON/include
+CFLAGS   = -std=gnu99 -fstack-protector-all -Wall -Os -s -fdata-sections -ffunction-sections -I. -IcJSON/include
 
-LINKER   = gcc -o
+LINKER   = musl-gcc -o
 
 # linking flags here
 LFLAGS   = -L../development/lib 

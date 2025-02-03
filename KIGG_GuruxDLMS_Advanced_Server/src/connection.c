@@ -336,7 +336,7 @@ int svr_listen(
     con->captureThread = (HANDLE)_beginthreadex(NULL, STACK_SIZE, captureThreadFunction, (LPVOID)con, 0, NULL);
 #else
     pthread_attr_init(&con->attr);
-    pthread_attr_setstacksize(&con->attr, STACK_SIZE);
+    pthread_attr_setstacksize(&con->attr, STACK_SIZE / 4U);
     ret = pthread_create(&con->captureThread, &con->attr, captureThreadFunction, (void*)con);
     pthread_attr_destroy(&con->attr);
 #endif
