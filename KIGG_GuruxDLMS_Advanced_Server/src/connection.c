@@ -48,6 +48,8 @@
 #endif//Linux
 #endif
 
+static bool captureThreadStarted = false;
+
 //Initialize connection buffers.
 void con_initializeBuffers(connection* connection, int size)
 {
@@ -335,10 +337,14 @@ int svr_listen(
 #if defined(_WIN32) || defined(_WIN64)//Windows includes
     con->captureThread = (HANDLE)_beginthreadex(NULL, STACK_SIZE, captureThreadFunction, (LPVOID)con, 0, NULL);
 #else
-    pthread_attr_init(&con->attr);
-    pthread_attr_setstacksize(&con->attr, STACK_SIZE / 4U);
-    ret = pthread_create(&con->captureThread, &con->attr, captureThreadFunction, (void*)con);
-    pthread_attr_destroy(&con->attr);
+    if (!captureThreadStarted)
+    {
+        pthread_attr_init(&con->attr);
+        pthread_attr_setstacksize(&con->attr, STACK_SIZE / 4U);
+        ret = pthread_create(&con->captureThread, &con->attr, captureThreadFunction, (void*)con);
+        pthread_attr_destroy(&con->attr);
+        captureThreadStarted = true;
+    }
 #endif
     return ret;
 }
