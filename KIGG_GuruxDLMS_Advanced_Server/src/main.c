@@ -82,7 +82,11 @@ char _getch()
 int startServers(int port, int trace)
 {
     int ret;
+#if 0
     connection snHdlc, lnHdlc, snWrapper, lnWrapper, lniec;
+#endif
+    connection lnHdlc;
+#if 0
     //Initialize DLMS settings.
     svr_init(&snHdlc.settings, 0, DLMS_INTERFACE_TYPE_HDLC, HDLC_BUFFER_SIZE, PDU_BUFFER_SIZE, snframeBuff, HDLC_HEADER_SIZE + HDLC_BUFFER_SIZE, snpduBuff, PDU_BUFFER_SIZE);
     //Set master key (KEK) to 1111111111111111.
@@ -98,10 +102,13 @@ int startServers(int port, int trace)
     printf("Example connection settings:\n");
     printf("Gurux.DLMS.Client.Example.Net -r sn -h localhost -p %d\n", port);
     printf("----------------------------------------------------------\n");
+#endif
     //Initialize DLMS settings.
     svr_init(&lnHdlc.settings, 1, DLMS_INTERFACE_TYPE_HDLC, HDLC_BUFFER_SIZE, PDU_BUFFER_SIZE, lnframeBuff, HDLC_HEADER_SIZE + HDLC_BUFFER_SIZE, lnpduBuff, PDU_BUFFER_SIZE);
-    //We have several server that are using same objects. Just copy them.
-    oa_copy(&lnHdlc.settings.base.objects, &snHdlc.settings.base.objects);
+    //Set master key (KEK) to 1111111111111111.
+    unsigned char KEK[16] = { 0x31,0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31 };
+    BB_ATTACH(lnHdlc.settings.base.kek, KEK, sizeof(KEK));
+    svr_InitObjects(&lnHdlc.settings);
     //Start server
     if ((ret = svr_start(&lnHdlc, port + 1)) != 0)
     {
@@ -111,6 +118,7 @@ int startServers(int port, int trace)
     printf("Example connection settings:\n");
     printf("GuruxDLMSClientExample -h localhost -p %d\n", port + 1);
     printf("----------------------------------------------------------\n");
+#if 0
     //Initialize DLMS settings.
     svr_init(&snWrapper.settings, 0, DLMS_INTERFACE_TYPE_WRAPPER, WRAPPER_BUFFER_SIZE, PDU_BUFFER_SIZE, sn47frameBuff, WRAPPER_BUFFER_SIZE, sn47pduBuff, PDU_BUFFER_SIZE);
     //We have several server that are using same objects. Just copy them.
@@ -153,6 +161,7 @@ int startServers(int port, int trace)
     printf("Example connection settings:\n");
     printf("GuruxDLMSClientExample -h localhost -p %d -i HdlcWithModeE\n", port + 4);
     printf("----------------------------------------------------------\n");
+#endif
 
     printf("----------------------------------------------------------\n");
     printf("Authentication levels:\n");
@@ -162,13 +171,14 @@ int startServers(int port, int trace)
     printf("High Pre-established: Client address 2 (0x2)\n");
     printf("High ECDSA: Client address 3 (0x3)\n");
     printf("----------------------------------------------------------\n");
+#if 0
     println("System Title", &snHdlc.settings.base.cipher.systemTitle);
     println("Authentication key", &snHdlc.settings.base.cipher.authenticationKey);
     println("Block cipher key", &snHdlc.settings.base.cipher.blockCipherKey);
     println("Client System title", snHdlc.settings.base.preEstablishedSystemTitle);
     println("Master key (KEK)", &snHdlc.settings.base.kek);
     printf("----------------------------------------------------------\n");
-    printf("Press Enter to close application.\r\n");
+#endif
     uint32_t lastMonitor = 0;
     uint32_t executeTime = 0;
     while (1)
@@ -177,14 +187,17 @@ int startServers(int port, int trace)
         if (time_current() - lastMonitor > 1)
         {
             lastMonitor = time_current();
+#if 0
             if ((ret = svr_limiterAll(&snHdlc.settings, lastMonitor)) != 0)
             {
                 printf("snHdlc limiter failed.\r\n");
             }
+#endif
             if ((ret = svr_limiterAll(&lnHdlc.settings, lastMonitor)) != 0)
             {
                 printf("lnHdlc limiter failed.\r\n");
             }
+#if 0
             if ((ret = svr_limiterAll(&snWrapper.settings, lastMonitor)) != 0)
             {
                 printf("snWrapper limiter failed.\r\n");
@@ -197,10 +210,12 @@ int startServers(int port, int trace)
             {
                 printf("snHdlc monitor failed.\r\n");
             }
+#endif
             if ((ret = svr_monitorAll(&lnHdlc.settings)) != 0)
             {
                 printf("lnHdlc monitor failed.\r\n");
             }
+#if 0
             if ((ret = svr_monitorAll(&snWrapper.settings)) != 0)
             {
                 printf("snWrapper monitor failed.\r\n");
@@ -209,6 +224,7 @@ int startServers(int port, int trace)
             {
                 printf("lnWrapper monitor failed.\r\n");
             }
+#endif
             if (executeTime <= lastMonitor)
             {
                 svr_run(&lnHdlc.settings, lastMonitor, &executeTime);
@@ -239,9 +255,12 @@ int startServers(int port, int trace)
         }
 #endif
     }
+    con_close(&lnHdlc);
+#if 0
     con_close(&snHdlc);
     con_close(&snWrapper);
     con_close(&lnWrapper);
+#endif
     return 0;
 }
 
