@@ -17,7 +17,7 @@ class ParameterPopup(QWidget):
         self.initUI()
 
     def initUI(self):
-        self.setWindowTitle("KiGG VM Simulator")
+        self.setWindowTitle("Meshnet Electronics VM Simulator")
         self.setMinimumSize(500, 310)
         self.setStyleSheet("background-color: #F1F1F1;")
         self.setWindowModality(Qt.ApplicationModal)
@@ -116,7 +116,7 @@ class ServerPage(QMainWindow):
         self.initUI()
 
     def initUI(self):
-        self.setWindowTitle("KiGG VM Simulator")
+        self.setWindowTitle("Meshnet Electronics VM Simulator")
         self.setWindowState(Qt.WindowMaximized)
         self.setStyleSheet("background-color: #F1F1F1;")
         image_path = fr"{resource_path('assets/images/icon.png')}"
@@ -288,7 +288,7 @@ class ServerPage(QMainWindow):
             servers_started_successfully += temp_num_servers_started
             servers_failed_to_start += temp_num_servers_failed
         
-        QMessageBox.information(self, "KiGG VM Simulator", f"{servers_started_successfully} servers started successfully, {servers_failed_to_start} servers failed to start.")
+        QMessageBox.information(self, "Meshnet Electronics VM Simulator", f"{servers_started_successfully} servers started successfully, {servers_failed_to_start} servers failed to start.")
 
     def openNextPage(self):
         os.makedirs(resource_path("Config"), exist_ok=True)

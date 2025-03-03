@@ -98,7 +98,7 @@ class ProfilePage(QWidget):
         self.initUI()
 
     def initUI(self):
-        self.setWindowTitle("KiGG VM Simulator")
+        self.setWindowTitle("Meshnet Electronics VM Simulator")
         self.setWindowState(Qt.WindowMaximized)
         self.setStyleSheet("background-color: #F1F1F1;")
         image_path = fr"{resource_path('assets/images/icon.png')}"

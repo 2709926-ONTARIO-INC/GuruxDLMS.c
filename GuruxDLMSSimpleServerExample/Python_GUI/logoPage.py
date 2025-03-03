@@ -10,9 +10,9 @@ class LogoPage(QMainWindow):
         self.initUI()
 
     def initUI(self):
-        self.setWindowTitle("KiGG VM Simulator")
+        self.setWindowTitle("Meshnet Electronics VM Simulator")
         self.setWindowState(Qt.WindowMaximized)
-        self.setStyleSheet("background-color: #F1F1F1;")
+        self.setStyleSheet("background-color: white;")
         image_path = fr"{resource_path('assets/images/icon.png')}"
         self.setWindowIcon(QIcon(image_path))
 
@@ -28,13 +28,13 @@ class LogoPage(QMainWindow):
         image_label = QLabel(self)
         image_path = fr"{resource_path('assets/images/logo.png')}"
         logo_pixmap = QPixmap(image_path)
-        logo_pixmap = logo_pixmap.scaled(500,300, Qt.KeepAspectRatio)
+        logo_pixmap = logo_pixmap.scaled(650,450, Qt.KeepAspectRatio)
         image_label.setPixmap(logo_pixmap)
         image_label.setMinimumSize(500,300)
         image_label.setAlignment(Qt.AlignCenter)
 
         # Title label
-        title_label = createLabel("KiGG VM Simulator", 18, "darkblue")
+        title_label = createLabel("Meshnet Electronics VM Simulator", 18, "darkblue")
 
         # Version label
         version_label = createLabel("v1.02", 10)
