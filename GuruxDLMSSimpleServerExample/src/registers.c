@@ -47,8 +47,6 @@ static uint32_t signedPowerFactorValue = 0;
 // Define variables for upper and lower limits of single phase meter registers
 static uint32_t blockEnergyKWhExportValueMin = 0, blockEnergyKWhExportValueMax = 100 * 100;
 static uint32_t neutralCurrentValueMin = 0, neutralCurrentValueMax = 10 * 1000;
-static uint32_t activePowerValueMin = 0, activePowerValueMax = 100 * 10;
-static uint32_t apparentPowerValueMin = 0, apparentPowerValueMax = 100 * 10;
 static uint32_t signedPowerFactorValueMin = 0.1 * 1000, signedPowerFactorValueMax = 0.99 * 1000;
 
 // Garbage counters for each variable of single phase meter
@@ -58,14 +56,20 @@ static int signedPowerFactorCounter = 0;
 static int blockEnergyKWhExportCounter = 0;
 static int cumulativeEnergyKWhExportCounter = 0;
 
-// Variables to keep track of if the cumulative energy values are read once
+// Variable to keep track if the cumulative energy value is read once
 static bool isCumulativeEnergyKWhExportReadOnce = false;
+// Variable to keep track if the active power value is read once
+static bool isActivePowerReadOnce = false;
 
 // Variable to track if garbage values were read once 
 static bool isCumulativeEnergyKWhExportGarbageValueSent = false;
+// Variable to track if active power garbage values were read once
+static bool isActivePowerGarbageValueSent = false;
 
 // Variable to store the last cumulative energy values when garbage injection is enabled
 static uint32_t lastCumulativeEnergyKWhExportValue = 0;
+// Variable to store the last active power value when garbage injection is enabled
+static uint32_t lastActivePowerValue = 0;
 #elif defined(THREE_PHASE)
 // Garbage value arrays for each variable
 uint32_t voltageL2GarbageValues[] = {600000, 888000, 1200000};
@@ -192,12 +196,12 @@ static uint32_t currentL1ValueMin = 0, currentL1ValueMax = 10 * 1000;
 static uint32_t voltageL1ValueMin = 108 * 1000, voltageL1ValueMax = 112 * 1000;
 static uint32_t currentL1ValueMin = 0, currentL1ValueMax = 10 * 100000;
 #endif
-static uint32_t frequencyValueMin = 498 * 1000, frequencyValueMax = 502 * 1000;
+static uint32_t frequencyValueMin = 49.8 * 1000, frequencyValueMax = 50.2 * 1000;
 static uint32_t blockEnergyKWhImportValueMin = 0, blockEnergyKWhImportValueMax = 100 * 100;
 
 
 static char meterSerialNumberValue[64U] = "X0000000";
-static const char* manufacturerNameValue = "SECURE METERS LTD.";
+static char manufacturerNameValue[64U] = "SECURE METERS LTD.";
 #ifdef SINGLE_PHASE
 static const char* firmwareVersionValue = "A1XX02";
 static uint8_t meterTypeValue = 5;
@@ -288,7 +292,11 @@ int addVoltageL1()
     // Initialize the voltageL1 register object
     if ((ret = INIT_OBJECT(voltageL1, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
     {
-        voltageL1Value = 115;
+#ifdef SINGLE_PHASE
+        voltageL1Value = 229;
+#elif defined(THREE_PHASE)
+        voltageL1Value = 112;
+#endif
         GX_UINT32_BYREF(voltageL1.value, voltageL1Value);
         // Set additional properties  
         voltageL1.scaler = -3;
@@ -458,7 +466,7 @@ int addCurrentL1()
 
     if ((ret = INIT_OBJECT(currentL1, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
     {
-        currentL1Value = 10;
+        currentL1Value = 9;
         GX_UINT32_BYREF(currentL1.value, currentL1Value);
 
 #ifdef SINGLE_PHASE
@@ -1896,7 +1904,7 @@ int addActivePower()
 
     if ((ret = INIT_OBJECT(activePower, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
     {
-        activePowerValue = 1000;  // Initialize with a default value (adjust as needed)
+        activePowerValue = voltageL1Value * currentL1Value * cos(signedPowerFactorValue);  // Initialize with a default value (adjust as needed)
         GX_UINT32_BYREF(activePower.value, activePowerValue);
         activePower.scaler = -1;  // Scalar for active power
         activePower.unit = 27;    // Unit for active power
@@ -1919,21 +1927,45 @@ uint32_t readActivePowerValue()
         if (activePowerCounter == 0)
         {
             // Select a random garbage value
+            lastActivePowerValue = activePowerValue;
             activePowerValue = activePowerGarbageValues[rand() % (sizeof(activePowerGarbageValues) / sizeof(activePowerGarbageValues[0]))];
             current_timestamp = getFormattedTimestamp();
             printf("%s -> Meter sending garbage value %u for active power.\n", current_timestamp, activePowerValue);
             // Reset the counter
             activePowerCounter = resetCounter();
+            isActivePowerGarbageValueSent = true;
+            return activePowerValue;
         }
         else
         {
-            activePowerValue = activePowerValueMin + rand() % (activePowerValueMax - activePowerValueMin + 1); // Normal value
+            // Check if garbage value was sent, then restore the previous value
+            if (isActivePowerGarbageValueSent)
+            {
+                isActivePowerGarbageValueSent = false;
+                activePowerValue = lastActivePowerValue;
+            }
+
+            if (!isActivePowerReadOnce) 
+            {
+                isActivePowerReadOnce = true;
+            }
+            else 
+            {
+                activePowerValue += (rand() % 30) + 10;
+            }
             activePowerCounter--;
         }
     }
     else
     {
-        activePowerValue = activePowerValueMin + rand() % (activePowerValueMax - activePowerValueMin + 1); // Normal value
+        if (!isActivePowerReadOnce) 
+        {
+            isActivePowerReadOnce = true;
+        }
+        else
+        {
+            activePowerValue += (rand() % 30) + 10  ;
+        }
     }
     return activePowerValue;
 }
@@ -1946,7 +1978,7 @@ int addApparentPower()
 
     if ((ret = INIT_OBJECT(apparentPower, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
     {
-        apparentPowerValue = 2000;  // Initialize with a default value (adjust as needed)
+        apparentPowerValue = voltageL1Value * currentL1Value;  // Initialize with a default value (adjust as needed)
         GX_UINT32_BYREF(apparentPower.value, apparentPowerValue);
         apparentPower.scaler = -1;  // Scalar for apparent power
         apparentPower.unit = 28;    // Unit for apparent power
@@ -1977,14 +2009,15 @@ uint32_t readApparentPowerValue()
         }
         else
         {
-            apparentPowerValue = apparentPowerValueMin + rand() % (apparentPowerValueMax - apparentPowerValueMin + 1); // Normal value
+            apparentPowerValue = voltageL1Value * currentL1Value; // Normal value
             apparentPowerCounter--;
         }
     }
     else
     {
-        apparentPowerValue = apparentPowerValueMin + rand() % (apparentPowerValueMax - apparentPowerValueMin + 1); // Normal value
+        apparentPowerValue = voltageL1Value * currentL1Value; // Normal value
     }
+    apparentPowerValue /= 100000;
     return apparentPowerValue;
 }
 
@@ -2118,6 +2151,14 @@ bool setRegisterLimits(const char* filePath)
         return false;
     }
 
+    // Parse and store manufacturer name
+    cJSON *manufacturer = cJSON_GetObjectItem(json, "manufacturer");
+    if (cJSON_IsString(manufacturer) && (manufacturer->valuestring != NULL)) 
+    {
+        strncpy(manufacturerNameValue, manufacturer->valuestring, sizeof(manufacturerNameValue) - 1);
+        manufacturerNameValue[sizeof(manufacturerNameValue) - 1] = '\0'; // Null-terminate
+    }
+
     // Parse and store limits
     cJSON* voltageLimits = cJSON_GetObjectItem(json, "voltage_limits");
     if (voltageLimits)
@@ -2198,15 +2239,6 @@ bool setRegisterLimits(const char* filePath)
     {
         signedPowerFactorValueMin = cJSON_GetObjectItem(signedPowerFactorLimits, "lower_limit")->valueint; // Convert to integer
         signedPowerFactorValueMax = cJSON_GetObjectItem(signedPowerFactorLimits, "upper_limit")->valueint; // Convert to integer
-    }
-
-    cJSON* powerLimits = cJSON_GetObjectItem(json, "power_limits");
-    if (powerLimits)
-    {
-        activePowerValueMin = cJSON_GetObjectItem(cJSON_GetObjectItem(powerLimits, "active_power"), "lower_limit")->valueint; // Convert to integer
-        activePowerValueMax = cJSON_GetObjectItem(cJSON_GetObjectItem(powerLimits, "active_power"), "upper_limit")->valueint; // Convert to integer
-        apparentPowerValueMin = cJSON_GetObjectItem(cJSON_GetObjectItem(powerLimits, "apparent_power"), "lower_limit")->valueint; // Convert to integer
-        apparentPowerValueMax = cJSON_GetObjectItem(cJSON_GetObjectItem(powerLimits, "apparent_power"), "upper_limit")->valueint; // Convert to integer
     }
 #endif
 

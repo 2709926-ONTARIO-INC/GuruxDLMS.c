@@ -1,4 +1,6 @@
 {
+    "no_of_meters": 2222,
+    "meter_type": "Three Phase (WC)",
     "manufacturer": "AEW",
     "voltage_limits": {
         "L1": {

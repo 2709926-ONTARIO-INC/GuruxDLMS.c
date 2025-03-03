@@ -1,5 +1,7 @@
 {
-    "manufacturer": "AEW",
+    "no_of_meters": 20,
+    "meter_type": "Three Phase (HTCT)",
+    "manufacturer": "HPL",
     "voltage_limits": {
         "L1": {
             "lower_limit": 108000,

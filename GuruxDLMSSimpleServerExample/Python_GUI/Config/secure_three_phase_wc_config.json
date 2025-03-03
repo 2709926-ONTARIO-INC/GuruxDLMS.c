@@ -1,5 +1,7 @@
 {
-    "manufacturer": "AEW",
+    "no_of_meters": 50,
+    "meter_type": "Three Phase (WC)",
+    "manufacturer": "Secure Meters Ltd.",
     "voltage_limits": {
         "L1": {
             "lower_limit": 108000,

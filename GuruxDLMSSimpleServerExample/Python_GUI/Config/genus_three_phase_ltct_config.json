@@ -1,5 +1,7 @@
 {
-    "manufacturer": "AEW",
+    "no_of_meters": 144,
+    "meter_type": "Three Phase (LTCT)",
+    "manufacturer": "Genus",
     "voltage_limits": {
         "L1": {
             "lower_limit": 108000,
