@@ -52,8 +52,8 @@ extern "C" {
   */
     extern unsigned char svr_isTarget(
         dlmsSettings* settings,
-        uint32_t serverAddress,
-        uint32_t clientAddress);
+        unsigned long serverAddress,
+        unsigned long clientAddress);
 
     /**
     * Get attribute access level.

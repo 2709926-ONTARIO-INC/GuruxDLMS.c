@@ -2,66 +2,66 @@
     "manufacturer": "AEW",
     "voltage_limits": {
         "L1": {
-            "lower_limit": 108000,
-            "upper_limit": 112000
+            "lower_limit": 108,
+            "upper_limit": 112
         },
         "L2": {
-            "lower_limit": 108000,
-            "upper_limit": 112000
+            "lower_limit": 108,
+            "upper_limit": 112
         },
         "L3": {
-            "lower_limit": 108000,
-            "upper_limit": 112000
+            "lower_limit": 108,
+            "upper_limit": 112
         }
     },
     "current_limits": {
         "L1": {
             "lower_limit": 0,
-            "upper_limit": 1000000
+            "upper_limit": 10
         },
         "L2": {
             "lower_limit": 0,
-            "upper_limit": 1000000
+            "upper_limit": 10
         },
         "L3": {
             "lower_limit": 0,
-            "upper_limit": 1000000
+            "upper_limit": 10
         }
     },
     "frequency_limits": {
-            "lower_limit": 49800,
-            "upper_limit": 50200
+            "lower_limit": 49.8,
+            "upper_limit": 50.2
     },
     "power_factor_limits": {
         "L1": {
-            "lower_limit": 100,
-            "upper_limit": 990
+            "lower_limit": 0.1,
+            "upper_limit": 0.99
         },
         "L2": {
-            "lower_limit": 100,
-            "upper_limit": 990
+            "lower_limit": 0.1,
+            "upper_limit": 0.99
         },
         "L3": {
-            "lower_limit": 100,
-            "upper_limit": 990
+            "lower_limit": 0.1,
+            "upper_limit": 0.99
         }
     },
     "block_energy_limits": {
         "kWh_import": {
             "lower_limit": 0,
-            "upper_limit": 10000
+            "upper_limit": 100
         },
         "kVAh_lag": {
             "lower_limit": 0,
-            "upper_limit": 10000
+            "upper_limit": 100
         },
         "kVAh_lead": {
             "lower_limit": 0,
-            "upper_limit": 10000
+            "upper_limit": 100
         },
         "kVAh_import": {
             "lower_limit": 0,
-            "upper_limit": 10000
+            "upper_limit": 100
         }
     }
 }

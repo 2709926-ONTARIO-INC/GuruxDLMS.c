@@ -22,11 +22,11 @@ extern bool isGarbageValuesEnabled();
 #define SIZE                50
 
 #ifdef SINGLE_PHASE
-// Garbage value arrays for each variable of single phase meter
-uint32_t neutralCurrentGarbageValues[] = {5000000, 9900000, 11000000};
-uint32_t activePowerGarbageValues[] = {5000000, 9900000, 11000000};
-uint32_t apparentPowerGarbageValues[] = {5000000, 9900000, 11000000};
-uint32_t signedPowerFactorGarbageValues[] = {5000000, 9900000, 11000000};
+// Garbage value floatfor each variable of single phase meter
+float neutralCurrentGarbageValues[] = {5000000, 9900000, 11000000};
+float activePowerGarbageValues[] = {5000000, 9900000, 11000000};
+float apparentPowerGarbageValues[] = {5000000, 9900000, 11000000};
+float signedPowerFactorGarbageValues[] = {5000000, 9900000, 11000000};
 uint32_t blockEnergyKWhExportGarbageValues[] = {99999, 12345, 214745};
 uint32_t cumulativeEnergyKWhExportGarbageValues[] = {90, 98, 76};
 
@@ -38,16 +38,16 @@ gxRegister activePower, apparentPower;
 gxRegister signedPowerFactor;
 
 // Define variables to store the KIGG registers' values for single phase meter
-static uint32_t blockEnergyKWhExportValue = 0;
+static uint32_t blockEnergyKWhExportValue = 100;
 static uint32_t cumulativeEnergyKWhExportValue = 0;
-static uint32_t neutralCurrentValue = 0;
-static uint32_t activePowerValue = 0, apparentPowerValue = 0;
-static uint32_t signedPowerFactorValue = 0;
+static float neutralCurrentValue = 10;
+static float activePowerValue = 0, apparentPowerValue = 0;
+static float signedPowerFactorValue = 0.1;
 
 // Define variables for upper and lower limits of single phase meter registers
-static uint32_t blockEnergyKWhExportValueMin = 0, blockEnergyKWhExportValueMax = 100 * 100;
-static uint32_t neutralCurrentValueMin = 0, neutralCurrentValueMax = 10 * 1000;
-static uint32_t signedPowerFactorValueMin = 0.1 * 1000, signedPowerFactorValueMax = 0.99 * 1000;
+static uint32_t blockEnergyKWhExportValueMin = 0, blockEnergyKWhExportValueMax = 100;
+static float neutralCurrentValueMin = 0, neutralCurrentValueMax = 10;
+static float signedPowerFactorValueMin = 0.1, signedPowerFactorValueMax = 0.99;
 
 // Garbage counters for each variable of single phase meter
 static int neutralCurrentCounter = 0;
@@ -69,16 +69,16 @@ static bool isActivePowerGarbageValueSent = false;
 // Variable to store the last cumulative energy values when garbage injection is enabled
 static uint32_t lastCumulativeEnergyKWhExportValue = 0;
 // Variable to store the last active power value when garbage injection is enabled
-static uint32_t lastActivePowerValue = 0;
+static float lastActivePowerValue = 0;
 #elif defined(THREE_PHASE)
 // Garbage value arrays for each variable
-uint32_t voltageL2GarbageValues[] = {600000, 888000, 1200000};
-uint32_t voltageL3GarbageValues[] = {5500000, 6000000, 70000000};
-uint32_t currentL2GarbageValues[] = {6000000, 9800000, 12000000};
-uint32_t currentL3GarbageValues[] = {5500000, 1000000, 13000000};
-uint32_t powerFactorL1GarbageValues[] = {800000, 210000, 200000};
-uint32_t powerFactorL2GarbageValues[] = {900000, 210000, 210000};
-uint32_t powerFactorL3GarbageValues[] = {800000, 210000, 220000};
+float voltageL2GarbageValues[] = {600000, 888000, 1200000};
+float voltageL3GarbageValues[] = {5500000, 6000000, 70000000};
+float currentL2GarbageValues[] = {6000000, 9800000, 12000000};
+float currentL3GarbageValues[] = {5500000, 1000000, 13000000};
+float powerFactorL1GarbageValues[] = {800000, 210000, 200000};
+float powerFactorL2GarbageValues[] = {900000, 210000, 210000};
+float powerFactorL3GarbageValues[] = {800000, 210000, 220000};
 uint32_t blockEnergyKVAhLagGarbageValues[] = {99995, 23455, 198765};
 uint32_t blockEnergyKVAhLeadGarbageValues[] = {88885, 34565, 109875};
 uint32_t blockEnergyKVAhImportGarbageValues[] = {77775, 45675, 987655};
@@ -101,10 +101,10 @@ gxRegister currentL2Average, currentL3Average;
 gxData ctr, ptr;
 
 // Define variables to store the KIGG registers' values
-static uint32_t voltageL2Value = 0, voltageL3Value = 0;
-static uint32_t currentL2Value = 0, currentL3Value = 0;
-static uint32_t powerFactorL1Value = 0, powerFactorL2Value = 0, powerFactorL3Value = 0;
-static uint32_t blockEnergyKVAhLagValue = 0, blockEnergyKVAhLeadValue = 0, blockEnergyKVAhImportValue = 0;
+static float voltageL2Value = 108, voltageL3Value = 108;
+static float currentL2Value = 10, currentL3Value = 10;
+static float powerFactorL1Value = 0.1, powerFactorL2Value = 0.1, powerFactorL3Value = 0.1;
+static uint32_t blockEnergyKVAhLagValue = 100, blockEnergyKVAhLeadValue = 100, blockEnergyKVAhImportValue = 100;
 static uint32_t cumulativeEnergyKVAhLagValue = 0, cumulativeEnergyKVAhLeadValue = 0, cumulativeEnergyKVAhImportValue = 0;
 
 // Define variables to store the KIGG registers' averages
@@ -112,16 +112,16 @@ uint32_t voltageL2AverageValue = 0, voltageL3AverageValue = 0;
 uint32_t currentL2AverageValue = 0, currentL3AverageValue = 0;
 
 // Define variables for upper and lower limits
-static uint32_t voltageL2ValueMin = 108 * 1000, voltageL2ValueMax = 112 * 1000;
-static uint32_t voltageL3ValueMin = 108 * 1000, voltageL3ValueMax = 112* 1000;
-static uint32_t currentL2ValueMin = 0, currentL2ValueMax = 10 * 100000;
-static uint32_t currentL3ValueMin = 0, currentL3ValueMax = 10 * 100000;
-static uint32_t powerFactorL1ValueMin = 0.1 * 1000, powerFactorL1ValueMax = 0.99 * 1000;
-static uint32_t powerFactorL2ValueMin = 0.1 * 1000, powerFactorL2ValueMax = 0.99 * 1000;
-static uint32_t powerFactorL3ValueMin = 0.1* 1000, powerFactorL3ValueMax = 0.99 * 1000;
-static uint32_t blockEnergyKVAhLagValueMin = 0, blockEnergyKVAhLagValueMax = 100 * 100;
-static uint32_t blockEnergyKVAhLeadValueMin = 0, blockEnergyKVAhLeadValueMax = 100 * 100;
-static uint32_t blockEnergyKVAhImportValueMin = 0, blockEnergyKVAhImportValueMax = 100 * 100;
+static float voltageL2ValueMin = 108, voltageL2ValueMax = 112;
+static float voltageL3ValueMin = 108, voltageL3ValueMax = 112;
+static float currentL2ValueMin = 0, currentL2ValueMax = 10;
+static float currentL3ValueMin = 0, currentL3ValueMax = 10;
+static float powerFactorL1ValueMin = 0.1, powerFactorL1ValueMax = 0.99;
+static float powerFactorL2ValueMin = 0.1, powerFactorL2ValueMax = 0.99;
+static float powerFactorL3ValueMin = 0.1, powerFactorL3ValueMax = 0.99;
+static uint32_t blockEnergyKVAhLagValueMin = 0, blockEnergyKVAhLagValueMax = 100;
+static uint32_t blockEnergyKVAhLeadValueMin = 0, blockEnergyKVAhLeadValueMax = 100;
+static uint32_t blockEnergyKVAhImportValueMin = 0, blockEnergyKVAhImportValueMax = 100;
 
 // Garbage counters for each variable
 static int voltageL2Counter = 0, voltageL3Counter = 0;
@@ -151,9 +151,9 @@ static uint32_t lastCumulativeEnergyKVAhImportValue = 0;
 #endif
 
 // Garbage value arrays for each variable
-uint32_t voltageL1GarbageValues[] = {500000, 999000, 1100000};
-uint32_t currentL1GarbageValues[] = {5000000, 9900000, 11000000};
-uint32_t frequencyGarbageValues[] = {555000, 999000, 1100000};
+float voltageL1GarbageValues[] = {500000, 999000, 1100000};
+float currentL1GarbageValues[] = {5000000, 9900000, 11000000};
+float frequencyGarbageValues[] = {555000, 999000, 1100000};
 uint32_t blockEnergyKWhImportGarbageValues[] = {99999, 12345, 214745};
 uint32_t cumulativeEnergyKWhImportGarbageValues[] = {90, 98, 76};
 
@@ -177,10 +177,15 @@ gxData currentRating, yearOfManufacture;
 
 
 // Define variables to store the KIGG registers' values
-static uint32_t voltageL1Value = 0;
-static uint32_t currentL1Value = 0;
-static uint32_t frequencyValue = 0;
-static uint32_t blockEnergyKWhImportValue = 0;
+#ifdef SINGLE_PHASE
+static float voltageL1Value = 228;
+static float currentL1Value = 10;
+#elif defined(THREE_PHASE)
+static float voltageL1Value = 108;
+static float currentL1Value = 10;
+#endif
+static float frequencyValue = 49.8;
+static uint32_t blockEnergyKWhImportValue = 100;
 static uint32_t cumulativeEnergyKWhImportValue = 0;
 
 // Define variables to store the KIGG registers' averages
@@ -190,14 +195,14 @@ uint32_t currentL1AverageValue = 0;
 
 // Define variables for upper and lower limits
 #ifdef SINGLE_PHASE
-static uint32_t voltageL1ValueMin = 228 * 1000, voltageL1ValueMax = 232 * 1000;
-static uint32_t currentL1ValueMin = 0, currentL1ValueMax = 10 * 1000;
+static uint32_t voltageL1ValueMin = 228, voltageL1ValueMax = 232;
+static uint32_t currentL1ValueMin = 0, currentL1ValueMax = 10;
 #elif defined(THREE_PHASE)
-static uint32_t voltageL1ValueMin = 108 * 1000, voltageL1ValueMax = 112 * 1000;
-static uint32_t currentL1ValueMin = 0, currentL1ValueMax = 10 * 100000;
+static uint32_t voltageL1ValueMin = 108, voltageL1ValueMax = 112;
+static uint32_t currentL1ValueMin = 0, currentL1ValueMax = 10;
 #endif
-static uint32_t frequencyValueMin = 49.8 * 1000, frequencyValueMax = 50.2 * 1000;
-static uint32_t blockEnergyKWhImportValueMin = 0, blockEnergyKWhImportValueMax = 100 * 100;
+static float frequencyValueMin = 49.8, frequencyValueMax = 50.2;
+static uint32_t blockEnergyKWhImportValueMin = 0, blockEnergyKWhImportValueMax = 100;
 
 
 static char meterSerialNumberValue[64U] = "X0000000";
@@ -297,7 +302,7 @@ int addVoltageL1()
 #elif defined(THREE_PHASE)
         voltageL1Value = 112;
 #endif
-        GX_UINT32_BYREF(voltageL1.value, voltageL1Value);
+        GX_FLOAT_BYREF(voltageL1.value, voltageL1Value);
         // Set additional properties  
         voltageL1.scaler = -3;
         voltageL1.unit = 35;   
@@ -307,13 +312,13 @@ int addVoltageL1()
 }
 
 // Function to set the voltageL1 registers' value
-void writeVoltageL1Value(uint32_t value) 
+void writeVoltageL1Value(float value) 
 {
     voltageL1Value = value;
 }
 
 // Function to get the voltageL1 registers' value with garbage value injection
-uint32_t readVoltageL1Value()
+float readVoltageL1Value()
 {
     if (isGarbageValuesEnabled())
     {
@@ -322,24 +327,26 @@ uint32_t readVoltageL1Value()
             // Select a random garbage value
             voltageL1Value = voltageL1GarbageValues[rand() % (sizeof(voltageL1GarbageValues) / sizeof(voltageL1GarbageValues[0]))];
             current_timestamp = getFormattedTimestamp();
-            printf("%s -> Meter sending garbage value %u for voltage L1.\n", current_timestamp, voltageL1Value);
+            printf("%s -> Meter sending garbage value %f for voltage L1.\n", current_timestamp, voltageL1Value);
             // Reset the counter
             voltageL1Counter = resetCounter();
         }
         else
         {
-            voltageL1Value = voltageL1ValueMin + rand() % (voltageL1ValueMax - voltageL1ValueMin + 1); // Normal value
+            voltageL1Value = voltageL1ValueMin + ((double) rand() / RAND_MAX) * (voltageL1ValueMax - voltageL1ValueMin); // Normal value
             voltageL1Counter--;
             voltageL1AverageCounter++; // Increment the average counter to calculate new average
-            voltageL1AverageValue = calculateAverageUint32(voltageL1AverageValue * 1000, voltageL1Value, voltageL1AverageCounter) / 1000;
+            voltageL1AverageValue = calculateAverageUint32(voltageL1AverageValue * 1000, (uint32_t)voltageL1Value, voltageL1AverageCounter) / 1000;
         }
     }
     else
     {
-        voltageL1Value = voltageL1ValueMin + rand() % (voltageL1ValueMax - voltageL1ValueMin + 1); // Normal value
+        voltageL1Value = voltageL1ValueMin + ((double) rand() / RAND_MAX) * (voltageL1ValueMax - voltageL1ValueMin); // Normal value
         voltageL1AverageCounter++; // Increment the average counter to calculate new average
-        voltageL1AverageValue = calculateAverageUint32(voltageL1AverageValue * 1000, voltageL1Value, voltageL1AverageCounter) / 1000;
+        voltageL1AverageValue = calculateAverageUint32(voltageL1AverageValue * 1000, (uint32_t)voltageL1Value, voltageL1AverageCounter) / 1000;
     }
+
+    voltageL1Value *= 1000;
     return voltageL1Value;
 }
 
@@ -353,7 +360,7 @@ int addVoltageL2()
     if ((ret = INIT_OBJECT(voltageL2, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
     {
         voltageL2Value = 112;
-        GX_UINT32_BYREF(voltageL2.value, voltageL2Value);
+        GX_FLOAT_BYREF(voltageL2.value, voltageL2Value);
         voltageL2.scaler = -3;
         voltageL2.unit = 35;
     }
@@ -362,13 +369,13 @@ int addVoltageL2()
 }
 
 // Function to set the voltageL2 registers' value
-void writeVoltageL2Value(uint32_t value)
+void writeVoltageL2Value(float value)
 {
     voltageL2Value = value;
 }
 
 // Function to get the voltageL2 registers' value with garbage value injection
-uint32_t readVoltageL2Value()
+float readVoltageL2Value()
 {
     if (isGarbageValuesEnabled())
     {
@@ -377,24 +384,26 @@ uint32_t readVoltageL2Value()
             // Select a random garbage value
             voltageL2Value = voltageL2GarbageValues[rand() % (sizeof(voltageL2GarbageValues) / sizeof(voltageL2GarbageValues[0]))];
             current_timestamp = getFormattedTimestamp();
-            printf("%s -> Meter sending garbage value %u for voltage L2.\n", current_timestamp, voltageL2Value);
+            printf("%s -> Meter sending garbage value %f for voltage L2.\n", current_timestamp, voltageL2Value);
             // Reset the counter
             voltageL2Counter = resetCounter();
         }
         else
         {
-            voltageL2Value = voltageL2ValueMin + rand() % (voltageL2ValueMax - voltageL2ValueMin + 1); // Normal value
+            voltageL2Value = voltageL2ValueMin + ((double) rand() / RAND_MAX) * (voltageL2ValueMax - voltageL2ValueMin); // Normal value
             voltageL2Counter--;
             voltageL2AverageCounter++; // Increment the average counter to calculate new average
-            voltageL2AverageValue = calculateAverageUint32(voltageL2AverageValue * 1000, voltageL2Value, voltageL2AverageCounter) / 1000;
+            voltageL2AverageValue = calculateAverageUint32(voltageL2AverageValue * 1000, (uint32_t)voltageL2Value, voltageL2AverageCounter) / 1000;
         }
     }
     else
     {
-        voltageL2Value = voltageL2ValueMin + rand() % (voltageL2ValueMax - voltageL2ValueMin + 1); // Normal value
+        voltageL2Value = voltageL2ValueMin + ((double) rand() / RAND_MAX) * (voltageL2ValueMax - voltageL2ValueMin); // Normal value
         voltageL2AverageCounter++; // Increment the average counter to calculate new average
-        voltageL2AverageValue = calculateAverageUint32(voltageL2AverageValue * 1000, voltageL2Value, voltageL2AverageCounter) / 1000;
+        voltageL2AverageValue = calculateAverageUint32(voltageL2AverageValue * 1000, (uint32_t)voltageL2Value, voltageL2AverageCounter) / 1000;
     }
+
+    voltageL2Value *= 1000;
     return voltageL2Value;
 }
 
@@ -407,7 +416,7 @@ int addVoltageL3()
     if ((ret = INIT_OBJECT(voltageL3, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
     {
         voltageL3Value = 117;
-        GX_UINT32_BYREF(voltageL3.value, voltageL3Value);
+        GX_FLOAT_BYREF(voltageL3.value, voltageL3Value);
         voltageL3.scaler = -3;
         voltageL3.unit = 35;
     }
@@ -416,13 +425,13 @@ int addVoltageL3()
 }
 
 // Function to set the voltageL3 registers' value
-void writeVoltageL3Value(uint32_t value)
+void writeVoltageL3Value(float value)
 {
     voltageL3Value = value;
 }
 
 // Function to get the voltageL3 registers' value with garbage value injection
-uint32_t readVoltageL3Value()
+float readVoltageL3Value()
 {
     if (isGarbageValuesEnabled())
     {
@@ -431,24 +440,26 @@ uint32_t readVoltageL3Value()
             // Select a random garbage value
             voltageL3Value = voltageL3GarbageValues[rand() % (sizeof(voltageL3GarbageValues) / sizeof(voltageL3GarbageValues[0]))];
             current_timestamp = getFormattedTimestamp();
-            printf("%s -> Meter sending garbage value %u for voltage L3.\n", current_timestamp, voltageL3Value);
+            printf("%s -> Meter sending garbage value %f for voltage L3.\n", current_timestamp, voltageL3Value);
             // Reset the counter
             voltageL3Counter = resetCounter();
         }
         else
         {
-            voltageL3Value = voltageL3ValueMin + rand() % (voltageL3ValueMax - voltageL3ValueMin + 1); // Normal value
+            voltageL3Value = voltageL3ValueMin + ((double) rand() / RAND_MAX) * (voltageL3ValueMax - voltageL3ValueMin); // Normal value
             voltageL3Counter--;
             voltageL3AverageCounter++; // Increment the average counter to calculate new average
-            voltageL3AverageValue = calculateAverageUint32(voltageL3AverageValue * 1000, voltageL3Value, voltageL3AverageCounter) / 1000;
+            voltageL3AverageValue = calculateAverageUint32(voltageL3AverageValue * 1000, (uint32_t)voltageL3Value, voltageL3AverageCounter) / 1000;
         }
     }
     else
     {
-        voltageL3Value = voltageL3ValueMin + rand() % (voltageL3ValueMax - voltageL3ValueMin + 1); // Normal value
+        voltageL3Value = voltageL3ValueMin + ((double) rand() / RAND_MAX) * (voltageL3ValueMax - voltageL3ValueMin); // Normal value
         voltageL3AverageCounter++; // Increment the average counter to calculate new average
-        voltageL3AverageValue = calculateAverageUint32(voltageL3AverageValue * 1000, voltageL3Value, voltageL3AverageCounter)/ 1000;
+        voltageL3AverageValue = calculateAverageUint32(voltageL3AverageValue * 1000, (uint32_t)voltageL3Value, voltageL3AverageCounter)/ 1000;
     }
+
+    voltageL3Value *= 1000;
     return voltageL3Value;
 }
 #endif 
@@ -467,7 +478,7 @@ int addCurrentL1()
     if ((ret = INIT_OBJECT(currentL1, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
     {
         currentL1Value = 9;
-        GX_UINT32_BYREF(currentL1.value, currentL1Value);
+        GX_FLOAT_BYREF(currentL1.value, currentL1Value);
 
 #ifdef SINGLE_PHASE
         currentL1.scaler = -3;
@@ -481,13 +492,13 @@ int addCurrentL1()
 }
 
 // Function to set the currentL1 registers' value
-void writeCurrentL1Value(uint32_t value)
+void writeCurrentL1Value(float value)
 {
     currentL1Value = value;
 }
 
 // Function to get the currentL1 registers' value with garbage value injection
-uint32_t readCurrentL1Value()
+float readCurrentL1Value()
 {
     if (isGarbageValuesEnabled())
     {
@@ -496,13 +507,13 @@ uint32_t readCurrentL1Value()
             // Select a random garbage value
             currentL1Value = currentL1GarbageValues[rand() % (sizeof(currentL1GarbageValues) / sizeof(currentL1GarbageValues[0]))];
             current_timestamp = getFormattedTimestamp();
-            printf("%s -> Meter sending garbage value %u for current L1.\n", current_timestamp, currentL1Value);
+            printf("%s -> Meter sending garbage value %f for current L1.\n", current_timestamp, currentL1Value);
             // Reset the counter
             currentL1Counter = resetCounter();
         }
         else
         {
-            currentL1Value = currentL1ValueMin + rand() % (currentL1ValueMax - currentL1ValueMin + 1); // Normal value
+            currentL1Value = currentL1ValueMin + ((double) rand() / RAND_MAX) * (currentL1ValueMax - currentL1ValueMin); // Normal value
             currentL1Counter--;
             currentL1AverageCounter++; // Increment the average counter to calculate new average
 #ifdef SINGLE_PHASE
@@ -514,15 +525,22 @@ uint32_t readCurrentL1Value()
     }
     else
     {
-        currentL1Value = currentL1ValueMin + rand() % (currentL1ValueMax - currentL1ValueMin + 1); // Normal value
+        currentL1Value = currentL1ValueMin + ((double) rand() / RAND_MAX) * (currentL1ValueMax - currentL1ValueMin); // Normal value
         currentL1AverageCounter++; // Increment the average counter to calculate new average
 #ifdef SINGLE_PHASE
-            currentL1AverageValue = calculateAverageUint32(currentL1AverageValue * 1000, currentL1Value, currentL1AverageCounter) / 1000;
+            currentL1AverageValue = calculateAverageUint32(currentL1AverageValue * 1000, (uint32_t)currentL1Value, currentL1AverageCounter) / 1000;
 #elif defined(THREE_PHASE)
-            currentL1AverageValue = calculateAverageUint32(currentL1AverageValue * 100000, currentL1Value, currentL1AverageCounter) / 100000;
+            currentL1AverageValue = calculateAverageUint32(currentL1AverageValue * 100000, (uint32_t)currentL1Value, currentL1AverageCounter) / 100000;
 #endif
     }
+
+#ifdef SINGLE_PHASE
+    currentL1Value *= 1000;
     return currentL1Value;
+#elif defined(THREE_PHASE)
+    currentL1Value *= 100000;
+    return currentL1Value;
+#endif
 }
 
 #ifdef THREE_PHASE
@@ -535,7 +553,7 @@ int addCurrentL2()
     if ((ret = INIT_OBJECT(currentL2, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
     {
         currentL2Value = 10;
-        GX_UINT32_BYREF(currentL2.value, currentL2Value);
+        GX_FLOAT_BYREF(currentL2.value, currentL2Value);
         currentL2.scaler = -5;
         currentL2.unit = 33;
     }
@@ -544,13 +562,13 @@ int addCurrentL2()
 }
 
 // Function to set the currentL2 registers' value
-void writeCurrentL2Value(uint32_t value)
+void writeCurrentL2Value(float value)
 {
     currentL2Value = value;
 }
 
 // Function to get the currentL2 registers' value with garbage value injection
-uint32_t readCurrentL2Value()
+float readCurrentL2Value()
 {
     if (isGarbageValuesEnabled())
     {
@@ -559,25 +577,32 @@ uint32_t readCurrentL2Value()
             // Select a random garbage value
             currentL2Value = currentL2GarbageValues[rand() % (sizeof(currentL2GarbageValues) / sizeof(currentL2GarbageValues[0]))];
             current_timestamp = getFormattedTimestamp();
-            printf("%s -> Meter sending garbage value %u for current L2.\n", current_timestamp, currentL2Value);
+            printf("%s -> Meter sending garbage value %f for current L2.\n", current_timestamp, currentL2Value);
             // Reset the counter
             currentL2Counter = resetCounter();
         }
         else
         {
-            currentL2Value = currentL2ValueMin + rand() % (currentL2ValueMax - currentL2ValueMin + 1); // Normal value
+            currentL2Value = currentL2ValueMin + ((double) rand() / RAND_MAX) * (currentL2ValueMax - currentL2ValueMin); // Normal value
             currentL2Counter--;
             currentL2AverageCounter++; // Increment the average counter to calculate new average
-            currentL2AverageValue = calculateAverageUint32(currentL2AverageValue * 100000, currentL2Value, currentL2AverageCounter) / 100000;
+            currentL2AverageValue = calculateAverageUint32(currentL2AverageValue * 100000, (uint32_t)currentL2Value, currentL2AverageCounter) / 100000;
         }
     }
     else
     {
-        currentL2Value = currentL2ValueMin + rand() % (currentL2ValueMax - currentL2ValueMin + 1); // Normal value
+        currentL2Value = currentL2ValueMin + ((double) rand() / RAND_MAX) * (currentL2ValueMax - currentL2ValueMin); // Normal value
         currentL2AverageCounter++; // Increment the average counter to calculate new average
-        currentL2AverageValue = calculateAverageUint32(currentL2AverageValue * 100000, currentL2Value, currentL2AverageCounter) / 100000;
+        currentL2AverageValue = calculateAverageUint32(currentL2AverageValue * 100000, (uint32_t)currentL2Value, currentL2AverageCounter) / 100000;
     }
+
+#ifdef SINGLE_PHASE
+    currentL2Value *= 1000;
     return currentL2Value;
+#elif defined(THREE_PHASE)
+    currentL2Value *= 100000;
+    return currentL2Value;
+#endif
 }
 
 // Function to add the currentL3 register to the DLMS server
@@ -589,7 +614,7 @@ int addCurrentL3()
     if ((ret = INIT_OBJECT(currentL3, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
     {
         currentL3Value = 10;
-        GX_UINT32_BYREF(currentL3.value, currentL3Value);
+        GX_FLOAT_BYREF(currentL3.value, currentL3Value);
         currentL3.scaler = -5;
         currentL3.unit = 33;
     }
@@ -598,13 +623,13 @@ int addCurrentL3()
 }
 
 // Function to set the currentL3 registers' value
-void writeCurrentL3Value(uint32_t value)
+void writeCurrentL3Value(float value)
 {
     currentL3Value = value;
 }
 
 // Function to get the currentL3 registers' value with garbage value injection
-uint32_t readCurrentL3Value()
+float readCurrentL3Value()
 {
     if (isGarbageValuesEnabled())
     {
@@ -613,25 +638,32 @@ uint32_t readCurrentL3Value()
             // Select a random garbage value
             currentL3Value = currentL3GarbageValues[rand() % (sizeof(currentL3GarbageValues) / sizeof(currentL3GarbageValues[0]))];
             current_timestamp = getFormattedTimestamp();
-            printf("%s -> Meter sending garbage value %u for current L3.\n", current_timestamp, currentL3Value);
+            printf("%s -> Meter sending garbage value %f for current L3.\n", current_timestamp, currentL3Value);
             // Reset the counter
             currentL3Counter = resetCounter();
         }
         else
         {
-            currentL3Value = currentL3ValueMin + rand() % (currentL3ValueMax - currentL3ValueMin + 1); // Normal value
+            currentL3Value = currentL3ValueMin + ((double) rand() / RAND_MAX) * (currentL3ValueMax - currentL3ValueMin); // Normal value
             currentL3Counter--;
             currentL3AverageCounter++; // Increment the average counter to calculate new average
-            currentL3AverageValue = calculateAverageUint32(currentL3AverageValue * 100000, currentL3Value, currentL3AverageCounter)/ 100000;
+            currentL3AverageValue = calculateAverageUint32(currentL3AverageValue * 100000, (uint32_t)currentL3Value, currentL3AverageCounter)/ 100000;
         }
     }
     else
     {
-        currentL3Value = currentL3ValueMin + rand() % (currentL3ValueMax - currentL3ValueMin + 1); // Normal value
+        currentL3Value = currentL3ValueMin + ((double) rand() / RAND_MAX) * (currentL3ValueMax - currentL3ValueMin); // Normal value
         currentL3AverageCounter++; // Increment the average counter to calculate new average
-        currentL3AverageValue = calculateAverageUint32(currentL3AverageValue * 100000, currentL3Value, currentL3AverageCounter) / 100000;
+        currentL3AverageValue = calculateAverageUint32(currentL3AverageValue * 100000, (uint32_t)currentL3Value, currentL3AverageCounter) / 100000;
     }
+
+#ifdef SINGLE_PHASE
+    currentL3Value *= 1000;
     return currentL3Value;
+#elif defined(THREE_PHASE)
+    currentL3Value *= 100000;
+    return currentL3Value;
+#endif
 }
 #endif
 
@@ -643,8 +675,8 @@ int addFrequency()
 
     if ((ret = INIT_OBJECT(frequency, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
     {
-        frequencyValue = 50;
-        GX_UINT32_BYREF(frequency.value, frequencyValue);
+        frequencyValue = 50.1;
+        GX_FLOAT_BYREF(frequency.value, frequencyValue);
         frequency.scaler = -3;
         frequency.unit = 44;
     }
@@ -653,13 +685,13 @@ int addFrequency()
 }
 
 // Function to set the frequency registers' value
-void writeFrequencyValue(uint32_t value)
+void writeFrequencyValue(float value)
 {
     frequencyValue = value;
 }
 
 // Function to get the frequency registers' value with garbage value injection
-uint32_t readFrequencyValue()
+float readFrequencyValue()
 {
     if (isGarbageValuesEnabled())
     {
@@ -668,20 +700,22 @@ uint32_t readFrequencyValue()
             // Select a random garbage value
             frequencyValue = frequencyGarbageValues[rand() % (sizeof(frequencyGarbageValues) / sizeof(frequencyGarbageValues[0]))];
             current_timestamp = getFormattedTimestamp();
-            printf("%s -> Meter sending garbage value %u for frequency.\n", current_timestamp, frequencyValue);
+            printf("%s -> Meter sending garbage value %f for frequency.\n", current_timestamp, frequencyValue);
             // Reset the counter
             frequencyCounter = resetCounter();
         }
         else
         {
-            frequencyValue = frequencyValueMin + rand() % (frequencyValueMax - frequencyValueMin + 1); // Normal value
+            frequencyValue = frequencyValueMin + ((double) rand() / RAND_MAX) * (frequencyValueMax - frequencyValueMin); // Normal value
             frequencyCounter--;
         }
     }
     else
     {
-        frequencyValue = frequencyValueMin + rand() % (frequencyValueMax - frequencyValueMin + 1); // Normal value
+        frequencyValue = frequencyValueMin + ((double) rand() / RAND_MAX) * (frequencyValueMax - frequencyValueMin); // Normal value
     }
+
+    frequencyValue *= 1000;
     return frequencyValue;
 }
 
@@ -694,8 +728,8 @@ int addPowerFactorL1()
 
     if ((ret = INIT_OBJECT(powerFactorL1, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
     {
-        powerFactorL1Value = 1;
-        GX_UINT32_BYREF(powerFactorL1.value, powerFactorL1Value);
+        powerFactorL1Value = 0.1;
+        GX_FLOAT_BYREF(powerFactorL1.value, powerFactorL1Value);
         powerFactorL1.scaler = -3;
         powerFactorL1.unit = 0;  
     }
@@ -704,13 +738,13 @@ int addPowerFactorL1()
 }
 
 // Function to set the powerFactorL1 registers' value
-void writePowerFactorL1Value(uint32_t value)
+void writePowerFactorL1Value(float value)
 {
     powerFactorL1Value = value;
 }
 
 // Function to get the powerFactorL1 registers' value with garbage value injection
-uint32_t readPowerFactorL1Value()
+float readPowerFactorL1Value()
 {
     if (isGarbageValuesEnabled())
     {
@@ -719,20 +753,22 @@ uint32_t readPowerFactorL1Value()
             // Select a random garbage value
             powerFactorL1Value = powerFactorL1GarbageValues[rand() % (sizeof(powerFactorL1GarbageValues) / sizeof(powerFactorL1GarbageValues[0]))];
             current_timestamp = getFormattedTimestamp();
-            printf("%s -> Meter sending garbage value %u for power factor L1.\n", current_timestamp, powerFactorL1Value);
+            printf("%s -> Meter sending garbage value %f for power factor L1.\n", current_timestamp, powerFactorL1Value);
             // Reset the counter
             powerFactorL1Counter = resetCounter();
         }
         else
         {
-            powerFactorL1Value = powerFactorL1ValueMin + rand() % (powerFactorL1ValueMax - powerFactorL1ValueMin + 1); // Normal value
+            powerFactorL1Value = powerFactorL1ValueMin + ((double) rand() / RAND_MAX) * (powerFactorL1ValueMax - powerFactorL1ValueMin); // Normal value
             powerFactorL1Counter--;
         }
     }
     else
     {
-        powerFactorL1Value = powerFactorL1ValueMin + rand() % (powerFactorL1ValueMax - powerFactorL1ValueMin + 1); // Normal value
+        powerFactorL1Value = powerFactorL1ValueMin + ((double) rand() / RAND_MAX) * (powerFactorL1ValueMax - powerFactorL1ValueMin); // Normal value
     }
+    
+    powerFactorL1Value *= 1000;
     return powerFactorL1Value;
 }
 
@@ -744,8 +780,8 @@ int addPowerFactorL2()
 
     if ((ret = INIT_OBJECT(powerFactorL2, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
     {
-        powerFactorL2Value = 1; 
-        GX_UINT32_BYREF(powerFactorL2.value, powerFactorL2Value);
+        powerFactorL2Value = 0.1; 
+        GX_FLOAT_BYREF(powerFactorL2.value, powerFactorL2Value);
         powerFactorL2.scaler = -3;
         powerFactorL2.unit = 0;  
     }
@@ -754,13 +790,13 @@ int addPowerFactorL2()
 }
 
 // Function to set Power Factor L2 register's value
-void writePowerFactorL2Value(uint32_t value)
+void writePowerFactorL2Value(float value)
 {
     powerFactorL2Value = value;
 }
 
 // Function to get the powerFactorL2 registers' value with garbage value injection
-uint32_t readPowerFactorL2Value()
+float readPowerFactorL2Value()
 {
     if (isGarbageValuesEnabled())
     {
@@ -769,20 +805,22 @@ uint32_t readPowerFactorL2Value()
             // Select a random garbage value
             powerFactorL2Value = powerFactorL2GarbageValues[rand() % (sizeof(powerFactorL2GarbageValues) / sizeof(powerFactorL2GarbageValues[0]))];
             current_timestamp = getFormattedTimestamp();
-            printf("%s -> Meter sending garbage value %u for power factor L2.\n", current_timestamp, powerFactorL2Value);
+            printf("%s -> Meter sending garbage value %f for power factor L2.\n", current_timestamp, powerFactorL2Value);
             // Reset the counter
             powerFactorL2Counter = resetCounter();
         }
         else
         {
-            powerFactorL2Value = powerFactorL2ValueMin + rand() % (powerFactorL2ValueMax - powerFactorL2ValueMin + 1); // Normal value
+            powerFactorL2Value = powerFactorL2ValueMin + ((double) rand() / RAND_MAX) * (powerFactorL2ValueMax - powerFactorL2ValueMin); // Normal value
             powerFactorL2Counter--;
         }
     }
     else
     {
-        powerFactorL2Value = powerFactorL2ValueMin + rand() % (powerFactorL2ValueMax - powerFactorL2ValueMin + 1); // Normal value
+        powerFactorL2Value = powerFactorL2ValueMin + ((double) rand() / RAND_MAX) * (powerFactorL2ValueMax - powerFactorL2ValueMin); // Normal value
     }
+
+    powerFactorL2Value *= 1000;
     return powerFactorL2Value;
 }
 
@@ -794,8 +832,8 @@ int addPowerFactorL3()
 
     if ((ret = INIT_OBJECT(powerFactorL3, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
     {
-        powerFactorL3Value = 1; 
-        GX_UINT32_BYREF(powerFactorL3.value, powerFactorL3Value);
+        powerFactorL3Value = 0.1; 
+        GX_FLOAT_BYREF(powerFactorL3.value, powerFactorL3Value);
         powerFactorL3.scaler = -3;
         powerFactorL3.unit = 0;  
     }
@@ -804,13 +842,13 @@ int addPowerFactorL3()
 }
 
 // Function to set Power Factor L3 register's value
-void writePowerFactorL3Value(uint32_t value)
+void writePowerFactorL3Value(float value)
 {
     powerFactorL3Value = value;
 }
 
 // Function to get the powerFactorL3 registers' value with garbage value injection
-uint32_t readPowerFactorL3Value()
+float readPowerFactorL3Value()
 {
     if (isGarbageValuesEnabled())
     {
@@ -819,20 +857,22 @@ uint32_t readPowerFactorL3Value()
             // Select a random garbage value
             powerFactorL3Value = powerFactorL3GarbageValues[rand() % (sizeof(powerFactorL3GarbageValues) / sizeof(powerFactorL3GarbageValues[0]))];
             current_timestamp = getFormattedTimestamp();
-            printf("%s -> Meter sending garbage value %u for power factor L3.\n", current_timestamp, powerFactorL3Value);
+            printf("%s -> Meter sending garbage value %f for power factor L3.\n", current_timestamp, powerFactorL3Value);
             // Reset the counter
             powerFactorL3Counter = resetCounter();
         }
         else
         {
-            powerFactorL3Value = powerFactorL3ValueMin + rand() % (powerFactorL3ValueMax - powerFactorL3ValueMin + 1); // Normal value
+            powerFactorL3Value = powerFactorL3ValueMin + ((double) rand() / RAND_MAX) * (powerFactorL3ValueMax - powerFactorL3ValueMin); // Normal value
             powerFactorL3Counter--;
         }
     }
     else
     {
-        powerFactorL3Value = powerFactorL3ValueMin + rand() % (powerFactorL3ValueMax - powerFactorL3ValueMin + 1); // Normal value
+        powerFactorL3Value = powerFactorL3ValueMin + ((double) rand() / RAND_MAX) * (powerFactorL3ValueMax - powerFactorL3ValueMin); // Normal value
     }
+
+    powerFactorL3Value *= 1000;
     return powerFactorL3Value;
 }
 #endif
@@ -845,7 +885,7 @@ int addBlockEnergyKWhImport()
 
     if ((ret = INIT_OBJECT(blockEnergyKWhImport, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
     {
-        blockEnergyKWhImportValue = 1000; 
+        blockEnergyKWhImportValue = 100; 
         GX_UINT32_BYREF(blockEnergyKWhImport.value, blockEnergyKWhImportValue);
         blockEnergyKWhImport.scaler = 2;
         blockEnergyKWhImport.unit = 32;  
@@ -884,6 +924,8 @@ uint32_t readBlockEnergyKWhImportValue()
     {
         blockEnergyKWhImportValue = blockEnergyKWhImportValueMin + rand() % (blockEnergyKWhImportValueMax - blockEnergyKWhImportValueMin + 1); // Normal value
     }
+
+    blockEnergyKWhImportValue /= 100;
     return blockEnergyKWhImportValue;
 }
 
@@ -896,7 +938,7 @@ int addBlockEnergyKWhExport()
 
     if ((ret = INIT_OBJECT(blockEnergyKWhExport, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
     {
-        blockEnergyKWhExportValue = 1000; 
+        blockEnergyKWhExportValue = 100; 
         GX_UINT32_BYREF(blockEnergyKWhExport.value, blockEnergyKWhExportValue);
         blockEnergyKWhExport.scaler = 2;
         blockEnergyKWhExport.unit = 32;  
@@ -935,6 +977,8 @@ uint32_t readBlockEnergyKWhExportValue()
     {
         blockEnergyKWhExportValue = blockEnergyKWhExportValueMin + rand() % (blockEnergyKWhExportValueMax - blockEnergyKWhExportValueMin + 1); // Normal value
     }
+
+    blockEnergyKWhExportValue /= 100;
     return blockEnergyKWhExportValue;
 }
 #endif
@@ -948,7 +992,7 @@ int addBlockEnergyKVAhLag()
 
     if ((ret = INIT_OBJECT(blockEnergyKVAhLag, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
     {
-        blockEnergyKVAhLagValue = 1000; 
+        blockEnergyKVAhLagValue = 100; 
         GX_UINT32_BYREF(blockEnergyKVAhLag.value, blockEnergyKVAhLagValue);
         blockEnergyKVAhLag.scaler = 2;
         blockEnergyKVAhLag.unit = 32;  
@@ -987,6 +1031,8 @@ uint32_t readBlockEnergyKVAhLagValue()
     {
         blockEnergyKVAhLagValue = blockEnergyKVAhLagValueMin + rand() % (blockEnergyKVAhLagValueMax - blockEnergyKVAhLagValueMin + 1); // Normal value
     }
+
+    blockEnergyKVAhLagValue /= 100;
     return blockEnergyKVAhLagValue;
 }
 
@@ -998,7 +1044,7 @@ int addBlockEnergyKVAhLead()
 
     if ((ret = INIT_OBJECT(blockEnergyKVAhLead, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
     {
-        blockEnergyKVAhLeadValue = 1000; 
+        blockEnergyKVAhLeadValue = 100; 
         GX_UINT32_BYREF(blockEnergyKVAhLead.value, blockEnergyKVAhLeadValue);
         blockEnergyKVAhLead.scaler = 2;
         blockEnergyKVAhLead.unit = 32;  
@@ -1037,6 +1083,8 @@ uint32_t readBlockEnergyKVAhLeadValue()
     {
         blockEnergyKVAhLeadValue = blockEnergyKVAhLeadValueMin + rand() % (blockEnergyKVAhLeadValueMax - blockEnergyKVAhLeadValueMin + 1); // Normal value
     }
+
+    blockEnergyKVAhLeadValue /= 100;
     return blockEnergyKVAhLeadValue;
 }
 
@@ -1048,7 +1096,7 @@ int addBlockEnergyKVAhImport()
 
     if ((ret = INIT_OBJECT(blockEnergyKVAhImport, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
     {
-        blockEnergyKVAhImportValue = 1000; 
+        blockEnergyKVAhImportValue = 100; 
         GX_UINT32_BYREF(blockEnergyKVAhImport.value, blockEnergyKVAhImportValue);
         blockEnergyKVAhImport.scaler = 2;
         blockEnergyKVAhImport.unit = 32;  
@@ -1087,6 +1135,8 @@ uint32_t readBlockEnergyKVAhImportValue()
     {
         blockEnergyKVAhImportValue = blockEnergyKVAhImportValueMin + rand() % (blockEnergyKVAhImportValueMax - blockEnergyKVAhImportValueMin + 1); // Normal value
     }
+
+    blockEnergyKVAhImportValue /= 100;
     return blockEnergyKVAhImportValue;
 }
 #endif
@@ -1103,7 +1153,7 @@ int addCumulativeEnergyKWhImport()
 #ifdef SINGLE_PHASE
         cumulativeEnergyKWhImportValue = (uint32_t)(
                                         (voltageL1Value * currentL1Value * cos(signedPowerFactorValue)));
-        printf("Voltage value: %u, Current value: %u, Power Factor value: %u\n", voltageL1Value, currentL1Value, signedPowerFactorValue);
+        printf("Voltage value: %f, Current value: %f, Power Factor value: %f\n", voltageL1Value, currentL1Value, signedPowerFactorValue);
         printf("Cumulative Energy (kWh Import) value: %u\n", cumulativeEnergyKWhImportValue);
 #elif defined(THREE_PHASE)
         cumulativeEnergyKWhImportValue = (uint32_t)(
@@ -1179,6 +1229,8 @@ uint32_t readCumulativeEnergyKWhImportValue()
         }
         // cumulativeEnergyKWhImportValue = cumulativeEnergyKWhImportValueMin + rand() % (cumulativeEnergyKWhImportValueMax - cumulativeEnergyKWhImportValueMin + 1); // Normal value
     }
+
+    cumulativeEnergyKWhImportValue /= 100; 
     return cumulativeEnergyKWhImportValue;
 }
 
@@ -1193,7 +1245,7 @@ int addCumulativeEnergyKWhExport()
     {
         cumulativeEnergyKWhExportValue = (uint32_t)(
                                         (voltageL1Value * currentL1Value * cos(signedPowerFactorValue)));
-        printf("Voltage value: %u, Current value: %u, Power Factor value: %u\n", voltageL1Value, currentL1Value, signedPowerFactorValue);
+        printf("Voltage value: %f, Current value: %f, Power Factor value: %f\n", voltageL1Value, currentL1Value, signedPowerFactorValue);
         printf("Cumulative Energy (kWh Export) value: %u\n", cumulativeEnergyKWhExportValue);
         GX_UINT32_BYREF(cumulativeEnergyKWhExport.value, cumulativeEnergyKWhExportValue);
         cumulativeEnergyKWhExport.scaler = 2;
@@ -1261,6 +1313,8 @@ uint32_t readCumulativeEnergyKWhExportValue()
         }
         // cumulativeEnergyKWhExportValue = cumulativeEnergyKWhExportValueMin + rand() % (cumulativeEnergyKWhExportValueMax - cumulativeEnergyKWhExportValueMin + 1); // Normal value
     }
+
+    cumulativeEnergyKWhExportValue /= 100;
     return cumulativeEnergyKWhExportValue;
 }
 #endif
@@ -1344,6 +1398,8 @@ uint32_t readCumulativeEnergyKVAhLagValue()
         }
         // cumulativeEnergyKVAhLagValue = cumulativeEnergyKVAhLagValueMin + rand() % (cumulativeEnergyKVAhLagValueMax - cumulativeEnergyKVAhLagValueMin + 1); // Normal value
     }
+
+    cumulativeEnergyKVAhLagValue /= 100;
     return cumulativeEnergyKVAhLagValue;
 }
 
@@ -1425,6 +1481,8 @@ uint32_t readCumulativeEnergyKVAhLeadValue()
         }
         // cumulativeEnergyKVAhLeadValue = cumulativeEnergyKVAhLeadValueMin + rand() % (cumulativeEnergyKVAhLeadValueMax - cumulativeEnergyKVAhLeadValueMin + 1); // Normal value
     }
+
+    cumulativeEnergyKVAhLeadValue /= 100;
     return cumulativeEnergyKVAhLeadValue;
 }
 
@@ -1505,6 +1563,8 @@ uint32_t readCumulativeEnergyKVAhImportValue()
         }
         // cumulativeEnergyKVAhImportValue = cumulativeEnergyKVAhImportValueMin + rand() % (cumulativeEnergyKVAhImportValueMax - cumulativeEnergyKVAhImportValueMin + 1); // Normal value
     }
+
+    cumulativeEnergyKVAhImportValue /= 100;
     return cumulativeEnergyKVAhImportValue;
 }
 #endif
@@ -1855,7 +1915,7 @@ int addNeutralCurrent()
     if ((ret = INIT_OBJECT(neutralCurrent, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
     {
         neutralCurrentValue = 10;  // Initialize with a default value
-        GX_UINT32_BYREF(neutralCurrent.value, neutralCurrentValue);
+        GX_FLOAT_BYREF(neutralCurrent.value, neutralCurrentValue);
         neutralCurrent.scaler = -3;
         neutralCurrent.unit = 33;
     }
@@ -1864,13 +1924,13 @@ int addNeutralCurrent()
 }
 
 // Function to set the neutral current register's value
-void writeNeutralCurrentValue(uint32_t value)
+void writeNeutralCurrentValue(float value)
 {
     neutralCurrentValue = value;
 }
 
 // Function to get the neutral current register's value with garbage value injection
-uint32_t readNeutralCurrentValue()
+float readNeutralCurrentValue()
 {
     if (isGarbageValuesEnabled())
     {
@@ -1879,20 +1939,22 @@ uint32_t readNeutralCurrentValue()
             // Select a random garbage value
             neutralCurrentValue = neutralCurrentGarbageValues[rand() % (sizeof(neutralCurrentGarbageValues) / sizeof(neutralCurrentGarbageValues[0]))];
             current_timestamp = getFormattedTimestamp();
-            printf("%s -> Meter sending garbage value %u for neutral current.\n", current_timestamp, neutralCurrentValue);
+            printf("%s -> Meter sending garbage value %f for neutral current.\n", current_timestamp, neutralCurrentValue);
             // Reset the counter
             neutralCurrentCounter = resetCounter();
         }
         else
         {
-            neutralCurrentValue = neutralCurrentValueMin + rand() % (neutralCurrentValueMax - neutralCurrentValueMin + 1); // Normal value
+            neutralCurrentValue = neutralCurrentValueMin + ((double) rand() / RAND_MAX) * (neutralCurrentValueMax - neutralCurrentValueMin); // Normal value
             neutralCurrentCounter--;
         }
     }
     else
     {
-        neutralCurrentValue = neutralCurrentValueMin + rand() % (neutralCurrentValueMax - neutralCurrentValueMin + 1); // Normal value
+        neutralCurrentValue = neutralCurrentValueMin + ((double) rand() / RAND_MAX) * (neutralCurrentValueMax - neutralCurrentValueMin); // Normal value
     }
+
+    neutralCurrentValue *= 1000;
     return neutralCurrentValue;
 }
 
@@ -1905,7 +1967,7 @@ int addActivePower()
     if ((ret = INIT_OBJECT(activePower, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
     {
         activePowerValue = voltageL1Value * currentL1Value * cos(signedPowerFactorValue);  // Initialize with a default value (adjust as needed)
-        GX_UINT32_BYREF(activePower.value, activePowerValue);
+        GX_FLOAT_BYREF(activePower.value, activePowerValue);
         activePower.scaler = -1;  // Scalar for active power
         activePower.unit = 27;    // Unit for active power
     }
@@ -1914,13 +1976,13 @@ int addActivePower()
 }
 
 // Function to set the active power register's value
-void writeActivePowerValue(uint32_t value)
+void writeActivePowerValue(float value)
 {
     activePowerValue = value;
 }
 
 // Function to get the active power register's value with garbage value injection
-uint32_t readActivePowerValue()
+float readActivePowerValue()
 {
     if (isGarbageValuesEnabled())
     {
@@ -1930,7 +1992,7 @@ uint32_t readActivePowerValue()
             lastActivePowerValue = activePowerValue;
             activePowerValue = activePowerGarbageValues[rand() % (sizeof(activePowerGarbageValues) / sizeof(activePowerGarbageValues[0]))];
             current_timestamp = getFormattedTimestamp();
-            printf("%s -> Meter sending garbage value %u for active power.\n", current_timestamp, activePowerValue);
+            printf("%s -> Meter sending garbage value %f for active power.\n", current_timestamp, activePowerValue);
             // Reset the counter
             activePowerCounter = resetCounter();
             isActivePowerGarbageValueSent = true;
@@ -1967,6 +2029,8 @@ uint32_t readActivePowerValue()
             activePowerValue += (rand() % 30) + 10  ;
         }
     }
+
+    activePowerValue *= 10;
     return activePowerValue;
 }
 
@@ -1979,7 +2043,7 @@ int addApparentPower()
     if ((ret = INIT_OBJECT(apparentPower, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
     {
         apparentPowerValue = voltageL1Value * currentL1Value;  // Initialize with a default value (adjust as needed)
-        GX_UINT32_BYREF(apparentPower.value, apparentPowerValue);
+        GX_FLOAT_BYREF(apparentPower.value, apparentPowerValue);
         apparentPower.scaler = -1;  // Scalar for apparent power
         apparentPower.unit = 28;    // Unit for apparent power
     }
@@ -1988,13 +2052,13 @@ int addApparentPower()
 }
 
 // Function to set the apparent power register's value
-void writeApparentPowerValue(uint32_t value)
+void writeApparentPowerValue(float value)
 {
     apparentPowerValue = value;
 }
 
 // Function to get the apparent power register's value with garbage value injection
-uint32_t readApparentPowerValue()
+float readApparentPowerValue()
 {
     if (isGarbageValuesEnabled())
     {
@@ -2003,7 +2067,7 @@ uint32_t readApparentPowerValue()
             // Select a random garbage value
             apparentPowerValue = apparentPowerGarbageValues[rand() % (sizeof(apparentPowerGarbageValues) / sizeof(apparentPowerGarbageValues[0]))];
             current_timestamp = getFormattedTimestamp();
-            printf("%s -> Meter sending garbage value %u for apparent power.\n", current_timestamp, apparentPowerValue);
+            printf("%s -> Meter sending garbage value %f for apparent power.\n", current_timestamp, apparentPowerValue);
             // Reset the counter
             apparentPowerCounter = resetCounter();
         }
@@ -2017,7 +2081,8 @@ uint32_t readApparentPowerValue()
     {
         apparentPowerValue = voltageL1Value * currentL1Value; // Normal value
     }
-    apparentPowerValue /= 100000;
+
+    apparentPowerValue *= 10;
     return apparentPowerValue;
 }
 
@@ -2030,7 +2095,7 @@ int addSignedPowerFactor()
     if ((ret = INIT_OBJECT(signedPowerFactor, DLMS_OBJECT_TYPE_REGISTER, ln)) == 0)
     {
         signedPowerFactorValue = 1;  // Initialize with a default value (adjust as needed)
-        GX_UINT32_BYREF(signedPowerFactor.value, signedPowerFactorValue);
+        GX_FLOAT_BYREF(signedPowerFactor.value, signedPowerFactorValue);
         signedPowerFactor.scaler = -3;  // Scalar for signed power factor
         signedPowerFactor.unit = 0;     // Unit for signed power factor
     }
@@ -2039,13 +2104,13 @@ int addSignedPowerFactor()
 }
 
 // Function to set the signed power factor register's value
-void writeSignedPowerFactorValue(uint32_t value)
+void writeSignedPowerFactorValue(float value)
 {
     signedPowerFactorValue = value;
 }
 
 // Function to get the signed power factor register's value with garbage value injection
-uint32_t readSignedPowerFactorValue()
+float readSignedPowerFactorValue()
 {
     if (isGarbageValuesEnabled())
     {
@@ -2054,20 +2119,22 @@ uint32_t readSignedPowerFactorValue()
             // Select a random garbage value
             signedPowerFactorValue = signedPowerFactorGarbageValues[rand() % (sizeof(signedPowerFactorGarbageValues) / sizeof(signedPowerFactorGarbageValues[0]))];
             current_timestamp = getFormattedTimestamp();
-            printf("%s -> Meter sending garbage value %u for signed power factor.\n", current_timestamp, signedPowerFactorValue);
+            printf("%s -> Meter sending garbage value %f for signed power factor.\n", current_timestamp, signedPowerFactorValue);
             // Reset the counter
             signedPowerFactorCounter = resetCounter();
         }
         else
         {
-            signedPowerFactorValue = signedPowerFactorValueMin + rand() % (signedPowerFactorValueMax - signedPowerFactorValueMin + 1); // Normal value
+            signedPowerFactorValue = signedPowerFactorValueMin + ((double) rand() / RAND_MAX) * (signedPowerFactorValueMax - signedPowerFactorValueMin); // Normal value
             signedPowerFactorCounter--;
         }
     }
     else
     {
-        signedPowerFactorValue = signedPowerFactorValueMin + rand() % (signedPowerFactorValueMax - signedPowerFactorValueMin + 1); // Normal value
+        signedPowerFactorValue = signedPowerFactorValueMin + ((double) rand() / RAND_MAX) * (signedPowerFactorValueMax - signedPowerFactorValueMin); // Normal value
     }
+
+    signedPowerFactorValue *= 1000;
     return signedPowerFactorValue;
 }
 #endif
@@ -2197,8 +2264,8 @@ bool setRegisterLimits(const char* filePath)
     cJSON* frequencyLimits = cJSON_GetObjectItem(json, "frequency_limits");
     if (frequencyLimits)
     {
-        frequencyValueMin = cJSON_GetObjectItem(frequencyLimits, "lower_limit")->valueint; // Convert to integer
-        frequencyValueMax = cJSON_GetObjectItem(frequencyLimits, "upper_limit")->valueint; // Convert to integer
+        frequencyValueMin = cJSON_GetObjectItem(frequencyLimits, "lower_limit")->valuedouble; // Convert to float
+        frequencyValueMax = cJSON_GetObjectItem(frequencyLimits, "upper_limit")->valuedouble; // Convert to float
     }
 
 #ifdef THREE_PHASE
@@ -2237,8 +2304,8 @@ bool setRegisterLimits(const char* filePath)
     cJSON* signedPowerFactorLimits = cJSON_GetObjectItem(json, "signed_power_factor_limits");
     if (signedPowerFactorLimits)
     {
-        signedPowerFactorValueMin = cJSON_GetObjectItem(signedPowerFactorLimits, "lower_limit")->valueint; // Convert to integer
-        signedPowerFactorValueMax = cJSON_GetObjectItem(signedPowerFactorLimits, "upper_limit")->valueint; // Convert to integer
+        signedPowerFactorValueMin = cJSON_GetObjectItem(signedPowerFactorLimits, "lower_limit")->valuedouble; // Convert to float
+        signedPowerFactorValueMax = cJSON_GetObjectItem(signedPowerFactorLimits, "upper_limit")->valuedouble; // Convert to float
     }
 #endif
 
