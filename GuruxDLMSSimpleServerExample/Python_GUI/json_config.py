@@ -84,7 +84,7 @@ class SaveConfigJson():
 
             os.makedirs(resource_path("Config"), exist_ok=True)
 
-            json_keys = ["no_of_meters", "meter_type", "manufacturer", "voltage_limits", "current_limits", "frequency_limits", "power_factor_limits", "block_energy_limits"]
+            json_keys = ["no_of_meters", "meter_type", "manufacturer", "voltage_limits", "current_limits", "power_factor_limits", "frequency_limits", "block_energy_limits"]
             phases = ["L1", "L2", "L3"]
             limits = ["lower_limit", "upper_limit"]
             
